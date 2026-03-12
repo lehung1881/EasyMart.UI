@@ -1,0 +1,12 @@
+export default {
+    Brand: "EasyMart",
+    Processing: "Đang xử lý...",
+    Success: "Thành công!",
+    Error: "Có lỗi xảy ra, vui lòng thử lại.",
+    Cancel: "Hủy",
+    Confirm: "Xác nhận",
+    Save: "Lưu",
+    Delete: "Xóa",
+    Edit: "Chỉnh sửa",
+    Back: "Quay lại",
+};
