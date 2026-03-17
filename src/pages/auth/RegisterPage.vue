@@ -5,7 +5,6 @@
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
             <div class="orb orb-3"></div>
-            <div class="grid-lines"></div>
         </div>
 
         <!-- Form Card -->
@@ -255,6 +254,8 @@
                     <span class="error-msg" v-if="errors.Terms">{{ errors.Terms }}</span>
                 </div>
 
+                <span class="error-msg form-error" v-if="errors.Form">{{ errors.Form }}</span>
+
                 <!-- Submit -->
                 <button
                     type="button"
@@ -300,16 +301,8 @@
 <script lang="ts">
 import { defineComponent, reactive, ref, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
-
-// Interface đồng bộ với BASE.Service.Core.Model.RegisterRequest (PascalCase)
-interface RegisterRequest {
-    Email: string;
-    FullName: string; // = LastName + ' ' + FirstName (tách để nhập riêng trên UI)
-    Password: string;
-    PhoneNumber: string;
-    TenantName: string;
-    TaxCode: string;
-}
+import { useAuthStore } from "@/stores/auth/auth.store";
+import type { RegisterRequest } from "@/models/auth/auth.model";
 
 // Form UI mở rộng thêm LastName, FirstName, ConfirmPassword, Terms (không gửi lên server)
 interface RegisterForm extends RegisterRequest {
@@ -329,6 +322,7 @@ interface FormErrors {
     Password?: string;
     ConfirmPassword?: string;
     Terms?: string;
+    Form?: string;
 }
 
 export default defineComponent({
@@ -336,6 +330,7 @@ export default defineComponent({
     setup() {
         const router = useRouter();
         const { proxy } = getCurrentInstance()!;
+        const authStore = useAuthStore();
         const showPassword = ref(false);
         const showConfirmPassword = ref(false);
 
@@ -417,6 +412,7 @@ export default defineComponent({
         async function handleSubmit() {
             if (!validateAll()) return;
             loading.value = true;
+            errors.Form = undefined;
 
             // Build payload khớp RegisterRequest gửi lên server
             const payload: RegisterRequest = {
@@ -427,11 +423,35 @@ export default defineComponent({
                 TenantName: form.TenantName,
                 TaxCode: form.TaxCode,
             };
-            console.log("Register payload:", payload);
 
-            await new Promise((r) => setTimeout(r, 1800));
-            loading.value = false;
-            submitted.value = true;
+            try {
+                await authStore.register(payload);
+                submitted.value = true;
+            } catch (err: any) {
+                const validateInfo = err?.ValidateInfo;
+                if (Array.isArray(validateInfo)) {
+                    const allowedFields: (keyof FormErrors)[] = [
+                        "TaxCode",
+                        "TenantName",
+                        "LastName",
+                        "FirstName",
+                        "Email",
+                        "PhoneNumber",
+                        "Password",
+                        "ConfirmPassword",
+                        "Terms",
+                        "Form",
+                    ];
+                    for (const item of validateInfo) {
+                        const field = item?.Field as keyof FormErrors;
+                        const message = item?.Message as string | undefined;
+                        if (field && message && allowedFields.includes(field)) errors[field] = message;
+                    }
+                }
+                errors.Form = err?.Message || proxy!.$t("i18nCommon.Error");
+            } finally {
+                loading.value = false;
+            }
         }
 
         function goToLogin() {
@@ -470,7 +490,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f0f4f8;
+    background: #ffffff;
     font-family: "DM Sans", sans-serif;
     padding: 24px;
     position: relative;
@@ -479,6 +499,7 @@ export default defineComponent({
 
 /* Animated background */
 .bg-layer {
+    display: none;
     position: fixed;
     inset: 0;
     pointer-events: none;
@@ -492,7 +513,7 @@ export default defineComponent({
 .orb-1 {
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, rgba(0, 137, 199, 0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0, 137, 199, 0.1) 0%, transparent 70%);
     top: -100px;
     left: -100px;
     animation-delay: 0s;
@@ -500,7 +521,7 @@ export default defineComponent({
 .orb-2 {
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
     bottom: -80px;
     right: -80px;
     animation-delay: -4s;
@@ -508,18 +529,19 @@ export default defineComponent({
 .orb-3 {
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     animation-delay: -8s;
 }
 .grid-lines {
+    display: none;
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(rgba(0, 137, 199, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 137, 199, 0.06) 1px, transparent 1px);
+        linear-gradient(rgba(0, 137, 199, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 137, 199, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
 }
 
@@ -706,6 +728,12 @@ export default defineComponent({
     font-size: 12px;
     color: #f43f5e;
     animation: fadeIn 0.2s ease;
+}
+.form-error {
+    display: block;
+    text-align: center;
+    margin-top: -10px;
+    margin-bottom: 14px;
 }
 @keyframes fadeIn {
     from {

@@ -5,7 +5,6 @@
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
             <div class="orb orb-3"></div>
-            <div class="grid-lines"></div>
         </div>
 
         <!-- Login Card -->
@@ -296,7 +295,7 @@ function handleGoToRegister() {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f0f4f8;
+    background: #ffffff;
     font-family: "DM Sans", sans-serif;
     padding: 24px;
     position: relative;
@@ -305,6 +304,7 @@ function handleGoToRegister() {
 
 /* Animated background */
 .bg-layer {
+    display: none;
     position: fixed;
     inset: 0;
     pointer-events: none;
@@ -318,7 +318,7 @@ function handleGoToRegister() {
 .orb-1 {
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, rgba(0, 137, 199, 0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(0, 137, 199, 0.1) 0%, transparent 70%);
     top: -100px;
     left: -100px;
     animation-delay: 0s;
@@ -326,7 +326,7 @@ function handleGoToRegister() {
 .orb-2 {
     width: 400px;
     height: 400px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
     bottom: -80px;
     right: -80px;
     animation-delay: -4s;
@@ -334,18 +334,19 @@ function handleGoToRegister() {
 .orb-3 {
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     animation-delay: -8s;
 }
 .grid-lines {
+    display: none;
     position: absolute;
     inset: 0;
     background-image:
-        linear-gradient(rgba(0, 137, 199, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 137, 199, 0.06) 1px, transparent 1px);
+        linear-gradient(rgba(0, 137, 199, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 137, 199, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
 }
 @keyframes drift {

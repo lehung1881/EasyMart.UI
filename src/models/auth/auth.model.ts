@@ -51,6 +51,10 @@ export interface RegisterRequest {
     FullName: string;
     /** Mật khẩu - sẽ được mã hóa BCrypt trước khi lưu */
     Password: string;
-    /** Số điện thoại (không bắt buộc) */
-    PhoneNumber: string | null;
+    /** Số điện thoại */
+    PhoneNumber: string;
+    /** Tên cửa hàng / doanh nghiệp */
+    TenantName: string;
+    /** Mã số thuế */
+    TaxCode: string;
 }
