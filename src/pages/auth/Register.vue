@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <div class="page-wrapper">
         <!-- Animated background -->
         <div class="bg-layer">
@@ -298,13 +298,36 @@
     </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, reactive, ref, getCurrentInstance } from "vue";
+<script setup lang="ts">
+import { reactive, ref, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth/auth.store";
-import type { RegisterRequest } from "@/models/auth/auth.model";
+import { useAuthStore } from "@/stores/auth/authStore";
+import type { RegisterRequest } from "@/models/auth/auth";
 
-// Form UI mở rộng thêm LastName, FirstName, ConfirmPassword, Terms (không gửi lên server)
+type RegisterField =
+    | "TaxCode"
+    | "TenantName"
+    | "LastName"
+    | "FirstName"
+    | "Email"
+    | "PhoneNumber"
+    | "Password"
+    | "ConfirmPassword"
+    | "Terms";
+
+type ErrorField = RegisterField | "Form";
+type FieldValue = string | boolean;
+
+interface ServerValidateInfo {
+    Field?: string;
+    Message?: string;
+}
+
+interface RegisterApiError {
+    Message?: string;
+    ValidateInfo?: ServerValidateInfo[];
+}
+
 interface RegisterForm extends RegisterRequest {
     LastName: string;
     FirstName: string;
@@ -312,166 +335,199 @@ interface RegisterForm extends RegisterRequest {
     Terms: boolean;
 }
 
-interface FormErrors {
-    TaxCode?: string;
-    TenantName?: string;
-    LastName?: string;
-    FirstName?: string;
-    Email?: string;
-    PhoneNumber?: string;
-    Password?: string;
-    ConfirmPassword?: string;
-    Terms?: string;
-    Form?: string;
+type FormErrors = Partial<Record<ErrorField, string>>;
+
+const REGISTER_FIELDS: RegisterField[] = [
+    "TaxCode",
+    "TenantName",
+    "LastName",
+    "FirstName",
+    "Email",
+    "PhoneNumber",
+    "Password",
+    "ConfirmPassword",
+    "Terms",
+];
+
+const ALLOWED_ERROR_FIELDS = new Set<ErrorField>([...REGISTER_FIELDS, "Form"]);
+
+const router = useRouter();
+const { proxy } = getCurrentInstance()!;
+const authStore = useAuthStore();
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const loading = ref(false);
+const submitted = ref(false);
+
+const form = reactive<RegisterForm>({
+    TaxCode: "",
+    TenantName: "",
+    LastName: "",
+    FirstName: "",
+    FullName: "",
+    Email: "",
+    PhoneNumber: "",
+    Password: "",
+    ConfirmPassword: "",
+    Terms: false,
+});
+
+const errors = reactive<FormErrors>({});
+
+/**
+ * Dá»‹ch key i18n sang chuá»—i hiá»ƒn thá»‹.
+ * @param key KhÃ³a i18n cáº§n dá»‹ch.
+ * @returns Chuá»—i sau khi dá»‹ch.
+ */
+function t(key: string): string {
+    return String(proxy!.$t(key));
 }
 
-export default defineComponent({
-    name: "RegisterForm",
-    setup() {
-        const router = useRouter();
-        const { proxy } = getCurrentInstance()!;
-        const authStore = useAuthStore();
-        const showPassword = ref(false);
-        const showConfirmPassword = ref(false);
-
-        const form = reactive<RegisterForm>({
-            TaxCode: "",
-            TenantName: "",
-            LastName: "",
-            FirstName: "",
-            FullName: "",
-            Email: "",
-            PhoneNumber: "",
-            Password: "",
-            ConfirmPassword: "",
-            Terms: false,
-        });
-
-        const errors = reactive<FormErrors>({});
-        const loading = ref(false);
-        const submitted = ref(false);
-
-        const validators: Record<string, (val: string | boolean) => string | undefined> = {
-            TaxCode: (v) => (!v ? proxy!.$t("i18nAuth.Register.ValidateTaxCodeRequired") : undefined),
-            TenantName: (v) => (!v ? proxy!.$t("i18nAuth.Register.ValidateTenantNameRequired") : undefined),
-            LastName: (v) => (!v ? proxy!.$t("i18nAuth.Register.ValidateLastNameRequired") : undefined),
-            FirstName: (v) => (!v ? proxy!.$t("i18nAuth.Register.ValidateFirstNameRequired") : undefined),
-            Email: (v) => {
-                if (!v) return proxy!.$t("i18nAuth.Register.ValidateEmailRequired");
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v as string))
-                    return proxy!.$t("i18nAuth.Register.ValidateEmailInvalid");
-                return undefined;
-            },
-            PhoneNumber: (v) => {
-                if (!v) return proxy!.$t("i18nAuth.Register.ValidatePhoneRequired");
-                if (!/^(0|\+84)(3[2-9]|5[6-9]|7[0-9]|8[0-9]|9[0-9])[0-9]{7}$/.test((v as string).replace(/\s/g, "")))
-                    return proxy!.$t("i18nAuth.Register.ValidatePhoneInvalid");
-                return undefined;
-            },
-            Password: (v) => {
-                const s = v as string;
-                if (!s) return proxy!.$t("i18nAuth.Register.ValidatePasswordRequired");
-                if (s.length < 8) return proxy!.$t("i18nAuth.Register.ValidatePasswordMinLength");
-                if (!/[A-Z]/.test(s)) return proxy!.$t("i18nAuth.Register.ValidatePasswordUppercase");
-                if (!/[a-z]/.test(s)) return proxy!.$t("i18nAuth.Register.ValidatePasswordLowercase");
-                if (!/[0-9]/.test(s)) return proxy!.$t("i18nAuth.Register.ValidatePasswordNumber");
-                if (!/[^A-Za-z0-9]/.test(s)) return proxy!.$t("i18nAuth.Register.ValidatePasswordSpecial");
-                return undefined;
-            },
-            ConfirmPassword: (v) => {
-                if (!v) return proxy!.$t("i18nAuth.Register.ValidateConfirmPasswordRequired");
-                if (v !== form.Password) return proxy!.$t("i18nAuth.Register.ValidateConfirmPasswordMismatch");
-                return undefined;
-            },
-            Terms: (v) => (!v ? proxy!.$t("i18nAuth.Register.ValidateTermsRequired") : undefined),
-        };
-
-        function validateField(field: keyof FormErrors) {
-            const val = (form as any)[field];
-            const err = validators[field]?.(val);
-            if (err) {
-                (errors as any)[field] = err;
-            } else {
-                delete (errors as any)[field];
-            }
-        }
-
-        function clearError(field: keyof FormErrors) {
-            delete (errors as any)[field];
-        }
-
-        function validateAll(): boolean {
-            let valid = true;
-            (Object.keys(validators) as (keyof FormErrors)[]).forEach((field) => {
-                validateField(field);
-                if ((errors as any)[field]) valid = false;
-            });
-            return valid;
-        }
-
-        async function handleSubmit() {
-            if (!validateAll()) return;
-            loading.value = true;
-            errors.Form = undefined;
-
-            // Build payload khớp RegisterRequest gửi lên server
-            const payload: RegisterRequest = {
-                Email: form.Email,
-                FullName: `${form.LastName} ${form.FirstName}`.trim(),
-                Password: form.Password,
-                PhoneNumber: form.PhoneNumber,
-                TenantName: form.TenantName,
-                TaxCode: form.TaxCode,
-            };
-
-            try {
-                await authStore.register(payload);
-                submitted.value = true;
-            } catch (err: any) {
-                const validateInfo = err?.ValidateInfo;
-                if (Array.isArray(validateInfo)) {
-                    const allowedFields: (keyof FormErrors)[] = [
-                        "TaxCode",
-                        "TenantName",
-                        "LastName",
-                        "FirstName",
-                        "Email",
-                        "PhoneNumber",
-                        "Password",
-                        "ConfirmPassword",
-                        "Terms",
-                        "Form",
-                    ];
-                    for (const item of validateInfo) {
-                        const field = item?.Field as keyof FormErrors;
-                        const message = item?.Message as string | undefined;
-                        if (field && message && allowedFields.includes(field)) errors[field] = message;
-                    }
-                }
-                errors.Form = err?.Message || proxy!.$t("i18nCommon.Error");
-            } finally {
-                loading.value = false;
-            }
-        }
-
-        function goToLogin() {
-            router.push({ name: "Login" });
-        }
-
-        return {
-            form,
-            errors,
-            loading,
-            submitted,
-            showPassword,
-            showConfirmPassword,
-            validateField,
-            clearError,
-            handleSubmit,
-            goToLogin,
-        };
+const validators: Record<RegisterField, (value: FieldValue) => string | undefined> = {
+    TaxCode: (value) => (!value ? t("i18nAuth.Register.ValidateTaxCodeRequired") : undefined),
+    TenantName: (value) => (!value ? t("i18nAuth.Register.ValidateTenantNameRequired") : undefined),
+    LastName: (value) => (!value ? t("i18nAuth.Register.ValidateLastNameRequired") : undefined),
+    FirstName: (value) => (!value ? t("i18nAuth.Register.ValidateFirstNameRequired") : undefined),
+    Email: (value) => {
+        const email = String(value);
+        if (!email) return t("i18nAuth.Register.ValidateEmailRequired");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return t("i18nAuth.Register.ValidateEmailInvalid");
+        return undefined;
     },
-});
+    PhoneNumber: (value) => {
+        const phone = String(value).replace(/\s/g, "");
+        if (!phone) return t("i18nAuth.Register.ValidatePhoneRequired");
+        if (!/^(0|\+84)(3[2-9]|5[6-9]|7[0-9]|8[0-9]|9[0-9])[0-9]{7}$/.test(phone)) {
+            return t("i18nAuth.Register.ValidatePhoneInvalid");
+        }
+        return undefined;
+    },
+    Password: (value) => {
+        const password = String(value);
+        if (!password) return t("i18nAuth.Register.ValidatePasswordRequired");
+        if (password.length < 8) return t("i18nAuth.Register.ValidatePasswordMinLength");
+        if (!/[A-Z]/.test(password)) return t("i18nAuth.Register.ValidatePasswordUppercase");
+        if (!/[a-z]/.test(password)) return t("i18nAuth.Register.ValidatePasswordLowercase");
+        if (!/[0-9]/.test(password)) return t("i18nAuth.Register.ValidatePasswordNumber");
+        if (!/[^A-Za-z0-9]/.test(password)) return t("i18nAuth.Register.ValidatePasswordSpecial");
+        return undefined;
+    },
+    ConfirmPassword: (value) => {
+        const confirmPassword = String(value);
+        if (!confirmPassword) return t("i18nAuth.Register.ValidateConfirmPasswordRequired");
+        if (confirmPassword !== form.Password) return t("i18nAuth.Register.ValidateConfirmPasswordMismatch");
+        return undefined;
+    },
+    Terms: (value) => (!value ? t("i18nAuth.Register.ValidateTermsRequired") : undefined),
+};
+
+/**
+ * Kiá»ƒm tra há»£p lá»‡ cho má»™t trÆ°á»ng dá»¯ liá»‡u.
+ * @param field TÃªn trÆ°á»ng cáº§n kiá»ƒm tra.
+ * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ */
+function validateField(field: RegisterField): void {
+    const errorMessage = validators[field](form[field]);
+    if (errorMessage) {
+        errors[field] = errorMessage;
+        return;
+    }
+
+    delete errors[field];
+}
+
+/**
+ * XÃ³a lá»—i cá»§a má»™t trÆ°á»ng hoáº·c lá»—i tá»•ng quÃ¡t cá»§a form.
+ * @param field TÃªn trÆ°á»ng lá»—i cáº§n xÃ³a.
+ * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ */
+function clearError(field: ErrorField): void {
+    delete errors[field];
+}
+
+/**
+ * Kiá»ƒm tra toÃ n bá»™ form trÆ°á»›c khi submit.
+ * @returns `true` náº¿u form há»£p lá»‡, ngÆ°á»£c láº¡i `false`.
+ */
+function validateAll(): boolean {
+    let isValid = true;
+    REGISTER_FIELDS.forEach((field) => {
+        validateField(field);
+        if (errors[field]) {
+            isValid = false;
+        }
+    });
+    return isValid;
+}
+
+/**
+ * Táº¡o payload gá»­i API Ä‘Äƒng kÃ½ tá»« dá»¯ liá»‡u form hiá»‡n táº¡i.
+ * @returns Dá»¯ liá»‡u Ä‘Ãºng kiá»ƒu `RegisterRequest`.
+ */
+function buildRegisterPayload(): RegisterRequest {
+    return {
+        Email: form.Email,
+        FullName: `${form.LastName} ${form.FirstName}`.trim(),
+        Password: form.Password,
+        PhoneNumber: form.PhoneNumber,
+        TenantName: form.TenantName,
+        TaxCode: form.TaxCode,
+    };
+}
+
+/**
+ * Ãnh xáº¡ lá»—i validation tá»« API vÃ o cÃ¡c trÆ°á»ng cá»§a form.
+ * @param error Äá»‘i tÆ°á»£ng lá»—i tráº£ vá» tá»« API.
+ * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ */
+function applyServerValidationErrors(error: RegisterApiError): void {
+    if (!Array.isArray(error.ValidateInfo)) {
+        return;
+    }
+
+    error.ValidateInfo.forEach((item) => {
+        const field = item.Field as ErrorField | undefined;
+        const message = item.Message;
+
+        if (!field || !message || !ALLOWED_ERROR_FIELDS.has(field)) {
+            return;
+        }
+
+        errors[field] = message;
+    });
+}
+
+/**
+ * Gá»­i form Ä‘Äƒng kÃ½ tÃ i khoáº£n vÃ  xá»­ lÃ½ tráº¡ng thÃ¡i UI.
+ * @returns Promise hoÃ n táº¥t quÃ¡ trÃ¬nh Ä‘Äƒng kÃ½.
+ */
+async function handleSubmit(): Promise<void> {
+    if (!validateAll()) {
+        return;
+    }
+
+    loading.value = true;
+    clearError("Form");
+
+    try {
+        await authStore.register(buildRegisterPayload());
+        submitted.value = true;
+    } catch (error: unknown) {
+        const registerError = error as RegisterApiError;
+        applyServerValidationErrors(registerError);
+        errors.Form = registerError.Message || t("i18nCommon.Error");
+    } finally {
+        loading.value = false;
+    }
+}
+
+/**
+ * Äiá»u hÆ°á»›ng ngÆ°á»i dÃ¹ng sang trang Ä‘Äƒng nháº­p.
+ * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ */
+function goToLogin(): void {
+    router.push({ name: "Login" });
+}
 </script>
 
 <style scoped>
@@ -853,3 +909,5 @@ export default defineComponent({
     }
 }
 </style>
+
+

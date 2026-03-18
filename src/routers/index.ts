@@ -1,6 +1,7 @@
-import { createRouter, createWebHistory } from "vue-router";
+﻿import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
-import authRoutes from "./modules/auth";
+import authRoutes from "./modules/authRouter";
+import appRoutes from "./modules/appRouter";
 
 const routes: RouteRecordRaw[] = [
     {
@@ -8,6 +9,7 @@ const routes: RouteRecordRaw[] = [
         redirect: "/login",
     },
     ...authRoutes,
+    ...appRoutes,
 ];
 
 const router = createRouter({

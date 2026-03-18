@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <div class="page-wrapper">
         <!-- Animated background -->
         <div class="bg-layer">
@@ -39,7 +39,7 @@
                 </button>
             </div>
 
-            <!-- Tab: Mật khẩu -->
+            <!-- Tab: Máº­t kháº©u -->
             <div v-if="activeTab === 'password'" class="form-content">
                 <!-- Username -->
                 <div class="field" :class="{ 'field-error': errors.username, 'field-filled': form.username }">
@@ -127,6 +127,8 @@
                 <div class="forgot-row">
                     <button type="button" class="link">{{ $t("i18nAuth.Login.ForgotPassword") }}</button>
                 </div>
+
+                <span class="error-msg form-error" v-if="errors.form">{{ errors.form }}</span>
 
                 <!-- Submit -->
                 <button
@@ -234,47 +236,123 @@
 <script setup lang="ts">
 import { ref, reactive, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
-
-const { proxy } = getCurrentInstance()!;
+import { useAuthStore } from "@/stores/auth/authStore";
+import type { LoginRequest } from "@/models/auth/auth";
 
 type TabType = "password" | "qr";
+type LoginField = "username" | "password";
+type LoginErrorField = LoginField | "form";
+type LoginErrors = Partial<Record<LoginErrorField, string>>;
+
+interface LoginApiError {
+    Message?: string;
+}
+
+const { proxy } = getCurrentInstance()!;
 
 const activeTab = ref<TabType>("password");
 const showPassword = ref<boolean>(false);
 const loading = ref(false);
 const submitted = ref(false);
 
-const form = reactive({ username: "", password: "" });
-const errors = reactive<{ username?: string; password?: string }>({});
+const form = reactive<Record<LoginField, string>>({ username: "", password: "" });
+const errors = reactive<LoginErrors>({});
+const router = useRouter();
+const authStore = useAuthStore();
 
-function validateField(field: "username" | "password") {
+/**
+ * Dá»‹ch key i18n sang chuá»—i hiá»ƒn thá»‹.
+ * @param key KhÃ³a i18n cáº§n dá»‹ch.
+ * @returns Chuá»—i sau khi dá»‹ch.
+ */
+function t(key: string): string {
+    return String(proxy!.$t(key));
+}
+
+/**
+ * Kiá»ƒm tra há»£p lá»‡ cho má»™t trÆ°á»ng Ä‘Äƒng nháº­p.
+ * @param field TÃªn trÆ°á»ng cáº§n kiá»ƒm tra.
+ * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ */
+function validateField(field: LoginField): void {
     if (!form[field]) {
         errors[field] =
             field === "username"
-                ? proxy!.$t("i18nAuth.Login.ValidateUsernameRequired")
-                : proxy!.$t("i18nAuth.Login.ValidatePasswordRequired");
+                ? t("i18nAuth.Login.ValidateUsernameRequired")
+                : t("i18nAuth.Login.ValidatePasswordRequired");
     } else {
         delete errors[field];
     }
 }
 
-function clearError(field: "username" | "password") {
+/**
+ * XÃ³a lá»—i cá»§a má»™t trÆ°á»ng Ä‘Äƒng nháº­p.
+ * @param field TÃªn trÆ°á»ng lá»—i cáº§n xÃ³a.
+ * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ */
+function clearError(field: LoginField): void {
     delete errors[field];
 }
 
-async function handleLogin() {
-    validateField("username");
-    validateField("password");
-    if (errors.username || errors.password) return;
-    loading.value = true;
-    await new Promise((r) => setTimeout(r, 1800));
-    loading.value = false;
-    submitted.value = true;
+/**
+ * XÃ³a lá»—i tá»•ng quÃ¡t cá»§a form.
+ * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ */
+function clearFormError(): void {
+    delete errors.form;
 }
 
-const router = useRouter();
+/**
+ * Kiá»ƒm tra toÃ n bá»™ form Ä‘Äƒng nháº­p.
+ * @returns `true` náº¿u há»£p lá»‡, ngÆ°á»£c láº¡i `false`.
+ */
+function validateAll(): boolean {
+    validateField("username");
+    validateField("password");
+    return !errors.username && !errors.password;
+}
 
-function handleGoToRegister() {
+/**
+ * Táº¡o payload Ä‘Äƒng nháº­p theo contract API.
+ * @returns Dá»¯ liá»‡u Ä‘Ãºng kiá»ƒu `LoginRequest`.
+ */
+function buildLoginPayload(): LoginRequest {
+    return {
+        Email: form.username.trim(),
+        Password: form.password,
+    };
+}
+
+/**
+ * Gá»­i form Ä‘Äƒng nháº­p vÃ  xá»­ lÃ½ tráº¡ng thÃ¡i UI.
+ * @returns Promise hoÃ n táº¥t Ä‘Äƒng nháº­p.
+ */
+async function handleLogin(): Promise<void> {
+    clearFormError();
+    submitted.value = false;
+
+    if (!validateAll()) return;
+
+    loading.value = true;
+
+    try {
+        await authStore.login(buildLoginPayload());
+        submitted.value = true;
+        await router.push({ name: "Dashboard" });
+    } catch (error: unknown) {
+        const loginError = error as LoginApiError;
+        errors.form = loginError.Message || t("i18nCommon.Error");
+        submitted.value = false;
+    } finally {
+        loading.value = false;
+    }
+}
+
+/**
+ * Äiá»u hÆ°á»›ng ngÆ°á»i dÃ¹ng sang trang Ä‘Äƒng kÃ½.
+ * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ */
+function handleGoToRegister(): void {
     router.push({ name: "Register" });
 }
 </script>
@@ -552,6 +630,12 @@ function handleGoToRegister() {
     color: #f43f5e;
     animation: fadeIn 0.2s ease;
 }
+.form-error {
+    display: block;
+    text-align: center;
+    margin-top: -8px;
+    margin-bottom: 2px;
+}
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -695,3 +779,4 @@ function handleGoToRegister() {
     }
 }
 </style>
+

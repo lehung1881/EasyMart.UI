@@ -1,9 +1,9 @@
-import axios from "axios";
+﻿import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import commonFunction from "@/commons/commonFunction";
-import type { ServiceResponse } from "@/api/models/serviceResponse.type";
-import { API_CONFIG } from "@/api/config.api";
-import type { ApiService } from "@/api/config.api";
+import type { ServiceResponse } from "@/api/models/serviceResponse";
+import { API_CONFIG } from "@/api/configApi";
+import type { ApiService } from "@/api/configApi";
 
 abstract class BaseApi {
     protected abstract readonly serviceName: ApiService;

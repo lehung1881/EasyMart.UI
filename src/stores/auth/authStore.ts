@@ -1,14 +1,14 @@
-import { defineStore } from "pinia";
+﻿import { defineStore } from "pinia";
 import { ref } from "vue";
-import authApi from "@/api/modules/auth.api";
+import authApi from "@/api/modules/authApi";
 import commonFunction from "@/commons/commonFunction";
-import type { RegisterRequest, UserInfo, LoginRequest } from "@/models/auth/auth.model";
+import type { RegisterRequest, UserInfo, LoginRequest } from "@/models/auth/auth";
 
 export const useAuthStore = defineStore("auth", () => {
     const userInfo = ref<UserInfo | null>(null);
     /**
-     * Đăng nhập tài khoản.
-     * @param payload - Email và mật khẩu
+     * ÄÄƒng nháº­p tÃ i khoáº£n.
+     * @param payload - Email vÃ  máº­t kháº©u
      */
     const login = async (payload: LoginRequest) => {
         const res = await authApi.login(payload);
@@ -17,8 +17,8 @@ export const useAuthStore = defineStore("auth", () => {
     };
 
     /**
-     * Đăng ký tài khoản mới.
-     * @param payload - Thông tin đăng ký
+     * ÄÄƒng kÃ½ tÃ i khoáº£n má»›i.
+     * @param payload - ThÃ´ng tin Ä‘Äƒng kÃ½
      */
     const register = async (payload: RegisterRequest) => {
         const res = await authApi.register(payload);
@@ -26,7 +26,7 @@ export const useAuthStore = defineStore("auth", () => {
     };
 
     /**
-     * Đăng xuất tài khoản hiện tại.
+     * ÄÄƒng xuáº¥t tÃ i khoáº£n hiá»‡n táº¡i.
      */
     const logout = async () => {
         await authApi.logout();
@@ -36,3 +36,4 @@ export const useAuthStore = defineStore("auth", () => {
 
     return { userInfo, register, logout, login };
 });
+
