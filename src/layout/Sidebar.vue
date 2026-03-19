@@ -1,14 +1,23 @@
 ﻿<template>
     <aside class="app-sidebar">
         <nav class="sidebar-nav">
-            <a class="nav-item" href="#">Dashboard</a>
+            <a class="nav-item" href="#" @click="cl">Dashboard</a>
             <a class="nav-item" href="#">Dictionary</a>
             <a class="nav-item" href="#">Sales</a>
         </nav>
     </aside>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import authApi from "@/api/modules/authApi";
+const cl = async () => {
+    try {
+        await authApi.me();
+    } catch (error) {
+        console.error(error);
+    }
+};
+</script>
 
 <style scoped>
 .app-sidebar {

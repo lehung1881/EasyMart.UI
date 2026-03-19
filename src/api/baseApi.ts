@@ -1,9 +1,11 @@
 ﻿import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
-import commonFunction from "@/commons/commonFunction";
 import type { ServiceResponse } from "@/api/models/serviceResponse";
 import { API_CONFIG } from "@/api/configApi";
 import type { ApiService } from "@/api/configApi";
+import cacheService from "@/commons/cacheService";
+import { CacheCode } from "@/constants/cacheConfig";
+
 
 abstract class BaseApi {
     protected abstract readonly serviceName: ApiService;
@@ -12,14 +14,13 @@ abstract class BaseApi {
     private _instance: AxiosInstance | null = null;
 
     /**
-     * Khởi tạo axios instance theo từng service (lazy init).
-     * Instance chỉ được tạo một lần khi lần đầu tiên gọi API.
+     * Kh?i t?o axios instance theo t?ng service (lazy init).
+     * Instance ch? du?c t?o m?t l?n khi l?n d?u tiên g?i API.
      */
     protected get instance(): AxiosInstance {
         if (!this._instance) {
             this._instance = axios.create({
                 baseURL: API_CONFIG[this.serviceName],
-                // timeout: 600000,
             });
             this.initRequestInterceptor();
             this.initResponseInterceptor();
@@ -28,36 +29,51 @@ abstract class BaseApi {
     }
 
     /**
-     * Ghép basePath và url thành đường dẫn đầy đủ.
-     * @param url - Path của endpoint, ví dụ: /login
-     * @returns Đường dẫn đầy đủ, ví dụ: /auth/login
+     * Ghép basePath và url thành du?ng d?n d?y d?.
+     * @param url - Path c?a endpoint, ví d?: /login
+     * @returns Ðu?ng d?n d?y d?, ví d?: /v1/auth/login
      */
     private buildUrl(url: string): string {
         return `${this.basePath}${url}`;
     }
 
     /**
-     * Interceptor xử lý request trước khi gửi lên server.
-     * Tự động đính kèm token và userID vào header nếu có.
+     * Interceptor x? lý request tru?c khi g?i lên server.
+     * Ð?c Access Token t? localStorage và g?n vào Authorization header.
+     * Ðính kèm các thông tin d?nh danh ngu?i dùng vào header n?u có:
+     * - Authorization: Bearer token
+     * - X-UserID: ID ngu?i dùng
+     * - X-DatabaseID: ID database c?a tenant
+     * - X-TenantID: ID tenant
+     * - X-FullName: H? tên ngu?i dùng (encoded UTF-8)
      */
     private initRequestInterceptor() {
         this._instance!.interceptors.request.use(
-            (config: InternalAxiosRequestConfig) => {
-                const token = commonFunction.getToken();
-                const userID = commonFunction.getUserID();
+            async (config: InternalAxiosRequestConfig) => {
+                const { useAuthStore } = await import("@/stores/auth/authStore");
+                const userInfo = useAuthStore().getUserInfo();
+                const token = cacheService.get<string>(CacheCode.AuthAccessToken);
 
                 if (token) config.headers.set("Authorization", `Bearer ${token}`);
-                if (userID) config.headers.set("X-UserID", userID);
+                if (userInfo) {
+                    config.headers.set("X-UserID", userInfo.UserID);
+                    config.headers.set("X-DatabaseID", userInfo.DatabaseID);
+                    config.headers.set("X-TenantID", userInfo.TenantID);
+                    config.headers.set("X-FullName", encodeURIComponent(userInfo.FullName));
+                }
 
                 return config;
             },
-            (error: unknown) => Promise.reject(error)
+            (error: unknown) => Promise.reject(error),
         );
     }
 
     /**
-     * Interceptor xử lý response trả về từ server.
-     * Tự động reject nếu Success === false.
+     * Interceptor x? lý response tr? v? t? server.
+     * - T? d?ng reject n?u Success === false.
+     * - Khi nh?n 401 (Access Token h?t h?n), t? d?ng g?i /refresh_token m?t l?n.
+     *   N?u refresh thành công, luu token m?i vào localStorage và retry request g?c.
+     *   N?u refresh th?t b?i, xóa token và thông tin ngu?i dùng r?i chuy?n v? trang login.
      */
     private initResponseInterceptor() {
         this._instance!.interceptors.response.use(
@@ -65,69 +81,98 @@ abstract class BaseApi {
                 if (res.data?.Success === false) return Promise.reject(res.data);
                 return res.data;
             },
-            (error: unknown) => Promise.reject(error)
+            async (error: unknown) => {
+                const axiosError = error as {
+                    config?: InternalAxiosRequestConfig & { _retry?: boolean };
+                    response?: { status: number };
+                };
+                const status = axiosError.response?.status;
+                const config = axiosError.config;
+
+                if (status === 401 && config && !config._retry) {
+                    config._retry = true;
+                    try {
+                        // G?i refresh token — luu token m?i vào localStorage
+                        const { useAuthStore } = await import("@/stores/auth/authStore");
+                        await useAuthStore().refreshToken();
+
+                        // G?n l?i Access Token m?i vào header r?i retry request g?c
+                        const newToken = cacheService.get<string>(CacheCode.AuthAccessToken);
+                        if (newToken) config.headers.set("Authorization", `Bearer ${newToken}`);
+
+                        return this.instance(config);
+                    } catch {
+                        // Refresh th?t b?i ? phiên h?t h?n hoàn toàn, v? trang login
+                        const { useAuthStore } = await import("@/stores/auth/authStore");
+                        await useAuthStore().logout();
+                        window.location.href = "/login";
+                    }
+                }
+
+                return Promise.reject(error);
+            },
         );
     }
 
     /**
-     * Lấy ra URL đầy đủ của service hiện tại.
-     * @returns URL đầy đủ, ví dụ: http://localhost:3001/v1/auth
+     * L?y ra URL d?y d? c?a service hi?n t?i.
+     * @returns URL d?y d?, ví d?: http://localhost:3001/v1/auth
      */
     public getServiceUrl(): string {
         return `${API_CONFIG[this.serviceName]}${this.basePath}`;
     }
 
     /**
-     * Gửi HTTP GET request.
-     * @param url - Path của endpoint, ví dụ: /profile
-     * @param config - Cấu hình axios tùy chọn
+     * G?i HTTP GET request.
+     * @param url - Path c?a endpoint, ví d?: /profile
+     * @param config - C?u hình axios tùy ch?n
      */
     protected get<T>(url: string, config?: AxiosRequestConfig) {
         return this.instance.get<T, ServiceResponse<T>>(this.buildUrl(url), config);
     }
 
     /**
-     * Gửi HTTP POST request.
-     * @param url - Path của endpoint, ví dụ: /login
-     * @param payload - Dữ liệu gửi lên server
-     * @param config - Cấu hình axios tùy chọn
+     * G?i HTTP POST request.
+     * @param url - Path c?a endpoint, ví d?: /login
+     * @param payload - D? li?u g?i lên server
+     * @param config - C?u hình axios tùy ch?n
      */
     protected post<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.post<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
     /**
-     * Gửi HTTP PUT request.
-     * @param url - Path của endpoint, ví dụ: /profile
-     * @param payload - Dữ liệu cập nhật
-     * @param config - Cấu hình axios tùy chọn
+     * G?i HTTP PUT request.
+     * @param url - Path c?a endpoint, ví d?: /profile
+     * @param payload - D? li?u c?p nh?t
+     * @param config - C?u hình axios tùy ch?n
      */
     protected put<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.put<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
     /**
-     * Gửi HTTP PATCH request.
-     * @param url - Path của endpoint, ví dụ: /profile/avatar
-     * @param payload - Dữ liệu cập nhật một phần
-     * @param config - Cấu hình axios tùy chọn
+     * G?i HTTP PATCH request.
+     * @param url - Path c?a endpoint, ví d?: /profile/avatar
+     * @param payload - D? li?u c?p nh?t m?t ph?n
+     * @param config - C?u hình axios tùy ch?n
      */
     protected patch<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.patch<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
     /**
-     * Gửi HTTP DELETE request.
-     * @param url - Path của endpoint, ví dụ: /profile
-     * @param config - Cấu hình axios tùy chọn
+     * G?i HTTP DELETE request.
+     * @param url - Path c?a endpoint, ví d?: /profile
+     * @param config - C?u hình axios tùy ch?n
      */
     protected delete<T>(url: string, config?: AxiosRequestConfig) {
         return this.instance.delete<T, ServiceResponse<T>>(this.buildUrl(url), config);
     }
 
     /**
-     * Thêm/sửa/xóa bản ghi.
-     * @param payload - Dữ liệu của bản ghi cần thêm/sửa/xóa
+     * Thêm/s?a/xóa b?n ghi.
+     * @param payload - D? li?u c?a b?n ghi c?n thêm/s?a/xóa
      */
     protected saveData<T>(payload: T) {
         return this.post<T>("/save_data_async", payload);
@@ -135,3 +180,7 @@ abstract class BaseApi {
 }
 
 export default BaseApi;
+
+
+
+
