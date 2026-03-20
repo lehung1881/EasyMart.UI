@@ -3,7 +3,7 @@ import { createPinia } from "pinia";
 import App from "./App.vue";
 import router from "./routers";
 import { i18nPlugin } from "./i18n";
-import globalComponentsPlugin from "@/plugins/global-components";
+import globalComponentsPlugin from "@/plugins/globalComponents";
 import "@/assets/styles/_base.scss";
 import "./style.css";
 

@@ -1,15 +1,12 @@
-﻿<template>
+<template>
     <div class="page-wrapper">
-        <!-- Animated background -->
         <div class="bg-layer">
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
             <div class="orb orb-3"></div>
         </div>
 
-        <!-- Form Card -->
-        <div class="card" :class="{ 'card-submitted': submitted }">
-            <!-- Logo / Brand -->
+        <div class="card">
             <div class="brand">
                 <div class="brand-icon">
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -33,205 +30,109 @@
                 <a href="#" class="link" @click.prevent="goToLogin">{{ $t("i18nAuth.Register.LoginLink") }}</a>
             </p>
 
-            <div>
+            <div class="form-content">
                 <div class="form-grid">
-                    <!-- Tax ID -->
-                    <div class="field" :class="{ 'field-error': errors.TaxCode, 'field-filled': form.TaxCode }">
-                        <label class="label">{{ $t("i18nAuth.Register.FieldTaxCode") }}</label>
-                        <div class="input-wrap">
-                            <input
-                                v-model="form.TaxCode"
-                                type="text"
-                                :placeholder="$t('i18nAuth.Register.FieldTaxCodePlaceholder')"
-                                @blur="validateField('TaxCode')"
-                                @input="clearError('TaxCode')"
-                            />
-                        </div>
+                    <div class="field" :class="{ 'field-error': errors.TaxCode }">
+                        <BaseInput
+                            v-model="form.TaxCode"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldTaxCode')"
+                            :placeholder="$t('i18nAuth.Register.FieldTaxCodePlaceholder')"
+                            @blur="validateField('TaxCode')"
+                            @update:modelValue="clearError('TaxCode')"
+                        />
                         <span class="error-msg" v-if="errors.TaxCode">{{ errors.TaxCode }}</span>
                     </div>
 
-                    <!-- Company Name -->
-                    <div class="field" :class="{ 'field-error': errors.TenantName, 'field-filled': form.TenantName }">
-                        <label class="label">{{ $t("i18nAuth.Register.FieldTenantName") }}</label>
-                        <div class="input-wrap">
-                            <input
-                                v-model="form.TenantName"
-                                type="text"
-                                :placeholder="$t('i18nAuth.Register.FieldTenantNamePlaceholder')"
-                                @blur="validateField('TenantName')"
-                                @input="clearError('TenantName')"
-                            />
-                        </div>
+                    <div class="field" :class="{ 'field-error': errors.TenantName }">
+                        <BaseInput
+                            v-model="form.TenantName"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldTenantName')"
+                            :placeholder="$t('i18nAuth.Register.FieldTenantNamePlaceholder')"
+                            @blur="validateField('TenantName')"
+                            @update:modelValue="clearError('TenantName')"
+                        />
                         <span class="error-msg" v-if="errors.TenantName">{{ errors.TenantName }}</span>
                     </div>
 
-                    <!-- Last Name -->
-                    <div class="field" :class="{ 'field-error': errors.LastName, 'field-filled': form.LastName }">
-                        <label class="label">{{ $t("i18nAuth.Register.FieldLastName") }}</label>
-                        <div class="input-wrap">
-                            <input
-                                v-model="form.LastName"
-                                type="text"
-                                :placeholder="$t('i18nAuth.Register.FieldLastNamePlaceholder')"
-                                @blur="validateField('LastName')"
-                                @input="clearError('LastName')"
-                            />
-                        </div>
+                    <div class="field" :class="{ 'field-error': errors.LastName }">
+                        <BaseInput
+                            v-model="form.LastName"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldLastName')"
+                            :placeholder="$t('i18nAuth.Register.FieldLastNamePlaceholder')"
+                            @blur="validateField('LastName')"
+                            @update:modelValue="clearError('LastName')"
+                        />
                         <span class="error-msg" v-if="errors.LastName">{{ errors.LastName }}</span>
                     </div>
 
-                    <!-- First Name -->
-                    <div class="field" :class="{ 'field-error': errors.FirstName, 'field-filled': form.FirstName }">
-                        <label class="label">{{ $t("i18nAuth.Register.FieldFirstName") }}</label>
-                        <div class="input-wrap">
-                            <input
-                                v-model="form.FirstName"
-                                type="text"
-                                :placeholder="$t('i18nAuth.Register.FieldFirstNamePlaceholder')"
-                                @blur="validateField('FirstName')"
-                                @input="clearError('FirstName')"
-                            />
-                        </div>
+                    <div class="field" :class="{ 'field-error': errors.FirstName }">
+                        <BaseInput
+                            v-model="form.FirstName"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldFirstName')"
+                            :placeholder="$t('i18nAuth.Register.FieldFirstNamePlaceholder')"
+                            @blur="validateField('FirstName')"
+                            @update:modelValue="clearError('FirstName')"
+                        />
                         <span class="error-msg" v-if="errors.FirstName">{{ errors.FirstName }}</span>
                     </div>
 
-                    <!-- Email -->
-                    <div class="field" :class="{ 'field-error': errors.Email, 'field-filled': form.Email }">
-                        <label class="label">{{ $t("i18nAuth.Register.FieldEmail") }}</label>
-                        <div class="input-wrap">
-                            <input
-                                v-model="form.Email"
-                                type="email"
-                                :placeholder="$t('i18nAuth.Register.FieldEmailPlaceholder')"
-                                @blur="validateField('Email')"
-                                @input="clearError('Email')"
-                            />
-                        </div>
+                    <div class="field" :class="{ 'field-error': errors.Email }">
+                        <BaseInput
+                            v-model="form.Email"
+                            type="email"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldEmail')"
+                            :placeholder="$t('i18nAuth.Register.FieldEmailPlaceholder')"
+                            @blur="validateField('Email')"
+                            @update:modelValue="clearError('Email')"
+                        />
                         <span class="error-msg" v-if="errors.Email">{{ errors.Email }}</span>
                     </div>
 
-                    <!-- Phone -->
-                    <div class="field" :class="{ 'field-error': errors.PhoneNumber, 'field-filled': form.PhoneNumber }">
-                        <label class="label">{{ $t("i18nAuth.Register.FieldPhone") }}</label>
-                        <div class="input-wrap">
-                            <input
-                                v-model="form.PhoneNumber"
-                                type="tel"
-                                :placeholder="$t('i18nAuth.Register.FieldPhonePlaceholder')"
-                                @blur="validateField('PhoneNumber')"
-                                @input="clearError('PhoneNumber')"
-                            />
-                        </div>
+                    <div class="field" :class="{ 'field-error': errors.PhoneNumber }">
+                        <BaseInput
+                            v-model="form.PhoneNumber"
+                            type="tel"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldPhone')"
+                            :placeholder="$t('i18nAuth.Register.FieldPhonePlaceholder')"
+                            @blur="validateField('PhoneNumber')"
+                            @update:modelValue="clearError('PhoneNumber')"
+                        />
                         <span class="error-msg" v-if="errors.PhoneNumber">{{ errors.PhoneNumber }}</span>
                     </div>
 
-                    <!-- Password -->
-                    <div class="field" :class="{ 'field-error': errors.Password, 'field-filled': form.Password }">
-                        <label class="label">{{ $t("i18nAuth.Register.FieldPassword") }}</label>
-                        <div class="input-wrap">
-                            <input
-                                v-model="form.Password"
-                                :type="showPassword ? 'text' : 'password'"
-                                :placeholder="$t('i18nAuth.Register.FieldPasswordPlaceholder')"
-                                @blur="validateField('Password')"
-                                @input="clearError('Password')"
-                            />
-                            <button class="toggle-password" type="button" @click="showPassword = !showPassword">
-                                <svg v-if="!showPassword" width="15" height="15" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                    />
-                                    <path
-                                        d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                    />
-                                    <line
-                                        x1="1"
-                                        y1="1"
-                                        x2="23"
-                                        y2="23"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                    />
-                                </svg>
-                                <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                    />
-                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" />
-                                </svg>
-                            </button>
-                        </div>
+                    <div class="field" :class="{ 'field-error': errors.Password }">
+                        <BaseInput
+                            v-model="form.Password"
+                            type="password"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldPassword')"
+                            :placeholder="$t('i18nAuth.Register.FieldPasswordPlaceholder')"
+                            @blur="validateField('Password')"
+                            @update:modelValue="clearError('Password')"
+                        />
                         <span class="error-msg" v-if="errors.Password">{{ errors.Password }}</span>
                     </div>
 
-                    <!-- Confirm Password -->
-                    <div
-                        class="field"
-                        :class="{ 'field-error': errors.ConfirmPassword, 'field-filled': form.ConfirmPassword }"
-                    >
-                        <label class="label">{{ $t("i18nAuth.Register.FieldConfirmPassword") }}</label>
-                        <div class="input-wrap">
-                            <input
-                                v-model="form.ConfirmPassword"
-                                :type="showConfirmPassword ? 'text' : 'password'"
-                                :placeholder="$t('i18nAuth.Register.FieldConfirmPasswordPlaceholder')"
-                                @blur="validateField('ConfirmPassword')"
-                                @input="clearError('ConfirmPassword')"
-                            />
-                            <button
-                                class="toggle-password"
-                                type="button"
-                                @click="showConfirmPassword = !showConfirmPassword"
-                            >
-                                <svg v-if="!showConfirmPassword" width="15" height="15" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                    />
-                                    <path
-                                        d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                    />
-                                    <line
-                                        x1="1"
-                                        y1="1"
-                                        x2="23"
-                                        y2="23"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                    />
-                                </svg>
-                                <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                    />
-                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" />
-                                </svg>
-                            </button>
-                        </div>
+                    <div class="field" :class="{ 'field-error': errors.ConfirmPassword }">
+                        <BaseInput
+                            v-model="form.ConfirmPassword"
+                            type="password"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldConfirmPassword')"
+                            :placeholder="$t('i18nAuth.Register.FieldConfirmPasswordPlaceholder')"
+                            @blur="validateField('ConfirmPassword')"
+                            @update:modelValue="clearError('ConfirmPassword')"
+                        />
                         <span class="error-msg" v-if="errors.ConfirmPassword">{{ errors.ConfirmPassword }}</span>
                     </div>
                 </div>
 
-                <!-- Terms checkbox -->
                 <div class="checkbox-row" :class="{ 'checkbox-error': errors.Terms }">
                     <label class="checkbox-label">
                         <input type="checkbox" v-model="form.Terms" @change="clearError('Terms')" />
@@ -256,43 +157,9 @@
 
                 <span class="error-msg form-error" v-if="errors.Form">{{ errors.Form }}</span>
 
-                <!-- Submit -->
-                <button
-                    type="button"
-                    class="submit-btn"
-                    :class="{ 'btn-loading': loading, 'btn-success': submitted }"
-                    :disabled="loading || submitted"
-                    @click="handleSubmit"
-                >
-                    <span class="btn-content" v-if="!loading && !submitted">
-                        {{ $t("i18nAuth.Register.Submit") }}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M5 12h14M13 6l6 6-6 6"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                    </span>
-                    <span class="btn-content" v-else-if="loading">
-                        <span class="spinner"></span>
-                        {{ $t("i18nCommon.Processing") }}
-                    </span>
-                    <span class="btn-content" v-else>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M5 13l4 4L19 7"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                        {{ $t("i18nCommon.Success") }}
-                    </span>
-                </button>
+                <BaseButton size="lg" variant="primary" class="submit-btn" :disabled="loading || submitted" @click="handleSubmit">
+                    {{ $t("i18nAuth.Register.Submit") }}
+                </BaseButton>
             </div>
         </div>
     </div>
@@ -303,6 +170,8 @@ import { reactive, ref, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth/authStore";
 import type { RegisterRequest } from "@/models/auth/auth";
+import BaseInput from "@/components/base/BaseInput.vue";
+import BaseButton from "@/components/base/BaseButton.vue";
 
 type RegisterField =
     | "TaxCode"
@@ -354,8 +223,6 @@ const ALLOWED_ERROR_FIELDS = new Set<ErrorField>([...REGISTER_FIELDS, "Form"]);
 const router = useRouter();
 const { proxy } = getCurrentInstance()!;
 const authStore = useAuthStore();
-const showPassword = ref(false);
-const showConfirmPassword = ref(false);
 const loading = ref(false);
 const submitted = ref(false);
 
@@ -374,11 +241,6 @@ const form = reactive<RegisterForm>({
 
 const errors = reactive<FormErrors>({});
 
-/**
- * Dá»‹ch key i18n sang chuá»—i hiá»ƒn thá»‹.
- * @param key KhÃ³a i18n cáº§n dá»‹ch.
- * @returns Chuá»—i sau khi dá»‹ch.
- */
 function t(key: string): string {
     return String(proxy!.$t(key));
 }
@@ -421,11 +283,6 @@ const validators: Record<RegisterField, (value: FieldValue) => string | undefine
     Terms: (value) => (!value ? t("i18nAuth.Register.ValidateTermsRequired") : undefined),
 };
 
-/**
- * Kiá»ƒm tra há»£p lá»‡ cho má»™t trÆ°á»ng dá»¯ liá»‡u.
- * @param field TÃªn trÆ°á»ng cáº§n kiá»ƒm tra.
- * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
- */
 function validateField(field: RegisterField): void {
     const errorMessage = validators[field](form[field]);
     if (errorMessage) {
@@ -436,19 +293,10 @@ function validateField(field: RegisterField): void {
     delete errors[field];
 }
 
-/**
- * XÃ³a lá»—i cá»§a má»™t trÆ°á»ng hoáº·c lá»—i tá»•ng quÃ¡t cá»§a form.
- * @param field TÃªn trÆ°á»ng lá»—i cáº§n xÃ³a.
- * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
- */
 function clearError(field: ErrorField): void {
     delete errors[field];
 }
 
-/**
- * Kiá»ƒm tra toÃ n bá»™ form trÆ°á»›c khi submit.
- * @returns `true` náº¿u form há»£p lá»‡, ngÆ°á»£c láº¡i `false`.
- */
 function validateAll(): boolean {
     let isValid = true;
     REGISTER_FIELDS.forEach((field) => {
@@ -460,10 +308,6 @@ function validateAll(): boolean {
     return isValid;
 }
 
-/**
- * Táº¡o payload gá»­i API Ä‘Äƒng kÃ½ tá»« dá»¯ liá»‡u form hiá»‡n táº¡i.
- * @returns Dá»¯ liá»‡u Ä‘Ãºng kiá»ƒu `RegisterRequest`.
- */
 function buildRegisterPayload(): RegisterRequest {
     return {
         Email: form.Email,
@@ -475,11 +319,6 @@ function buildRegisterPayload(): RegisterRequest {
     };
 }
 
-/**
- * Ãnh xáº¡ lá»—i validation tá»« API vÃ o cÃ¡c trÆ°á»ng cá»§a form.
- * @param error Äá»‘i tÆ°á»£ng lá»—i tráº£ vá» tá»« API.
- * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
- */
 function applyServerValidationErrors(error: RegisterApiError): void {
     if (!Array.isArray(error.ValidateInfo)) {
         return;
@@ -497,10 +336,6 @@ function applyServerValidationErrors(error: RegisterApiError): void {
     });
 }
 
-/**
- * Gá»­i form Ä‘Äƒng kÃ½ tÃ i khoáº£n vÃ  xá»­ lÃ½ tráº¡ng thÃ¡i UI.
- * @returns Promise hoÃ n táº¥t quÃ¡ trÃ¬nh Ä‘Äƒng kÃ½.
- */
 async function handleSubmit(): Promise<void> {
     if (!validateAll()) {
         return;
@@ -521,17 +356,13 @@ async function handleSubmit(): Promise<void> {
     }
 }
 
-/**
- * Äiá»u hÆ°á»›ng ngÆ°á»i dÃ¹ng sang trang Ä‘Äƒng nháº­p.
- * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
- */
 function goToLogin(): void {
     router.push({ name: "Login" });
 }
 </script>
 
-<style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap");
+<style scoped lang="scss">
+@use "@/assets/styles/base" as *;
 
 *,
 *::before,
@@ -547,13 +378,13 @@ function goToLogin(): void {
     align-items: center;
     justify-content: center;
     background: #ffffff;
-    font-family: "DM Sans", sans-serif;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
     padding: 24px;
     position: relative;
     overflow: hidden;
 }
 
-/* Animated background */
 .bg-layer {
     display: none;
     position: fixed;
@@ -591,15 +422,6 @@ function goToLogin(): void {
     transform: translate(-50%, -50%);
     animation-delay: -8s;
 }
-.grid-lines {
-    display: none;
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(0, 137, 199, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 137, 199, 0.05) 1px, transparent 1px);
-    background-size: 40px 40px;
-}
 
 @keyframes drift {
     0%,
@@ -614,7 +436,6 @@ function goToLogin(): void {
     }
 }
 
-/* Card */
 .card {
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(24px);
@@ -631,11 +452,6 @@ function goToLogin(): void {
         0 8px 32px rgba(0, 0, 0, 0.08);
     animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.card-submitted {
-    box-shadow:
-        0 24px 64px rgba(16, 185, 129, 0.12),
-        0 8px 32px rgba(0, 0, 0, 0.08);
-}
 
 @keyframes slideUp {
     from {
@@ -648,28 +464,27 @@ function goToLogin(): void {
     }
 }
 
-/* Brand */
 .brand {
     display: flex;
     align-items: center;
     gap: 10px;
     justify-content: center;
-    margin-bottom: 28px;
+    margin-bottom: 20px;
 }
 .brand-icon {
     width: 44px;
     height: 44px;
-    background: linear-gradient(135deg, #0089c7, #10b981);
+    background: linear-gradient(135deg, #0089c7, #007ab3);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    box-shadow: 0 4px 16px rgba(0, 137, 199, 0.4);
+    box-shadow: 0 4px 16px rgba(0, 137, 199, 0.35);
 }
 .brand-name {
-    font-family: "Sora", sans-serif;
-    font-size: 22px;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
     font-weight: 700;
     color: #003d5c;
     letter-spacing: -0.5px;
@@ -678,119 +493,77 @@ function goToLogin(): void {
     color: #10b981;
 }
 
-/* Title */
 .title {
-    font-family: "Sora", sans-serif;
-    font-size: 26px;
+    font-family: $font-family-base;
+    font-size: 24px;
     font-weight: 700;
     color: #003d5c;
     text-align: center;
     letter-spacing: -0.8px;
     margin-bottom: 8px;
 }
+
 .subtitle {
     text-align: center;
-    font-size: 14px;
+    font-size: $font-size-base;
     color: #6b7280;
-    margin-bottom: 36px;
+    margin-bottom: 24px;
 }
+
 .link {
-    color: #0089c7;
-    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    color: rgba($color-primary, 0.82);
     font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
     transition: color 0.2s;
 }
 .link:hover {
-    color: #33a3d4;
+    color: $color-primary;
     text-decoration: underline;
 }
 
-/* Form grid */
+.form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
 
-/* Field */
 .field {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.label {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-}
-
-.input-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-.input-wrap input {
-    width: 100%;
-    padding: 12px 14px;
-    background: #f9fafb;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 12px;
-    color: #111827;
-    font-family: "DM Sans", sans-serif;
-    font-size: 14.5px;
-    outline: none;
-    transition: all 0.25s ease;
-}
-.input-wrap input::placeholder {
-    color: #d1d5db;
-}
-.input-wrap input:focus {
-    border-color: #0089c7;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(0, 137, 199, 0.12);
-}
-.input-wrap:focus-within .field-filled .input-wrap input {
-    border-color: #d1d5db;
-    background: #fff;
-}
-.field-error .input-wrap input {
+.field-error :deep(.base-input) {
     border-color: #f43f5e;
-    background: #fff5f7;
 }
-.field-error .input-wrap input:focus {
-    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
-}
-
-.toggle-password {
-    position: absolute;
-    right: 14px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: #9ca3af;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s;
-}
-.toggle-password:hover {
-    color: #0089c7;
+.field-error :deep(.base-input:focus-visible) {
+    border-color: #f43f5e;
 }
 
 .error-msg {
-    font-size: 12px;
+    font-size: $font-size-base;
     color: #f43f5e;
     animation: fadeIn 0.2s ease;
 }
 .form-error {
     display: block;
     text-align: center;
-    margin-top: -10px;
-    margin-bottom: 14px;
+    margin-top: -8px;
+    margin-bottom: 2px;
 }
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -802,10 +575,9 @@ function goToLogin(): void {
     }
 }
 
-/* Checkbox */
 .checkbox-row {
-    margin-top: 22px;
-    margin-bottom: 24px;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 .checkbox-label {
     display: flex;
@@ -830,12 +602,12 @@ function goToLogin(): void {
     margin-top: 1px;
 }
 .checkbox-label:has(input:checked) .checkmark {
-    background: #0089c7;
-    border-color: #0089c7;
-    box-shadow: 0 2px 8px rgba(0, 137, 199, 0.35);
+    background: $color-primary;
+    border-color: $color-primary;
+    box-shadow: 0 2px 8px rgba($color-primary, 0.35);
 }
 .checkbox-text {
-    font-size: 13.5px;
+    font-size: $font-size-base;
     color: #6b7280;
     line-height: 1.5;
 }
@@ -843,62 +615,10 @@ function goToLogin(): void {
     border-color: #f43f5e;
 }
 
-/* Submit button */
 .submit-btn {
     width: 100%;
-    padding: 15px 24px;
-    background: linear-gradient(135deg, #0089c7 0%, #007ab3 100%);
-    border: none;
-    border-radius: 14px;
-    color: white;
-    font-family: "Sora", sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0, 137, 199, 0.4);
-    letter-spacing: -0.2px;
-}
-.submit-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(0, 137, 199, 0.55);
-    background: linear-gradient(135deg, #33a3d4 0%, #0089c7 100%);
-}
-.submit-btn:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 4px 16px rgba(0, 137, 199, 0.35);
-}
-.submit-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
-}
-.btn-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4) !important;
-}
-.btn-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
 }
 
-/* Spinner */
-.spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Responsive */
 @media (max-width: 520px) {
     .card {
         padding: 32px 24px;
@@ -909,5 +629,3 @@ function goToLogin(): void {
     }
 }
 </style>
-
-

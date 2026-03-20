@@ -4,7 +4,7 @@ export default {
         Title: "Sign in",
         TabPassword: "With password",
         TabQr: "With QR code",
-        FieldUsername: "Phone / Email",
+        FieldUsername: "Username",
         FieldUsernamePlaceholder: "Enter phone number or email",
         FieldPassword: "Password",
         FieldPasswordPlaceholder: "Enter password",

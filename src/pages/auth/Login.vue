@@ -1,15 +1,15 @@
 ﻿<template>
     <div class="page-wrapper">
-        <!-- Animated background -->
+        <!-- Nền động -->
         <div class="bg-layer">
             <div class="orb orb-1"></div>
             <div class="orb orb-2"></div>
             <div class="orb orb-3"></div>
         </div>
 
-        <!-- Login Card -->
+        <!-- Thẻ đăng nhập -->
         <div class="card">
-            <!-- Brand -->
+            <!-- Thương hiệu -->
             <div class="brand">
                 <div class="brand-icon">
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -29,205 +29,54 @@
 
             <h1 class="title">{{ $t("i18nAuth.Login.Title") }}</h1>
 
-            <!-- Tabs -->
-            <div class="tab-group">
-                <button :class="['tab-btn', activeTab === 'password' ? 'active' : '']" @click="activeTab = 'password'">
-                    {{ $t("i18nAuth.Login.TabPassword") }}
-                </button>
-                <button :class="['tab-btn', activeTab === 'qr' ? 'active' : '']" @click="activeTab = 'qr'">
-                    {{ $t("i18nAuth.Login.TabQr") }}
-                </button>
-            </div>
-
-            <!-- Tab: Máº­t kháº©u -->
-            <div v-if="activeTab === 'password'" class="form-content">
-                <!-- Username -->
-                <div class="field" :class="{ 'field-error': errors.username, 'field-filled': form.username }">
-                    <label class="label">{{ $t("i18nAuth.Login.FieldUsername") }}</label>
-                    <div class="input-wrap">
-                        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8" />
-                            <path
-                                d="M4 21c0-4 3.6-7 8-7s8 3 8 7"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-                        <input
-                            v-model="form.username"
-                            type="text"
-                            :placeholder="$t('i18nAuth.Login.FieldUsernamePlaceholder')"
-                            @blur="validateField('username')"
-                            @input="clearError('username')"
-                        />
-                    </div>
+            <!-- Form: Mật khẩu -->
+            <div class="form-content">
+                <!-- Tên đăng nhập -->
+                <div class="field" :class="{ 'field-error': errors.username }">
+                    <BaseInput
+                        v-model="form.username"
+                        size="lg"
+                        :label="$t('i18nAuth.Login.FieldUsername')"
+                        :placeholder="$t('i18nAuth.Login.FieldUsernamePlaceholder')"
+                        @blur="validateField('username')"
+                        @update:modelValue="clearError('username')"
+                    />
                     <span class="error-msg" v-if="errors.username">{{ errors.username }}</span>
                 </div>
 
-                <!-- Password -->
-                <div class="field" :class="{ 'field-error': errors.password, 'field-filled': form.password }">
-                    <label class="label">{{ $t("i18nAuth.Login.FieldPassword") }}</label>
-                    <div class="input-wrap">
-                        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.8" />
-                            <path
-                                d="M7 11V7a5 5 0 0 1 10 0v4"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-                        <input
-                            v-model="form.password"
-                            :type="showPassword ? 'text' : 'password'"
-                            :placeholder="$t('i18nAuth.Login.FieldPasswordPlaceholder')"
-                            @blur="validateField('password')"
-                            @input="clearError('password')"
-                        />
-                        <button class="toggle-password" type="button" @click="showPassword = !showPassword">
-                            <svg v-if="!showPassword" width="17" height="17" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                />
-                                <path
-                                    d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                />
-                                <line
-                                    x1="1"
-                                    y1="1"
-                                    x2="23"
-                                    y2="23"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-                            <svg v-else width="17" height="17" viewBox="0 0 24 24" fill="none">
-                                <path
-                                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                />
-                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" />
-                            </svg>
-                        </button>
-                    </div>
+                <!-- Mật khẩu -->
+                <div class="field" :class="{ 'field-error': errors.password }">
+                    <BaseInput
+                        v-model="form.password"
+                        size="lg"
+                        type="password"
+                        :label="$t('i18nAuth.Login.FieldPassword')"
+                        :placeholder="$t('i18nAuth.Login.FieldPasswordPlaceholder')"
+                        @blur="validateField('password')"
+                        @update:modelValue="clearError('password')"
+                    />
                     <span class="error-msg" v-if="errors.password">{{ errors.password }}</span>
                 </div>
 
-                <!-- Forgot password -->
+                <!-- Quên mật khẩu -->
                 <div class="forgot-row">
                     <button type="button" class="link">{{ $t("i18nAuth.Login.ForgotPassword") }}</button>
                 </div>
 
                 <span class="error-msg form-error" v-if="errors.form">{{ errors.form }}</span>
 
-                <!-- Submit -->
-                <button
-                    type="button"
-                    class="submit-btn"
-                    :class="{ 'btn-loading': loading, 'btn-success': submitted }"
-                    :disabled="loading || submitted"
-                    @click="handleLogin"
-                >
-                    <span class="btn-content" v-if="!loading && !submitted">
-                        {{ $t("i18nAuth.Login.Submit") }}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M5 12h14M13 6l6 6-6 6"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                    </span>
-                    <span class="btn-content" v-else-if="loading">
-                        <span class="spinner"></span>
-                        {{ $t("i18nCommon.Processing") }}
-                    </span>
-                    <span class="btn-content" v-else>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M5 13l4 4L19 7"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                        {{ $t("i18nCommon.Success") }}
-                    </span>
-                </button>
+                <!-- Nút đăng nhập -->
+                <BaseButton size="lg" variant="primary" :disabled="loading || submitted" @click="handleLogin">
+                    {{ $t("i18nAuth.Login.Submit") }}
+                </BaseButton>
 
-                <!-- Register link -->
+                <!-- Liên kết đăng ký -->
                 <p class="register-hint">
                     {{ $t("i18nAuth.Login.NoAccount") }}
                     <button type="button" class="link" @click="handleGoToRegister">
                         {{ $t("i18nAuth.Login.RegisterLink") }}
                     </button>
                 </p>
-            </div>
-
-            <!-- Tab: QR -->
-            <div v-if="activeTab === 'qr'" class="qr-content">
-                <div class="qr-box">
-                    <svg width="140" height="140" viewBox="0 0 140 140" fill="none">
-                        <!-- QR decorative pattern -->
-                        <rect
-                            x="10"
-                            y="10"
-                            width="50"
-                            height="50"
-                            rx="6"
-                            fill="none"
-                            stroke="#0089c7"
-                            stroke-width="3"
-                        />
-                        <rect x="20" y="20" width="30" height="30" rx="3" fill="#0089c7" />
-                        <rect
-                            x="80"
-                            y="10"
-                            width="50"
-                            height="50"
-                            rx="6"
-                            fill="none"
-                            stroke="#0089c7"
-                            stroke-width="3"
-                        />
-                        <rect x="90" y="20" width="30" height="30" rx="3" fill="#0089c7" />
-                        <rect
-                            x="10"
-                            y="80"
-                            width="50"
-                            height="50"
-                            rx="6"
-                            fill="none"
-                            stroke="#0089c7"
-                            stroke-width="3"
-                        />
-                        <rect x="20" y="90" width="30" height="30" rx="3" fill="#0089c7" />
-                        <!-- dots -->
-                        <rect x="80" y="80" width="10" height="10" rx="2" fill="#0089c7" />
-                        <rect x="96" y="80" width="10" height="10" rx="2" fill="#0089c7" />
-                        <rect x="112" y="80" width="18" height="10" rx="2" fill="#0089c7" />
-                        <rect x="80" y="96" width="18" height="10" rx="2" fill="#0089c7" />
-                        <rect x="104" y="96" width="10" height="10" rx="2" fill="#0089c7" />
-                        <rect x="80" y="112" width="10" height="18" rx="2" fill="#0089c7" />
-                        <rect x="96" y="112" width="18" height="10" rx="2" fill="#0089c7" />
-                        <rect x="120" y="108" width="10" height="22" rx="2" fill="#0089c7" />
-                    </svg>
-                    <p class="qr-text">{{ $t("i18nAuth.Login.QrHint") }} <strong>Easy Mart</strong></p>
-                    <p class="qr-sub">{{ $t("i18nAuth.Login.QrSteps") }}</p>
-                </div>
             </div>
         </div>
     </div>
@@ -238,8 +87,9 @@ import { ref, reactive, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth/authStore";
 import type { LoginRequest } from "@/models/auth/auth";
+import BaseButton from "@/components/base/BaseButton.vue";
+import BaseInput from "@/components/base/BaseInput.vue";
 
-type TabType = "password" | "qr";
 type LoginField = "username" | "password";
 type LoginErrorField = LoginField | "form";
 type LoginErrors = Partial<Record<LoginErrorField, string>>;
@@ -250,8 +100,6 @@ interface LoginApiError {
 
 const { proxy } = getCurrentInstance()!;
 
-const activeTab = ref<TabType>("password");
-const showPassword = ref<boolean>(false);
 const loading = ref(false);
 const submitted = ref(false);
 
@@ -261,18 +109,18 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 /**
- * Dá»‹ch key i18n sang chuá»—i hiá»ƒn thá»‹.
- * @param key KhÃ³a i18n cáº§n dá»‹ch.
- * @returns Chuá»—i sau khi dá»‹ch.
+ * Dịch key i18n sang chuỗi hiển thị.
+ * @param key Khóa i18n cần dịch.
+ * @returns Chuỗi sau khi dịch.
  */
 function t(key: string): string {
     return String(proxy!.$t(key));
 }
 
 /**
- * Kiá»ƒm tra há»£p lá»‡ cho má»™t trÆ°á»ng Ä‘Äƒng nháº­p.
- * @param field TÃªn trÆ°á»ng cáº§n kiá»ƒm tra.
- * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ * Kiểm tra hợp lệ cho một trường đăng nhập.
+ * @param field Tên trường cần kiểm tra.
+ * @returns Không trả dữ liệu.
  */
 function validateField(field: LoginField): void {
     if (!form[field]) {
@@ -286,25 +134,25 @@ function validateField(field: LoginField): void {
 }
 
 /**
- * XÃ³a lá»—i cá»§a má»™t trÆ°á»ng Ä‘Äƒng nháº­p.
- * @param field TÃªn trÆ°á»ng lá»—i cáº§n xÃ³a.
- * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ * Xóa lỗi của một trường đăng nhập.
+ * @param field Tên trường lỗi cần xóa.
+ * @returns Không trả dữ liệu.
  */
 function clearError(field: LoginField): void {
     delete errors[field];
 }
 
 /**
- * XÃ³a lá»—i tá»•ng quÃ¡t cá»§a form.
- * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ * Xóa lỗi tổng quát của form.
+ * @returns Không trả dữ liệu.
  */
 function clearFormError(): void {
     delete errors.form;
 }
 
 /**
- * Kiá»ƒm tra toÃ n bá»™ form Ä‘Äƒng nháº­p.
- * @returns `true` náº¿u há»£p lá»‡, ngÆ°á»£c láº¡i `false`.
+ * Kiểm tra toàn bộ form đăng nhập.
+ * @returns `true` nếu hợp lệ, ngược lại `false`.
  */
 function validateAll(): boolean {
     validateField("username");
@@ -313,8 +161,8 @@ function validateAll(): boolean {
 }
 
 /**
- * Táº¡o payload Ä‘Äƒng nháº­p theo contract API.
- * @returns Dá»¯ liá»‡u Ä‘Ãºng kiá»ƒu `LoginRequest`.
+ * Tạo payload đăng nhập theo contract API.
+ * @returns Dữ liệu đúng kiểu `LoginRequest`.
  */
 function buildLoginPayload(): LoginRequest {
     return {
@@ -324,8 +172,8 @@ function buildLoginPayload(): LoginRequest {
 }
 
 /**
- * Gá»­i form Ä‘Äƒng nháº­p vÃ  xá»­ lÃ½ tráº¡ng thÃ¡i UI.
- * @returns Promise hoÃ n táº¥t Ä‘Äƒng nháº­p.
+ * Gửi form đăng nhập và xử lý trạng thái UI.
+ * @returns Promise hoàn tất đăng nhập.
  */
 async function handleLogin(): Promise<void> {
     clearFormError();
@@ -349,16 +197,16 @@ async function handleLogin(): Promise<void> {
 }
 
 /**
- * Äiá»u hÆ°á»›ng ngÆ°á»i dÃ¹ng sang trang Ä‘Äƒng kÃ½.
- * @returns KhÃ´ng tráº£ dá»¯ liá»‡u.
+ * Điều hướng người dùng sang trang đăng ký.
+ * @returns Không trả dữ liệu.
  */
 function handleGoToRegister(): void {
     router.push({ name: "Register" });
 }
 </script>
 
-<style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap");
+<style scoped lang="scss">
+@use "@/assets/styles/base" as *;
 
 *,
 *::before,
@@ -374,13 +222,14 @@ function handleGoToRegister(): void {
     align-items: center;
     justify-content: center;
     background: #ffffff;
-    font-family: "DM Sans", sans-serif;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
     padding: 24px;
     position: relative;
     overflow: hidden;
 }
 
-/* Animated background */
+/* Nền động */
 .bg-layer {
     display: none;
     position: fixed;
@@ -418,15 +267,6 @@ function handleGoToRegister(): void {
     transform: translate(-50%, -50%);
     animation-delay: -8s;
 }
-.grid-lines {
-    display: none;
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(0, 137, 199, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 137, 199, 0.05) 1px, transparent 1px);
-    background-size: 40px 40px;
-}
 @keyframes drift {
     0%,
     100% {
@@ -440,7 +280,7 @@ function handleGoToRegister(): void {
     }
 }
 
-/* Card */
+/* Thẻ đăng nhập */
 .card {
     background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(24px);
@@ -468,7 +308,7 @@ function handleGoToRegister(): void {
     }
 }
 
-/* Brand */
+/* Thương hiệu */
 .brand {
     display: flex;
     align-items: center;
@@ -488,8 +328,8 @@ function handleGoToRegister(): void {
     box-shadow: 0 4px 16px rgba(0, 137, 199, 0.35);
 }
 .brand-name {
-    font-family: "Sora", sans-serif;
-    font-size: 22px;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
     font-weight: 700;
     color: #003d5c;
     letter-spacing: -0.5px;
@@ -499,7 +339,7 @@ function handleGoToRegister(): void {
 }
 
 .title {
-    font-family: "Sora", sans-serif;
+    font-family: $font-family-base;
     font-size: 24px;
     font-weight: 700;
     color: #003d5c;
@@ -508,125 +348,28 @@ function handleGoToRegister(): void {
     margin-bottom: 20px;
 }
 
-/* Tabs */
-.tab-group {
-    display: flex;
-    border-bottom: 2px solid #e5e7eb;
-    margin-bottom: 28px;
-}
-.tab-btn {
-    flex: 1;
-    background: none;
-    border: none;
-    padding: 10px 0;
-    font-family: "DM Sans", sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    color: #9ca3af;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.2s;
-}
-.tab-btn.active {
-    color: #0089c7;
-    font-weight: 600;
-}
-.tab-btn.active::after {
-    content: "";
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #0089c7;
-    border-radius: 2px 2px 0 0;
-}
-
-/* Form */
+/* Biểu mẫu */
 .form-content {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-/* Field */
+/* Trường nhập */
 .field {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
-.label {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-}
-.input-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-.input-icon {
-    position: absolute;
-    left: 14px;
-    color: #9ca3af;
-    pointer-events: none;
-    transition: color 0.2s;
-}
-.input-wrap input {
-    width: 100%;
-    padding: 12px 14px 12px 40px;
-    background: #f9fafb;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 12px;
-    color: #111827;
-    font-family: "DM Sans", sans-serif;
-    font-size: 14.5px;
-    outline: none;
-    transition: all 0.25s ease;
-}
-.input-wrap input::placeholder {
-    color: #d1d5db;
-}
-.input-wrap input:focus {
-    border-color: #0089c7;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(0, 137, 199, 0.12);
-}
-.input-wrap:focus-within .input-icon {
-    color: #0089c7;
-}
-.field-filled .input-wrap input {
-    border-color: #d1d5db;
-    background: #fff;
-}
-.field-error .input-wrap input {
+.field-error :deep(.base-input) {
     border-color: #f43f5e;
-    background: #fff5f7;
 }
-.field-error .input-wrap input:focus {
-    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12);
-}
-
-.toggle-password {
-    position: absolute;
-    right: 14px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    color: #9ca3af;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s;
-}
-.toggle-password:hover {
-    color: #0089c7;
+.field-error :deep(.base-input:focus-visible) {
+    border-color: #f43f5e;
 }
 
 .error-msg {
-    font-size: 12px;
+    font-size: $font-size-base;
     color: #f43f5e;
     animation: fadeIn 0.2s ease;
 }
@@ -647,7 +390,7 @@ function handleGoToRegister(): void {
     }
 }
 
-/* Forgot */
+/* Quên mật khẩu */
 .forgot-row {
     display: flex;
     justify-content: flex-end;
@@ -657,120 +400,30 @@ function handleGoToRegister(): void {
     background: none;
     border: none;
     padding: 0;
-    font-family: "DM Sans", sans-serif;
-    font-size: 13.5px;
-    color: #0089c7;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    color: rgba($color-primary, 0.82);
     font-weight: 500;
     cursor: pointer;
     text-decoration: none;
     transition: color 0.2s;
 }
 .link:hover {
-    color: #007ab3;
+    color: $color-primary;
     text-decoration: underline;
 }
 
-/* Submit */
+/* Nút gửi */
 .submit-btn {
     width: 100%;
-    padding: 14px 24px;
-    background: linear-gradient(135deg, #0089c7 0%, #007ab3 100%);
-    border: none;
-    border-radius: 14px;
-    color: white;
-    font-family: "Sora", sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0, 137, 199, 0.35);
-    letter-spacing: -0.2px;
-}
-.submit-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(0, 137, 199, 0.5);
-    background: linear-gradient(135deg, #33a3d4 0%, #0089c7 100%);
-}
-.submit-btn:active:not(:disabled) {
-    transform: translateY(0);
-}
-.submit-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
-}
-.btn-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4) !important;
-}
-.btn-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-.spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
-/* Register hint */
+/* Gợi ý đăng ký */
 .register-hint {
     text-align: center;
-    font-size: 13.5px;
+    font-size: $font-size-base;
     color: #6b7280;
     margin-top: -4px;
-}
-
-/* Divider */
-.divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #9ca3af;
-    font-size: 13px;
-}
-.divider::before,
-.divider::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: #e5e7eb;
-}
-
-/* QR */
-.qr-content {
-    display: flex;
-    justify-content: center;
-    padding: 12px 0 4px;
-}
-.qr-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    padding: 28px 32px;
-    border: 1.5px dashed rgba(0, 137, 199, 0.3);
-    border-radius: 20px;
-    background: rgba(0, 137, 199, 0.03);
-}
-.qr-text {
-    font-size: 14px;
-    color: #374151;
-    text-align: center;
-}
-.qr-sub {
-    font-size: 12.5px;
-    color: #9ca3af;
-    text-align: center;
 }
 
 @media (max-width: 480px) {
@@ -779,4 +432,3 @@ function handleGoToRegister(): void {
     }
 }
 </style>
-

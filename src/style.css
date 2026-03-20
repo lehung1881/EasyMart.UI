@@ -13,7 +13,7 @@
 
 /* 2. Root & Body */
 html {
-  font-size: 16px;
+  font-size: 95.238%;
   line-height: 1.5;
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
@@ -33,7 +33,7 @@ body {
     Oxygen,
     Ubuntu,
     sans-serif;
-  font-size: 13px;
+  font-size: var(--font-size-base);
   line-height: 1.5;
   color: #1a1a1a;
   background-color: #ffffff;
