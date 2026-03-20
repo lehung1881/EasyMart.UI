@@ -39,7 +39,7 @@ export default {
         FieldPasswordPlaceholder: "Nhập mật khẩu",
         FieldConfirmPassword: "Nhập lại mật khẩu",
         FieldConfirmPasswordPlaceholder: "Nhập lại mật khẩu",
-        TermsText: "Tôi đồng ý với các điều khoản của",
+        TermsText: "Tôi đồng ý với các điều khoản và chính sách",
         TermsLink: "Chính sách bảo vệ dữ liệu cá nhân",
         Submit: "Đăng ký",
         ValidateTaxCodeRequired: "Vui lòng nhập mã số thuế",

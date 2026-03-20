@@ -134,30 +134,23 @@
                 </div>
 
                 <div class="checkbox-row" :class="{ 'checkbox-error': errors.Terms }">
-                    <label class="checkbox-label">
-                        <input type="checkbox" v-model="form.Terms" @change="clearError('Terms')" />
-                        <span class="checkmark">
-                            <svg v-if="form.Terms" width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                <path
-                                    d="M1 4l3 3 5-6"
-                                    stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
-                        </span>
-                        <span class="checkbox-text">
+                    <BaseCheckbox v-model="form.Terms" @change="clearError('Terms')">
+                        <template #label>
                             {{ $t("i18nAuth.Register.TermsText") }}
-                            <a href="#" class="link">{{ $t("i18nAuth.Register.TermsLink") }}</a>
-                        </span>
-                    </label>
+                        </template>
+                    </BaseCheckbox>
                     <span class="error-msg" v-if="errors.Terms">{{ errors.Terms }}</span>
                 </div>
 
                 <span class="error-msg form-error" v-if="errors.Form">{{ errors.Form }}</span>
 
-                <BaseButton size="lg" variant="primary" class="submit-btn" :disabled="loading || submitted" @click="handleSubmit">
+                <BaseButton
+                    size="lg"
+                    variant="primary"
+                    class="submit-btn"
+                    :disabled="loading || submitted"
+                    @click="handleSubmit"
+                >
                     {{ $t("i18nAuth.Register.Submit") }}
                 </BaseButton>
             </div>
@@ -170,8 +163,6 @@ import { reactive, ref, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth/authStore";
 import type { RegisterRequest } from "@/models/auth/auth";
-import BaseInput from "@/components/base/BaseInput.vue";
-import BaseButton from "@/components/base/BaseButton.vue";
 
 type RegisterField =
     | "TaxCode"
@@ -579,39 +570,10 @@ function goToLogin(): void {
     margin-top: 8px;
     margin-bottom: 8px;
 }
-.checkbox-label {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    cursor: pointer;
+.terms-link {
+    margin-left: 4px;
 }
-.checkbox-label input[type="checkbox"] {
-    display: none;
-}
-.checkmark {
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-    border: 1.5px solid #d1d5db;
-    border-radius: 6px;
-    background: #f9fafb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    margin-top: 1px;
-}
-.checkbox-label:has(input:checked) .checkmark {
-    background: $color-primary;
-    border-color: $color-primary;
-    box-shadow: 0 2px 8px rgba($color-primary, 0.35);
-}
-.checkbox-text {
-    font-size: $font-size-base;
-    color: #6b7280;
-    line-height: 1.5;
-}
-.checkbox-error .checkmark {
+.checkbox-error :deep(.base-checkbox__box) {
     border-color: #f43f5e;
 }
 
