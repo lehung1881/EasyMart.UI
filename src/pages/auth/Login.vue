@@ -66,7 +66,7 @@
                 <span class="error-msg form-error" v-if="errors.form">{{ errors.form }}</span>
 
                 <!-- Nút đăng nhập -->
-                <BaseButton size="lg" variant="primary" :disabled="loading || submitted" @click="handleLogin">
+                <BaseButton size="xxl" variant="primary" :disabled="loading || submitted" @click="handleLogin">
                     {{ $t("i18nAuth.Login.Submit") }}
                 </BaseButton>
 
@@ -78,7 +78,10 @@
                     </button>
                 </p>
             </div>
+            <div class="icon-home"></div>
+            <div class="icon-delete"></div>
         </div>
+        <!-- Trong HTML -->
     </div>
 </template>
 

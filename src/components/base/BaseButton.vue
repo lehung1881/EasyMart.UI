@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonSize = "sm" | "md" | "lg" | "xl" | "xxl";
 type ButtonVariant = "normal" | "primary" | "outline-primary";
 
 interface Props {
@@ -99,6 +99,14 @@ function onClick(event: MouseEvent): void {
     height: $button-height-lg;
 }
 
+.size-xl {
+    height: $button-height-xl;
+}
+
+.size-xxl {
+    height: $button-height-xxl;
+}
+
 .variant-normal {
     background-color: #ffffff;
     border-color: #e0e0e0;
@@ -130,6 +138,3 @@ function onClick(event: MouseEvent): void {
     }
 }
 </style>
-
-
-

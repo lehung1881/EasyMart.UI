@@ -38,9 +38,9 @@
 #### Structure
 
 - Tách rõ 3 phần:
-  - UI (`template`)
-  - Logic (`script`)
-  - Style (`style scoped`)
+    - UI (`template`)
+    - Logic (`script`)
+    - Style (`style scoped`)
 - Không viết logic phức tạp trực tiếp trong template.
 - Ưu tiên component có thể tái sử dụng.
 - Một component chỉ nên có một trách nhiệm chính.
@@ -81,7 +81,7 @@ MỌI function đều phải có comment ngay phía trên:
 
 - Luôn đưa ra tối thiểu 2 phương án.
 - Với mỗi phương án cần nêu:
-  - Ưu điểm
-  - Nhược điểm
-  - Khi nào nên dùng
+    - Ưu điểm
+    - Nhược điểm
+    - Khi nào nên dùng
 - Nếu có thể, chốt phương án khuyến nghị và lý do chọn.

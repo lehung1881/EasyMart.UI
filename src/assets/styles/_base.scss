@@ -1,4 +1,5 @@
 @use "sass:map";
+@use "./_icons.scss" as *;
 
 // Typography tokens
 $font-family-base: Roboto, Helvetica, Arial, sans-serif;
@@ -21,6 +22,8 @@ $control-height-lg: 32px;
 $button-height-sm: $control-height-sm;
 $button-height-md: $control-height-md;
 $button-height-lg: $control-height-lg;
+$button-height-xl: 36px;
+$button-height-xxl: 40px;
 
 // Input aliases
 $input-height-sm: $control-height-sm;

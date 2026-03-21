@@ -145,7 +145,7 @@
                 <span class="error-msg form-error" v-if="errors.Form">{{ errors.Form }}</span>
 
                 <BaseButton
-                    size="lg"
+                    size="xxl"
                     variant="primary"
                     class="submit-btn"
                     :disabled="loading || submitted"

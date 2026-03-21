@@ -32,13 +32,12 @@ src/
 │   ├── format.ts
 │   └── validation.ts
 ├── components/
-│   ├── base/
-│   │   ├── BaseButton.vue
-│   │   ├── BaseInput.vue
-│   │   ├── BaseTable.vue
-│   │   └── BaseForm.vue
-│   └── shared/
-│       └── ConfirmDialog.vue
+│   └── base/
+│       ├── BaseButton.vue
+│       ├── BaseCheckbox.vue
+│       ├── BaseInput.vue
+│       ├── BaseTable.vue
+│       └── BaseForm.vue
 ├── constants/
 │   └── enums/
 │       ├── userRoleEnum.ts
@@ -168,3 +167,32 @@ src/
 5. Tạo router module `*Router.ts` trong `src/routers/modules/` và nối vào `routers/index.ts`.
 6. Thêm i18n cho cả `en` và `vi`.
 7. Bám đúng convention camelCase/PascalCase nêu trên.
+
+## 5. Mô tả control dùng chung trong `src/components`
+
+Mục tiêu của `src/components/base` là chuẩn hóa control UI dùng chung để tất cả màn hình có cùng trải nghiệm và giảm trùng lặp code.
+
+### 5.1 Danh sách control hiện có
+
+- `BaseButton.vue`
+  - Dùng cho các action chuẩn: thêm mới, lưu, cập nhật, xóa, hủy.
+  - Ưu tiên dùng component này thay vì button tự style tại từng page.
+- `BaseInput.vue`
+  - Dùng cho nhập liệu text/number cơ bản.
+  - Chuẩn hóa style input, trạng thái disabled/readonly và hiển thị lỗi validate.
+- `BaseCheckbox.vue`
+  - Dùng cho các trường bật/tắt hoặc lựa chọn nhị phân.
+  - Tránh tự dựng checkbox riêng rải rác theo từng module.
+- `BaseForm.vue`
+  - Dùng làm khung form chuẩn cho màn hình nhập liệu.
+  - Chuẩn hóa layout form và hành vi submit/reset.
+- `BaseTable.vue`
+  - Dùng hiển thị dữ liệu dạng danh sách/bảng.
+  - Chuẩn hóa header, hiển thị empty state và thao tác theo dòng.
+
+### 5.2 Quy ước sử dụng control dùng chung
+
+- Luôn kiểm tra và tái sử dụng control trong `components/base` trước khi tạo component mới.
+- Chỉ tạo mới base control khi nhu cầu tái sử dụng từ 2 màn hình trở lên.
+- Nếu custom theo nghiệp vụ riêng của một module, tạo wrapper tại module đó thay vì chỉnh base control theo hướng phá vỡ tính dùng chung.
+- Khi mở rộng props/events của base control, phải đảm bảo tương thích ngược với các màn hình đang sử dụng.

@@ -1,0 +1,49 @@
+/* _icons.scss */
+@use "./_variable.scss" as *;
+$link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
+
+@mixin setIcon($icon-name, $icon-x, $icon-y, $icon-size, $color: "", $icon-link: "") {
+    @if $icon-link == "" {
+        $icon-link: $link-default-icon;
+    }
+    @if $color == "" {
+        .#{$icon-name} {
+            min-width: $icon-size;
+            min-height: $icon-size;
+            width: $icon-size;
+            height: $icon-size;
+            background: $icon-link $icon-x $icon-y no-repeat;
+            cursor: pointer;
+        }
+    } @else {
+        .#{$icon-name} {
+            min-width: $icon-size;
+            min-height: $icon-size;
+            width: $icon-size;
+            height: $icon-size;
+            -webkit-mask: $icon-link no-repeat $icon-x $icon-y;
+            mask: $icon-link no-repeat $icon-x $icon-y;
+            background-color: $color;
+            cursor: pointer;
+        }
+    }
+}
+
+@mixin setIconCustomSize($icon-name, $icon-x, $icon-y, $icon-width, $icon-height, $icon-link: "") {
+    @if $icon-link == "" {
+        $icon-link: $link-default-icon;
+    }
+    .#{$icon-name} {
+        min-width: $icon-width;
+        min-height: $icon-height;
+        width: $icon-width;
+        height: $icon-height;
+        background: $icon-link $icon-x $icon-y no-repeat;
+        cursor: pointer;
+    }
+}
+
+
+/* Trong một file SCSS nào đó */
+@include setIcon(icon-home, 0px, 0px, 20px);
+@include setIcon(icon-delete, 0px, 0px, 20px, green);
