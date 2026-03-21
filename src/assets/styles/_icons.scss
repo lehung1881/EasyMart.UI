@@ -47,3 +47,7 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 /* Trong một file SCSS nào đó */
 @include setIcon(icon-home, 0px, 0px, 20px);
 @include setIcon(icon-delete, 0px, 0px, 20px, green);
+
+/* Eye Icons for Password Visibility Toggle - colored directly in SVG */
+@include setIcon(icon-eye-closed, -374px, 0px, 20px);
+@include setIcon(icon-eye-open, -348px, 0px, 20px);

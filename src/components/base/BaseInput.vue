@@ -1,20 +1,35 @@
 <template>
     <div class="base-input-wrapper">
         <label v-if="label" class="base-input-label">{{ label }}</label>
-        <input
-            :type="type"
-            class="base-input"
-            :class="[sizeClass, { 'is-readonly': readonly }]"
-            :value="normalizedValue"
-            :placeholder="placeholder"
-            :disabled="disabled"
-            :readonly="readonly"
-            v-bind="$attrs"
-            @input="onInput"
-            @focus="onFocus"
-            @blur="onBlur"
-            @change="onChange"
-        />
+        <div class="base-input-container">
+            <input
+                :type="type"
+                class="base-input"
+                :class="[
+                    sizeClass,
+                    {
+                        'is-readonly': readonly,
+                        'has-left-icon': $slots['left-icon'],
+                        'has-right-icon': $slots['right-icon'],
+                    },
+                ]"
+                :value="normalizedValue"
+                :placeholder="placeholder"
+                :disabled="disabled"
+                :readonly="readonly"
+                v-bind="$attrs"
+                @input="onInput"
+                @focus="onFocus"
+                @blur="onBlur"
+                @change="onChange"
+            />
+            <div v-if="$slots['left-icon']" class="left-icon">
+                <slot name="left-icon"></slot>
+            </div>
+            <div v-if="$slots['right-icon']" class="right-icon">
+                <slot name="right-icon"></slot>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -88,7 +103,15 @@ function onChange(event: Event): void {
     line-height: 1;
 }
 
+.base-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
 .base-input {
+    flex: 1;
     width: 100%;
     padding: 0 12px;
     border: 1px solid #e7e8e9;
@@ -104,6 +127,14 @@ function onChange(event: Event): void {
         box-shadow 0.2s ease,
         background-color 0.2s ease,
         color 0.2s ease;
+
+    &.has-right-icon {
+        padding-right: 30px;
+    }
+
+    &.has-left-icon {
+        padding-left: 30px;
+    }
 
     &::placeholder {
         color: #9ca3af;
@@ -141,5 +172,24 @@ function onChange(event: Event): void {
 
 .size-lg {
     height: $input-height-lg;
+}
+.right-icon {
+    position: absolute;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 32px;
+}
+
+.left-icon {
+    position: absolute;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 32px;
 }
 </style>

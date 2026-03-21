@@ -80,23 +80,9 @@
                         <span class="error-msg" v-if="errors.FirstName">{{ errors.FirstName }}</span>
                     </div>
 
-                    <div class="field" :class="{ 'field-error': errors.Email }">
-                        <BaseInput
-                            v-model="form.Email"
-                            type="email"
-                            size="lg"
-                            :label="$t('i18nAuth.Register.FieldEmail')"
-                            :placeholder="$t('i18nAuth.Register.FieldEmailPlaceholder')"
-                            @blur="validateField('Email')"
-                            @update:modelValue="clearError('Email')"
-                        />
-                        <span class="error-msg" v-if="errors.Email">{{ errors.Email }}</span>
-                    </div>
-
                     <div class="field" :class="{ 'field-error': errors.PhoneNumber }">
                         <BaseInput
                             v-model="form.PhoneNumber"
-                            type="tel"
                             size="lg"
                             :label="$t('i18nAuth.Register.FieldPhone')"
                             :placeholder="$t('i18nAuth.Register.FieldPhonePlaceholder')"
@@ -106,29 +92,55 @@
                         <span class="error-msg" v-if="errors.PhoneNumber">{{ errors.PhoneNumber }}</span>
                     </div>
 
+                    <div class="field" :class="{ 'field-error': errors.Email }">
+                        <BaseInput
+                            v-model="form.Email"
+                            size="lg"
+                            :label="$t('i18nAuth.Register.FieldEmail')"
+                            :placeholder="$t('i18nAuth.Register.FieldEmailPlaceholder')"
+                            @blur="validateField('Email')"
+                            @update:modelValue="clearError('Email')"
+                        />
+                        <span class="error-msg" v-if="errors.Email">{{ errors.Email }}</span>
+                    </div>
+
                     <div class="field" :class="{ 'field-error': errors.Password }">
                         <BaseInput
                             v-model="form.Password"
-                            type="password"
+                            :type="showPassword ? 'text' : 'password'"
                             size="lg"
                             :label="$t('i18nAuth.Register.FieldPassword')"
                             :placeholder="$t('i18nAuth.Register.FieldPasswordPlaceholder')"
                             @blur="validateField('Password')"
                             @update:modelValue="clearError('Password')"
-                        />
+                        >
+                            <template #right-icon>
+                                <div
+                                    @click="showPassword = !showPassword"
+                                    :class="showPassword ? 'icon-eye-open' : 'icon-eye-closed'"
+                                ></div>
+                            </template>
+                        </BaseInput>
                         <span class="error-msg" v-if="errors.Password">{{ errors.Password }}</span>
                     </div>
 
                     <div class="field" :class="{ 'field-error': errors.ConfirmPassword }">
                         <BaseInput
                             v-model="form.ConfirmPassword"
-                            type="password"
+                            :type="showConfirmPassword ? 'text' : 'password'"
                             size="lg"
                             :label="$t('i18nAuth.Register.FieldConfirmPassword')"
                             :placeholder="$t('i18nAuth.Register.FieldConfirmPasswordPlaceholder')"
                             @blur="validateField('ConfirmPassword')"
                             @update:modelValue="clearError('ConfirmPassword')"
-                        />
+                        >
+                            <template #right-icon>
+                                <div
+                                    @click="showConfirmPassword = !showConfirmPassword"
+                                    :class="showConfirmPassword ? 'icon-eye-open' : 'icon-eye-closed'"
+                                ></div>
+                            </template>
+                        </BaseInput>
                         <span class="error-msg" v-if="errors.ConfirmPassword">{{ errors.ConfirmPassword }}</span>
                     </div>
                 </div>
@@ -216,6 +228,8 @@ const { proxy } = getCurrentInstance()!;
 const authStore = useAuthStore();
 const loading = ref(false);
 const submitted = ref(false);
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 
 const form = reactive<RegisterForm>({
     TaxCode: "",
@@ -541,6 +555,35 @@ function goToLogin(): void {
 }
 .field-error :deep(.base-input:focus-visible) {
     border-color: #f43f5e;
+}
+
+.eye-icon-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: opacity 0.2s ease;
+    opacity: 0.7;
+}
+
+.eye-icon-btn:hover {
+    opacity: 1;
+}
+
+.eye-icon-btn span {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .error-msg {

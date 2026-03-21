@@ -1501,5 +1501,74 @@
         </g>
       </g>
     </g>
+    <g id="Group_eye" data-name="Eye" transform="translate(350.5 4.5)">
+      <rect width="16" height="12" fill="none"/>
+
+      <!-- Eye outline -->
+      <path 
+        d="M.5,8S3.5,2.5,8,2.5,15.5,8,15.5,8s-3,5.5-7.5,5.5S.5,8,.5,8Z"
+        transform="translate(0 -2)"
+        fill="none"
+        stroke="#444"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+
+      <!-- Pupil -->
+      <circle 
+        cx="8" 
+        cy="6" 
+        r="2.83"
+        fill="none"
+        stroke="#444"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </g>
+    <g id="Group_eye_off" data-name="Eye Off" transform="translate(376.5 2.5)">
+      <rect width="16" height="16" fill="none"/>
+
+      <!-- Eye outline -->
+      <path
+        d="M0.5,8 c0,0,3-5.5,7.5-5.5S15.5,8,15.5,8s-3,5.5-7.5,5.5S0.5,8,0.5,8z"
+        fill="none"
+        stroke="#444"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-miterlimit="10"
+      />
+
+      <!-- Upper inner arc -->
+      <path
+        d="M5,8 c0-1.657,1.343-3,3-3"
+        fill="none"
+        stroke="#444"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-miterlimit="10"
+      />
+
+      <!-- Lower inner arc -->
+      <path
+        d="M11,8 c0,1.657-1.343,3-3,3"
+        fill="none"
+        stroke="#444"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-miterlimit="10"
+      />
+
+      <!-- Slash -->
+      <line
+        x1="1"
+        y1="15"
+        x2="15"
+        y2="1"
+        stroke="#444"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-miterlimit="10"
+      />
+    </g>
   </g>
 </svg>

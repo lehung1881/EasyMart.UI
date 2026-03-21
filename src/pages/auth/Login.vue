@@ -49,12 +49,19 @@
                     <BaseInput
                         v-model="form.password"
                         size="lg"
-                        type="password"
+                        :type="showPassword ? 'text' : 'password'"
                         :label="$t('i18nAuth.Login.FieldPassword')"
                         :placeholder="$t('i18nAuth.Login.FieldPasswordPlaceholder')"
                         @blur="validateField('password')"
                         @update:modelValue="clearError('password')"
-                    />
+                    >
+                        <template #right-icon>
+                            <div
+                                @click="showPassword = !showPassword"
+                                :class="showPassword ? 'icon-eye-open' : 'icon-eye-closed'"
+                            ></div>
+                        </template>
+                    </BaseInput>
                     <span class="error-msg" v-if="errors.password">{{ errors.password }}</span>
                 </div>
 
@@ -78,8 +85,6 @@
                     </button>
                 </p>
             </div>
-            <div class="icon-home"></div>
-            <div class="icon-delete"></div>
         </div>
         <!-- Trong HTML -->
     </div>
@@ -105,6 +110,7 @@ const { proxy } = getCurrentInstance()!;
 
 const loading = ref(false);
 const submitted = ref(false);
+const showPassword = ref(false);
 
 const form = reactive<Record<LoginField, string>>({ username: "", password: "" });
 const errors = reactive<LoginErrors>({});
@@ -355,7 +361,7 @@ function handleGoToRegister(): void {
 .form-content {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
 }
 
 /* Trường nhập */
@@ -369,6 +375,35 @@ function handleGoToRegister(): void {
 }
 .field-error :deep(.base-input:focus-visible) {
     border-color: #f43f5e;
+}
+
+.eye-icon-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: opacity 0.2s ease;
+    opacity: 0.7;
+}
+
+.eye-icon-btn:hover {
+    opacity: 1;
+}
+
+.eye-icon-btn span {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .error-msg {
