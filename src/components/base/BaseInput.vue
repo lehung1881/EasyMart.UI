@@ -154,6 +154,17 @@ function onChange(event: Event): void {
         color: #9ca3af;
         cursor: not-allowed;
     }
+
+    &:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+        -webkit-text-fill-color: $color-text-black !important;
+    }
+
+    &:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+        -webkit-text-fill-color: $color-text-black !important;
+        border-color: $color-primary !important;
+    }
 }
 
 .is-readonly {
