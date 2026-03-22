@@ -14,8 +14,17 @@ export type QueryMode = "local" | "remote";
 export type ComboboxLoadData = (keyword: string) => Promise<Array<any>>;
 
 export interface ComboboxStoreOptions {
-    comboboxLoadData: ComboboxLoadData;
-    queryMode?: QueryMode; // default: 'remote'
+    /**
+     * Dữ liệu tĩnh — dùng cho local mode.
+     * Store sẽ filter trực tiếp trên mảng này, không gọi API.
+     */
+    data?: Array<any>;
+    /**
+     * Hàm gọi API — chỉ dùng cho remote mode.
+     */
+    comboboxLoadData?: ComboboxLoadData;
+    /** default: "local" nếu có data, "remote" nếu có comboboxLoadData */
+    queryMode?: QueryMode;
 }
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
@@ -23,10 +32,6 @@ export interface ComboboxStoreOptions {
 const ComboboxStoreName = "Combobox_{0}_{1}";
 
 export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions) {
-    /**
-     * defineStore với storeId duy nhất — Pinia tự cache instance,
-     * setup function chỉ chạy 1 lần duy nhất.
-     */
     const storeName = ComboboxStoreName.replace("{0}", storeId)
         .replace("{1}", commonFunction.genShortID())
         .toLowerCase();
@@ -41,7 +46,7 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
         // ── Internal state ────────────────────────────────────────────────────
         /**
          * Toàn bộ data gốc — chỉ dùng cho local mode.
-         * Được load 1 lần, các lần sau filter trực tiếp.
+         * Được set 1 lần từ options.data, các lần sau filter trực tiếp.
          */
         const rawData = ref<Array<any>>([]);
 
@@ -57,40 +62,17 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
          */
         const mode = ref<QueryMode>("remote");
 
-        /**
-         * Flag tránh gọi API trùng trong local mode khi đang pending load đầu.
-         * '__local__' = đang fetch; '' = chưa fetch hoặc đã xong.
-         */
-        let pendingKeyword = "";
-
         // ── Actions ───────────────────────────────────────────────────────────
 
         /**
          * loadData — Tải và lọc data theo keyword.
-         * Local mode : load 1 lần → filter trên rawData.
+         *
+         * Local mode : filter trực tiếp trên rawData (đã được seed từ options.data).
          * Remote mode: gọi API mỗi lần, không cache.
          */
         const loadData = async (keyword: string, displayField?: string): Promise<void> => {
-            if (!comboboxLoadData.value) return;
-
-            // LOCAL MODE
+            // LOCAL MODE — filter trên rawData, không gọi API
             if (mode.value === "local") {
-                // Nếu rawData chưa có → cần fetch lần đầu
-                if (rawData.value.length === 0) {
-                    // Tránh gọi API trùng khi đang pending
-                    if (pendingKeyword === "__local__") return;
-                    pendingKeyword = "__local__";
-
-                    loading.value = true;
-                    try {
-                        rawData.value = await comboboxLoadData.value("");
-                    } finally {
-                        loading.value = false;
-                        pendingKeyword = "";
-                    }
-                }
-
-                // Filter trực tiếp trên rawData (không gọi API lại)
                 if (!keyword || !displayField) {
                     data.value = [...rawData.value];
                 } else {
@@ -101,6 +83,8 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
             }
 
             // REMOTE MODE
+            if (!comboboxLoadData.value) return;
+
             loading.value = true;
             try {
                 data.value = await comboboxLoadData.value(keyword);
@@ -110,26 +94,34 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
         };
 
         /**
-         * configure — Thay đổi API function và mode, reset toàn bộ state.
-         * Dùng khi API phụ thuộc vào field khác trên form (vd: department → employee).
+         * configure — Thay đổi config và reset toàn bộ state.
+         * Dùng khi nguồn dữ liệu thay đổi động (vd: department → employee list mới).
          */
-        const configure = (fn: ComboboxLoadData, queryMode: QueryMode = "remote"): void => {
+        const configure = (fn: ComboboxLoadData | null, queryMode: QueryMode, sourceData?: Array<any>): void => {
             comboboxLoadData.value = fn;
             mode.value = queryMode;
-            // Reset toàn bộ để force load lại với config mới
+            rawData.value = sourceData ? [...sourceData] : [];
             data.value = [];
-            rawData.value = [];
-            pendingKeyword = "";
         };
 
         /**
-         * syncConfig — Chỉ cập nhật comboboxLoadData và mode, KHÔNG reset data.
+         * syncConfig — Chỉ cập nhật config, KHÔNG reset data.
          * Dùng nội bộ trong factory sau mỗi lần store() được gọi,
          * đảm bảo config luôn mới nhất dù component re-render.
+         *
+         * Với local mode: nếu sourceData thay đổi reference → seed lại rawData và data.
          */
-        const syncConfig = (fn: ComboboxLoadData, queryMode: QueryMode = "remote"): void => {
+        const syncConfig = (fn: ComboboxLoadData | null, queryMode: QueryMode, sourceData?: Array<any>): void => {
             comboboxLoadData.value = fn;
             mode.value = queryMode;
+
+            if (queryMode === "local" && sourceData) {
+                // Chỉ seed lại nếu mảng thay đổi reference (tránh reset không cần thiết)
+                if (sourceData !== rawData.value) {
+                    rawData.value = [...sourceData];
+                    data.value = [...sourceData];
+                }
+            }
         };
 
         /**
@@ -139,7 +131,6 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
             data.value = [];
             rawData.value = [];
             loading.value = false;
-            pendingKeyword = "";
         };
 
         return { data, loading, loadData, configure, syncConfig, reset };
@@ -149,8 +140,10 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
     const instance = store();
 
     // Luôn sync config sau mỗi lần factory được gọi — tránh mất config khi re-render
-    if (options?.comboboxLoadData) {
-        instance.syncConfig(options.comboboxLoadData, options.queryMode ?? "remote");
+    if (options) {
+        const resolvedMode: QueryMode = options.queryMode ?? (options.data ? "local" : "remote");
+
+        instance.syncConfig(options.comboboxLoadData ?? null, resolvedMode, options.data);
     }
 
     return instance;

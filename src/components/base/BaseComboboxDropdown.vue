@@ -24,7 +24,7 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody class="cb-dropdown__tbody">
+                <tbody class="cb-dropdown__tbody" :style="{ maxHeight: maxTableBodyHeight }">
                     <tr
                         v-for="(item, index) in data"
                         :key="item[valueField]"
@@ -57,7 +57,7 @@
         </template>
 
         <!-- LIST MODE — khi không có columns -->
-        <ul v-else class="cb-dropdown__list" role="listbox">
+        <ul v-else class="cb-dropdown__list" role="listbox" :style="{ maxHeight: maxListHeight }">
             <li
                 v-for="(item, index) in data"
                 :key="item[valueField]"
@@ -91,7 +91,7 @@
  * Chỉ nhận props và render dropdown list hoặc table.
  */
 
-import { ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -119,11 +119,14 @@ const props = withDefaults(
         selectedValue: any;
         /** Đang tải dữ liệu */
         loading: boolean;
+        /** Số item tối đa hiển thị trước khi scroll, default: 6 */
+        maxDisplayItem?: number;
     }>(),
     {
         // Bắt buộc có default để tránh lỗi khi store chưa init xong
         data: () => [],
         columns: undefined,
+        maxDisplayItem: 6,
     },
 );
 
@@ -140,6 +143,19 @@ const emit = defineEmits<{
 
 /** Mảng ref tới từng item element để scroll into view */
 const itemRefs = ref<HTMLElement[]>([]);
+
+// ─── Computed ─────────────────────────────────────────────────────────────────
+
+const ITEM_HEIGHT = 36; // px — khớp với $item-height trong SCSS
+const LIST_PADDING = 8; // 4px top + 4px bottom của ul
+
+/**
+ * maxListHeight — Chiều cao tối đa của scroll container.
+ * List mode : itemHeight * n + padding ul
+ * Table mode: itemHeight * n + thead (~33px)
+ */
+const maxListHeight = computed(() => `${ITEM_HEIGHT * props.maxDisplayItem + LIST_PADDING}px`);
+const maxTableBodyHeight = computed(() => `${ITEM_HEIGHT * props.maxDisplayItem}px`);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -184,14 +200,13 @@ $primary: #f48632;
 $primary-light: rgba(244, 134, 50, 0.08);
 $primary-medium: rgba(244, 134, 50, 0.18);
 $border-color: #d0d0d0;
-$border-radius: 6px;
+$border-radius: 4px;
 $item-height: 36px;
 
 // ─── Container ─────────────────────────────────────────────────────────────────
 
 .cb-dropdown {
     width: 100%;
-    max-height: 280px;
     overflow: hidden; // scroll nội bộ từng mode
     border-radius: $border-radius;
     font-size: 14px;
@@ -242,7 +257,7 @@ $item-height: 36px;
     margin: 0;
     padding: 4px 0;
     overflow-y: auto;
-    max-height: 280px;
+    // max-height được bind động qua :style từ prop maxDisplayItem
 }
 
 .cb-dropdown__item {
@@ -322,8 +337,8 @@ $item-height: 36px;
 
 .cb-dropdown__tbody {
     display: block;
-    max-height: calc(280px - 33px); // trừ thead
     overflow-y: auto;
+    // max-height được bind động qua :style từ prop maxDisplayItem
 }
 
 .cb-dropdown__thead tr,

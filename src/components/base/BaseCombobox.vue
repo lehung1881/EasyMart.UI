@@ -2,95 +2,108 @@
     <div
         ref="rootRef"
         class="cb-root"
-        :class="{
-            'cb-root--focused': isFocused,
-            'cb-root--open': isOpen,
-            'cb-root--disabled': disabled,
-        }"
+        :class="[
+            sizeClass,
+            {
+                'cb-root--focused': isFocused,
+                'cb-root--open': isOpen,
+                'cb-root--disabled': disabled,
+            },
+        ]"
     >
-        <!-- ── Input wrapper ─────────────────────────────────────────────── -->
-        <div class="cb-input-wrap">
-            <input
-                ref="inputRef"
-                v-model="inputText"
-                class="cb-input"
-                type="text"
-                :placeholder="placeholder"
-                :disabled="disabled"
-                autocomplete="off"
-                role="combobox"
-                :aria-expanded="isOpen"
-                aria-haspopup="listbox"
-                :aria-activedescendant="activeIndex >= 0 ? `cb-item-${activeIndex}` : undefined"
-                @input="onInput"
-                @focus="onFocus"
-                @blur="onBlur"
-                @keydown="onKeydown"
-            />
+        <!-- ── Label ─────────────────────────────────────────────────────── -->
+        <label v-if="label" class="cb-label">{{ label }}</label>
 
-            <!-- Nút clear (×) — dùng mousedown.prevent để tránh blur -->
-            <button
-                v-if="hasClearValue"
-                class="cb-btn cb-btn--clear"
-                type="button"
-                aria-label="Xoá giá trị"
-                tabindex="-1"
-                @mousedown.prevent="clearValue"
-            >
-                <span aria-hidden="true">×</span>
-            </button>
+        <!-- ── Control: input + dropdown — position:relative tính từ đây ── -->
+        <div class="cb-control">
+            <!-- ── Input wrapper ─────────────────────────────────────────────── -->
+            <div class="cb-input-wrap">
+                <input
+                    ref="inputRef"
+                    v-model="inputText"
+                    class="cb-input"
+                    type="text"
+                    :placeholder="placeholder"
+                    :disabled="disabled"
+                    :readonly="!searchable"
+                    autocomplete="off"
+                    role="combobox"
+                    :aria-expanded="isOpen"
+                    aria-haspopup="listbox"
+                    :aria-activedescendant="activeIndex >= 0 ? `cb-item-${activeIndex}` : undefined"
+                    @input="onInput"
+                    @focus="onFocus"
+                    @blur="onBlur"
+                    @keydown="onKeydown"
+                />
 
-            <!-- Nút toggle (▼) — chevron xoay khi mở -->
-            <button
-                class="cb-btn cb-btn--toggle"
-                type="button"
-                :aria-label="isOpen ? 'Đóng dropdown' : 'Mở dropdown'"
-                tabindex="-1"
-                :disabled="disabled"
-                @mousedown.prevent="isOpen ? closeDropdown() : openDropdown()"
-            >
-                <svg
-                    class="cb-chevron"
-                    :class="{ 'cb-chevron--open': isOpen }"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    aria-hidden="true"
+                <!-- Nút clear (×) — dùng mousedown.prevent để tránh blur -->
+                <button
+                    v-if="hasClearValue"
+                    class="cb-btn cb-btn--clear"
+                    type="button"
+                    aria-label="Xoá giá trị"
+                    tabindex="-1"
+                    @mousedown.prevent="clearValue"
                 >
-                    <path
-                        d="M2 4L6 8L10 4"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
-                </svg>
-            </button>
-        </div>
+                    <span aria-hidden="true">×</span>
+                </button>
 
-        <!-- ── Dropdown panel ────────────────────────────────────────────── -->
-        <Transition name="cb-dropdown">
-            <div v-if="isOpen" class="cb-panel" role="dialog" aria-label="Danh sách lựa chọn">
-                <!-- Delegate rendering sang BaseComboboxDropdown (global registered) -->
-                <BaseComboboxDropdown
-                    :data="storeData"
-                    :display-field="displayField"
-                    :value-field="valueField"
-                    :columns="columns"
-                    :active-index="activeIndex"
-                    :selected-value="modelValue"
-                    :loading="store.loading"
-                    @select="onSelect"
+                <!-- Nút toggle (▼) — chevron xoay khi mở -->
+                <button
+                    class="cb-btn cb-btn--toggle"
+                    type="button"
+                    :aria-label="isOpen ? 'Đóng dropdown' : 'Mở dropdown'"
+                    tabindex="-1"
+                    :disabled="disabled"
+                    :readonly="!searchable"
+                    @mousedown.prevent="isOpen ? closeDropdown() : openDropdown()"
                 >
-                    <!-- Pass-through slots -->
-                    <template v-for="(_, name) in $slots" #[name]="slotData">
-                        <slot :name="name" v-bind="slotData ?? {}" />
-                    </template>
-                </BaseComboboxDropdown>
+                    <svg
+                        class="cb-chevron"
+                        :class="{ 'cb-chevron--open': isOpen }"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        aria-hidden="true"
+                    >
+                        <path
+                            d="M2 4L6 8L10 4"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
             </div>
-        </Transition>
+
+            <!-- ── Dropdown panel ────────────────────────────────────────────── -->
+            <Transition name="cb-dropdown">
+                <div v-if="isOpen" class="cb-panel" role="dialog" aria-label="Danh sách lựa chọn">
+                    <!-- Delegate rendering sang BaseComboboxDropdown (global registered) -->
+                    <BaseComboboxDropdown
+                        :data="storeData"
+                        :display-field="displayField"
+                        :value-field="valueField"
+                        :columns="columns"
+                        :active-index="activeIndex"
+                        :selected-value="modelValue"
+                        :loading="store.loading"
+                        :max-display-item="maxDisplayItem"
+                        @select="onSelect"
+                    >
+                        <!-- Pass-through slots -->
+                        <template v-for="(_, name) in $slots" #[name]="slotData">
+                            <slot :name="name" v-bind="slotData ?? {}" />
+                        </template>
+                    </BaseComboboxDropdown>
+                </div>
+            </Transition>
+        </div>
+        <!-- /cb-control -->
     </div>
 </template>
 
@@ -126,12 +139,18 @@ interface ComboboxStore {
     $dispose: () => void;
 }
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type ComboboxSize = "sm" | "md" | "lg";
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 const props = withDefaults(
     defineProps<{
         /** v-model value — object hoặc primitive */
         modelValue: string | number | Record<string, any> | null;
+        /** Nhãn hiển thị phía trên input */
+        label?: string;
         /** Instance từ useComboboxStore() */
         store: ComboboxStore;
         /** Field tên hiển thị trong input và dropdown */
@@ -146,21 +165,38 @@ const props = withDefaults(
         disabled?: boolean;
         /** Debounce thời gian gõ (ms) */
         debounceTime?: number;
+        /** Kích thước component — khớp với BaseInput size: 'sm' | 'md' | 'lg' */
+        size?: ComboboxSize;
         /** Số ký tự tối thiểu để trigger search */
         minChars?: number;
+        /** Hiển thị nút × để xoá giá trị đang chọn. default: false */
+        clearIcon?: boolean;
         /**
          * Tự động load data ngay khi component mount.
          * Hữu ích cho local mode hoặc khi muốn pre-fetch trước khi user mở dropdown.
          * default: false
          */
         autoLoad?: boolean;
+        /**
+         * Cho phép gõ để tìm kiếm trong dropdown.
+         * false → input không gõ được, dropdown vẫn mở và chọn bình thường.
+         * default: true
+         */
+        searchable?: boolean;
+        /** Số item tối đa hiển thị trước khi scroll. default: 6 */
+        maxDisplayItem?: number;
     }>(),
     {
         placeholder: "Tìm kiếm...",
+        label: "",
         disabled: false,
+        size: "md",
         debounceTime: 300,
         minChars: 0,
         autoLoad: false,
+        searchable: true,
+        clearIcon: false,
+        maxDisplayItem: 6,
     },
 );
 
@@ -201,7 +237,10 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 const storeData = computed<Array<any>>(() => props.store.data ?? []);
 
 /** Có giá trị để hiển thị nút clear hay không */
-const hasClearValue = computed(() => inputText.value && !props.disabled);
+const hasClearValue = computed(() => props.clearIcon && inputText.value && !props.disabled);
+
+/** Class size — khớp pattern với BaseInput */
+const sizeClass = computed(() => `cb-root--${props.size}`);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -282,6 +321,7 @@ const clearValue = () => {
  * Debounce trước khi gọi store.loadData.
  */
 const onInput = (e: Event) => {
+    if (!props.searchable) return;
     const keyword = (e.target as HTMLInputElement).value;
     activeIndex.value = -1;
 
@@ -425,21 +465,32 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+@use "@/assets/styles/base" as *;
+
 // ─── SCSS Variables ────────────────────────────────────────────────────────────
-$primary: #f48632;
-$primary-alpha-20: rgba(244, 134, 50, 0.2);
+$primary: $color-primary;
+$primary-alpha-20: rgba($color-primary, 0.2);
 $border-color: #d0d0d0;
-$border-radius: 6px;
-$input-height: 38px;
+$border-radius: 4px;
 
 // ─── Root container ────────────────────────────────────────────────────────────
 
 .cb-root {
-    position: relative;
     display: inline-block;
     width: 100%;
     font-size: 14px;
     box-sizing: border-box;
+
+    // ── Size modifiers — set CSS var để cb-input-wrap và cb-panel dùng chung ──
+    &--sm {
+        --cb-input-height: #{$input-height-sm};
+    }
+    &--md {
+        --cb-input-height: #{$input-height-md};
+    }
+    &--lg {
+        --cb-input-height: #{$input-height-lg};
+    }
 
     &--disabled {
         opacity: 0.5;
@@ -448,12 +499,32 @@ $input-height: 38px;
     }
 }
 
+// ─── Control wrapper (input + panel) ──────────────────────────────────────────
+// Tách riêng khỏi label để position:relative không bị lệch bởi chiều cao label
+
+.cb-control {
+    position: relative;
+    width: 100%;
+}
+
+// ─── Label ─────────────────────────────────────────────────────────────────────
+
+.cb-label {
+    display: block;
+    margin-bottom: 10px;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    font-weight: $font-weight-button;
+    color: $color-text-black;
+    line-height: 1;
+}
+
 // ─── Input wrapper ─────────────────────────────────────────────────────────────
 
 .cb-input-wrap {
     display: flex;
     align-items: center;
-    height: $input-height;
+    height: var(--cb-input-height);
     border: 1px solid $border-color; // 1px — không phải 2px
     border-radius: $border-radius;
     background: #fff;
@@ -549,7 +620,7 @@ $input-height: 38px;
 
 .cb-panel {
     position: absolute;
-    top: calc(#{$input-height} + 4px); // cách input 4px — không liền mạch
+    top: calc(var(--cb-input-height) + 4px); // cách input 4px — không liền mạch
     left: 0;
     right: 0;
     z-index: 1000;
