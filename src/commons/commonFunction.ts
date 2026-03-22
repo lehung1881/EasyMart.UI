@@ -24,6 +24,23 @@ class CommonFunction {
         });
     }
 
+    /**
+     * genShortID — Tạo chuỗi ngẫu nhiên 6 ký tự [a-z0-9].
+     * Dùng counter + timestamp để đảm bảo không trùng giữa các lần gọi.
+     */
+    genShortID(): string {
+        const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        let n = Date.now() + Math.floor(Math.random() * 1000000);
+        let result = "";
+
+        for (let i = 0; i < 6; i++) {
+            result += chars[n % chars.length];
+            n = Math.floor(n / chars.length);
+        }
+
+        return result;
+    }
+
     getTokenExpired(): string | null {
         return localStorage.getItem("tokenExpried");
     }
