@@ -52,6 +52,15 @@
                             </td>
                         </slot>
                     </tr>
+                    <!-- Sentinel row -->
+                    <tr v-if="hasMore" ref="sentinelRef" class="cb-sentinel" aria-hidden="true">
+                        <td :colspan="columns?.length ?? 1" />
+                    </tr>
+                    <tr v-if="loadingMore" class="cb-dropdown__loading-more-row" aria-hidden="true">
+                        <td :colspan="columns?.length ?? 1" class="cb-dropdown__loading-more-cell">
+                            <span class="cb-dropdown__spinner" />
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </template>
@@ -80,6 +89,13 @@
                     {{ item[displayField] }}
                 </slot>
             </li>
+
+            <!-- Sentinel — IntersectionObserver bắt khi cuộn chạm đáy -->
+            <li v-if="hasMore" ref="sentinelRef" class="cb-sentinel" aria-hidden="true" />
+            <!-- Loading more indicator -->
+            <li v-if="loadingMore" class="cb-dropdown__loading-more" aria-hidden="true">
+                <span class="cb-dropdown__spinner" />
+            </li>
         </ul>
     </div>
 </template>
@@ -91,7 +107,7 @@
  * Chỉ nhận props và render dropdown list hoặc table.
  */
 
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onBeforeUnmount } from "vue";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -117,8 +133,12 @@ const props = withDefaults(
         activeIndex: number;
         /** Giá trị đang được chọn (để highlight selected) */
         selectedValue: any;
-        /** Đang tải dữ liệu */
+        /** Đang tải dữ liệu (lần đầu) */
         loading: boolean;
+        /** Đang tải thêm trang kế (infinite scroll) */
+        loadingMore?: boolean;
+        /** Còn dữ liệu để load thêm không */
+        hasMore?: boolean;
         /** Số item tối đa hiển thị trước khi scroll, default: 6 */
         maxDisplayItem?: number;
     }>(),
@@ -126,6 +146,8 @@ const props = withDefaults(
         // Bắt buộc có default để tránh lỗi khi store chưa init xong
         data: () => [],
         columns: undefined,
+        loadingMore: false,
+        hasMore: false,
         maxDisplayItem: 6,
     },
 );
@@ -137,12 +159,18 @@ const emit = defineEmits<{
     (e: "select", item: any): void;
     /** Khi hover vào item — cập nhật activeIndex ở parent */
     (e: "hover", index: number): void;
+    /** Khi scroll chạm đáy — yêu cầu load trang kế */
+    (e: "load-more"): void;
 }>();
 
 // ─── Refs ─────────────────────────────────────────────────────────────────────
 
 /** Mảng ref tới từng item element để scroll into view */
 const itemRefs = ref<HTMLElement[]>([]);
+/** Sentinel element ở cuối list — IntersectionObserver theo dõi để trigger load-more */
+const sentinelRef = ref<HTMLElement | null>(null);
+/** Observer instance */
+let observer: IntersectionObserver | null = null;
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
 
@@ -183,7 +211,6 @@ const columnWidth = (width?: string | number): string => {
 
 /**
  * Watch activeIndex → tự động cuộn item active vào viewport.
- * Dùng behavior smooth để UX mượt hơn.
  */
 watch(
     () => props.activeIndex,
@@ -192,6 +219,40 @@ watch(
         itemRefs.value[index]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     },
 );
+
+/**
+ * Watch sentinelRef — setup IntersectionObserver khi sentinel xuất hiện trong DOM.
+ * hasMore = false → sentinel bị v-if remove → observer tự disconnect.
+ *
+ * PHẢI dùng flush: 'post' — Vue docs yêu cầu khi watch template ref,
+ * đảm bảo DOM đã patch xong trước khi callback chạy.
+ * Nếu dùng flush: 'pre' (default): el.closest() trả null vì phần tử chưa mount
+ * → root: null → observer theo dõi viewport thay vì scroll container → không fire.
+ */
+watch(
+    sentinelRef,
+    (el) => {
+        observer?.disconnect();
+        observer = null;
+        if (!el) return;
+
+        // Root là scroll container cha gần nhất (list hoặc tbody)
+        const scrollParent = el.closest(".cb-dropdown__list, .cb-dropdown__tbody") as HTMLElement | null;
+
+        observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) emit("load-more");
+            },
+            { root: scrollParent, threshold: 0 }, // threshold: 0 — 1px đủ để trigger
+        );
+        observer.observe(el);
+    },
+    { flush: "post" },
+);
+
+onBeforeUnmount(() => {
+    observer?.disconnect();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -387,5 +448,25 @@ $item-height: 36px;
     white-space: nowrap;
     color: inherit;
     vertical-align: middle;
+}
+
+// ─── Infinite scroll ───────────────────────────────────────────────────────────
+
+.cb-sentinel {
+    height: 1px;
+    list-style: none;
+}
+
+.cb-dropdown__loading-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    list-style: none;
+}
+
+.cb-dropdown__loading-more-row .cb-dropdown__loading-more-cell {
+    padding: 6px 0;
+    text-align: center;
 }
 </style>

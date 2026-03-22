@@ -11,20 +11,38 @@ import { defineStore } from "pinia";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type QueryMode = "local" | "remote";
-export type ComboboxLoadData = (keyword: string) => Promise<Array<any>>;
+
+export interface ComboboxLoadPayload {
+    keyword: string;
+    pageSize: number;
+    pageIndex: number;
+}
+
+export type ComboboxLoadData = (payload: ComboboxLoadPayload) => Promise<Array<any>>;
 
 export interface ComboboxStoreOptions {
     /**
      * Dữ liệu tĩnh — dùng cho local mode.
-     * Store sẽ filter trực tiếp trên mảng này, không gọi API.
+     * Store filter trực tiếp trên mảng này, không gọi API.
      */
     data?: Array<any>;
     /**
      * Hàm gọi API — chỉ dùng cho remote mode.
+     * Nhận payload { keyword, pageSize, pageIndex }, tự xử lý đẩy xuống BE.
      */
     comboboxLoadData?: ComboboxLoadData;
     /** default: "local" nếu có data, "remote" nếu có comboboxLoadData */
     queryMode?: QueryMode;
+    /** Số bản ghi mỗi trang — default: 20 */
+    pageSize?: number;
+}
+
+/** Config nội bộ truyền vào configure / syncConfig */
+interface StoreConfig {
+    fn?: ComboboxLoadData | null;
+    staticData?: Array<any> | null;
+    queryMode: QueryMode;
+    pageSize: number;
 }
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
@@ -40,38 +58,37 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
         // ── Public state ──────────────────────────────────────────────────────
         /** Data hiển thị trong dropdown */
         const data = ref<Array<any>>([]);
-        /** Trạng thái đang tải */
+        /** Trạng thái đang tải (lần đầu hoặc reset) */
         const loading = ref<boolean>(false);
+        /** Trạng thái đang tải thêm trang kế (infinite scroll) */
+        const loadingMore = ref<boolean>(false);
+        /** Còn dữ liệu để load thêm không — dùng để ẩn/hiện sentinel */
+        const hasMore = ref<boolean>(false);
 
         // ── Internal state ────────────────────────────────────────────────────
-        /**
-         * Toàn bộ data gốc — chỉ dùng cho local mode.
-         * Được set 1 lần từ options.data, các lần sau filter trực tiếp.
-         */
+        /** Data gốc cho local mode */
         const rawData = ref<Array<any>>([]);
-
-        /**
-         * Hàm load data — PHẢI là ref, không dùng let.
-         * Nếu dùng let, giá trị sẽ bị mất khi Pinia reuse instance
-         * (setup chỉ chạy 1 lần, syncConfig cập nhật ref.value).
-         */
+        /** Hàm gọi API — chỉ remote mode */
         const comboboxLoadData = ref<ComboboxLoadData | null>(null);
-
-        /**
-         * Query mode — PHẢI là ref, cùng lý do với comboboxLoadData.
-         */
+        /** Query mode */
         const mode = ref<QueryMode>("remote");
+        /** Số bản ghi mỗi trang */
+        const pageSize = ref<number>(20);
+        /** Trang hiện tại đã load (remote mode) */
+        const currentPage = ref<number>(1);
+        /** Keyword đang tìm kiếm — để loadNextPage dùng lại */
+        const currentKeyword = ref<string>("");
 
         // ── Actions ───────────────────────────────────────────────────────────
 
         /**
-         * loadData — Tải và lọc data theo keyword.
+         * loadData — Load trang đầu tiên (hoặc reset khi keyword đổi).
          *
-         * Local mode : filter trực tiếp trên rawData (đã được seed từ options.data).
-         * Remote mode: gọi API mỗi lần, không cache.
+         * Local  : filter trực tiếp trên rawData.
+         * Remote : reset page về 1, replace data.
          */
         const loadData = async (keyword: string, displayField?: string): Promise<void> => {
-            // LOCAL MODE — filter trên rawData, không gọi API
+            // LOCAL MODE
             if (mode.value === "local") {
                 if (!keyword || !displayField) {
                     data.value = [...rawData.value];
@@ -85,42 +102,74 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
             // REMOTE MODE
             if (!comboboxLoadData.value) return;
 
+            currentKeyword.value = keyword;
+            currentPage.value = 1;
+            hasMore.value = false;
+
             loading.value = true;
             try {
-                data.value = await comboboxLoadData.value(keyword);
+                const result = await comboboxLoadData.value({
+                    keyword,
+                    pageSize: pageSize.value,
+                    pageIndex: 1,
+                });
+                data.value = result;
+                hasMore.value = result.length >= pageSize.value;
             } finally {
                 loading.value = false;
             }
         };
 
         /**
-         * configure — Thay đổi config và reset toàn bộ state.
-         * Dùng khi nguồn dữ liệu thay đổi động (vd: department → employee list mới).
+         * loadNextPage — Append trang tiếp theo vào data (infinite scroll).
+         * Chỉ dùng cho remote mode. Bỏ qua nếu đang load hoặc hết data.
          */
-        const configure = (fn: ComboboxLoadData | null, queryMode: QueryMode, sourceData?: Array<any>): void => {
-            comboboxLoadData.value = fn;
-            mode.value = queryMode;
-            rawData.value = sourceData ? [...sourceData] : [];
-            data.value = [];
+        const loadNextPage = async (): Promise<void> => {
+            if (mode.value !== "remote") return;
+            if (!comboboxLoadData.value) return;
+            if (loadingMore.value || !hasMore.value) return;
+
+            const nextPage = currentPage.value + 1;
+            loadingMore.value = true;
+            try {
+                const result = await comboboxLoadData.value({
+                    keyword: currentKeyword.value,
+                    pageSize: pageSize.value,
+                    pageIndex: nextPage,
+                });
+                data.value = [...data.value, ...result];
+                currentPage.value = nextPage;
+                hasMore.value = result.length >= pageSize.value;
+            } finally {
+                loadingMore.value = false;
+            }
+        };
+
+        /**
+         * configure — Thay đổi config và reset toàn bộ state.
+         */
+        const configure = (config: StoreConfig): void => {
+            comboboxLoadData.value = config.fn ?? null;
+            rawData.value = config.staticData ? [...config.staticData] : [];
+            data.value = config.staticData ? [...config.staticData] : [];
+            mode.value = config.queryMode;
+            pageSize.value = config.pageSize;
+            currentPage.value = 1;
+            currentKeyword.value = "";
+            hasMore.value = false;
         };
 
         /**
          * syncConfig — Chỉ cập nhật config, KHÔNG reset data.
-         * Dùng nội bộ trong factory sau mỗi lần store() được gọi,
-         * đảm bảo config luôn mới nhất dù component re-render.
-         *
-         * Với local mode: nếu sourceData thay đổi reference → seed lại rawData và data.
          */
-        const syncConfig = (fn: ComboboxLoadData | null, queryMode: QueryMode, sourceData?: Array<any>): void => {
-            comboboxLoadData.value = fn;
-            mode.value = queryMode;
+        const syncConfig = (config: StoreConfig): void => {
+            comboboxLoadData.value = config.fn ?? null;
+            mode.value = config.queryMode;
+            pageSize.value = config.pageSize;
 
-            if (queryMode === "local" && sourceData) {
-                // Chỉ seed lại nếu mảng thay đổi reference (tránh reset không cần thiết)
-                if (sourceData !== rawData.value) {
-                    rawData.value = [...sourceData];
-                    data.value = [...sourceData];
-                }
+            if (config.staticData !== rawData.value) {
+                rawData.value = config.staticData ? [...config.staticData] : [];
+                data.value = config.staticData ? [...config.staticData] : [];
             }
         };
 
@@ -131,19 +180,26 @@ export function useComboboxStore(storeId: string, options?: ComboboxStoreOptions
             data.value = [];
             rawData.value = [];
             loading.value = false;
+            loadingMore.value = false;
+            hasMore.value = false;
+            currentPage.value = 1;
+            currentKeyword.value = "";
         };
 
-        return { data, loading, loadData, configure, syncConfig, reset };
+        return { data, loading, loadingMore, hasMore, loadData, loadNextPage, configure, syncConfig, reset };
     });
 
-    // Lấy (hoặc tạo) instance — Pinia cache theo storeId
     const instance = store();
 
-    // Luôn sync config sau mỗi lần factory được gọi — tránh mất config khi re-render
     if (options) {
         const resolvedMode: QueryMode = options.queryMode ?? (options.data ? "local" : "remote");
 
-        instance.syncConfig(options.comboboxLoadData ?? null, resolvedMode, options.data);
+        instance.syncConfig({
+            fn: options.comboboxLoadData ?? null,
+            staticData: options.data ?? null,
+            queryMode: resolvedMode,
+            pageSize: options.pageSize ?? 20,
+        });
     }
 
     return instance;

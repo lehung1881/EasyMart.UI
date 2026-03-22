@@ -20,7 +20,7 @@
             <div class="cb-input-wrap">
                 <input
                     ref="inputRef"
-                    v-model="inputText"
+                    :value="visibleText"
                     class="cb-input"
                     type="text"
                     :placeholder="placeholder"
@@ -92,8 +92,11 @@
                         :active-index="activeIndex"
                         :selected-value="modelValue"
                         :loading="store.loading"
+                        :loading-more="store.loadingMore"
+                        :has-more="store.hasMore"
                         :max-display-item="maxDisplayItem"
                         @select="onSelect"
+                        @load-more="store.loadNextPage()"
                     >
                         <!-- Pass-through slots -->
                         <template v-for="(_, name) in $slots" #[name]="slotData">
@@ -132,9 +135,12 @@ interface Column {
 interface ComboboxStore {
     data: Array<any>;
     loading: boolean;
+    loadingMore: boolean;
+    hasMore: boolean;
     loadData: (keyword: string, displayField?: string) => Promise<void>;
-    configure: (fn: (kw: string) => Promise<any[]>, mode?: "local" | "remote") => void;
-    syncConfig: (fn: (kw: string) => Promise<any[]>, mode?: "local" | "remote") => void;
+    loadNextPage: () => Promise<void>;
+    configure: (...args: any[]) => void;
+    syncConfig: (...args: any[]) => void;
     reset: () => void;
     $dispose: () => void;
 }
@@ -172,6 +178,11 @@ const props = withDefaults(
         /** Hiển thị nút × để xoá giá trị đang chọn. default: false */
         clearIcon?: boolean;
         /**
+         * Text hiển thị khi data chưa load xong hoặc giá trị nằm ở trang chưa fetch.
+         * Tạo cảm giác có dữ liệu ngay từ đầu, tự động bị thay thế khi resolve được display text.
+         */
+        initText?: string;
+        /**
          * Tự động load data ngay khi component mount.
          * Hữu ích cho local mode hoặc khi muốn pre-fetch trước khi user mở dropdown.
          * default: false
@@ -196,6 +207,7 @@ const props = withDefaults(
         autoLoad: false,
         searchable: true,
         clearIcon: false,
+        initText: "",
         maxDisplayItem: 6,
     },
 );
@@ -238,6 +250,13 @@ const storeData = computed<Array<any>>(() => props.store.data ?? []);
 
 /** Có giá trị để hiển thị nút clear hay không */
 const hasClearValue = computed(() => props.clearIcon && inputText.value && !props.disabled);
+
+/**
+ * visibleText — Text hiển thị trong input.
+ * Ưu tiên: inputText (đã resolve) → initText (fallback khi chưa load) → ''
+ * Không áp dụng initText khi đang focus để tránh che keyword search.
+ */
+const visibleText = computed(() => (inputText.value || isFocused.value ? inputText.value : (props.initText ?? "")));
 
 /** Class size — khớp pattern với BaseInput */
 const sizeClass = computed(() => `cb-root--${props.size}`);
