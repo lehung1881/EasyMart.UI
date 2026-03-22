@@ -148,12 +148,19 @@ const props = withDefaults(
         debounceTime?: number;
         /** Số ký tự tối thiểu để trigger search */
         minChars?: number;
+        /**
+         * Tự động load data ngay khi component mount.
+         * Hữu ích cho local mode hoặc khi muốn pre-fetch trước khi user mở dropdown.
+         * default: false
+         */
+        autoLoad?: boolean;
     }>(),
     {
         placeholder: "Tìm kiếm...",
         disabled: false,
         debounceTime: 300,
         minChars: 0,
+        autoLoad: false,
     },
 );
 
@@ -202,14 +209,20 @@ const hasClearValue = computed(() => inputText.value && !props.disabled);
  * getDisplayText — Lấy text hiển thị từ modelValue.
  * null/undefined → ''
  * object         → value[displayField]
- * primitive      → tìm trong storeData; nếu không thấy → String(value)
+ * primitive      → tìm trong storeData:
+ *   - Tìm thấy                → displayField của item
+ *   - Không thấy + data đã có → String(value)  (giá trị không tồn tại trong list)
+ *   - Không thấy + data rỗng  → ''             (data chưa load, tránh flash primitive)
  */
 const getDisplayText = (value: typeof props.modelValue): string => {
     if (value == null) return "";
     if (typeof value === "object") return String((value as Record<string, any>)[props.displayField] ?? "");
     // Tìm trong storeData để lấy display text
     const found = storeData.value.find((item) => item[props.valueField] === value);
-    return found ? String(found[props.displayField]) : String(value);
+    if (found) return String(found[props.displayField]);
+    // storeData rỗng = data chưa load xong → trả "" tránh hiện thô primitive (vd: "1")
+    // watch(storeData) sẽ re-resolve sau khi data về
+    return storeData.value.length > 0 ? String(value) : "";
 };
 
 /** closeDropdown — Đóng dropdown và reset activeIndex */
@@ -378,10 +391,30 @@ watch(
     { immediate: true },
 );
 
+/**
+ * Re-resolve inputText sau khi store.data load xong.
+ *
+ * Vấn đề: watch(modelValue, { immediate }) chạy TRƯỚC khi data được fetch
+ * → getDisplayText không tìm thấy item → fallback về String(primitiveValue).
+ *
+ * Fix: mỗi lần storeData thay đổi (data về), nếu modelValue đang là primitive
+ * và inputText chưa đúng display text → re-resolve lại.
+ * Không chạy khi user đang gõ (isFocused) để tránh ghi đè keyword search.
+ */
+watch(storeData, () => {
+    if (isFocused.value) return;
+    const text = getDisplayText(props.modelValue);
+    if (text && text !== inputText.value) inputText.value = text;
+});
+
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
 
 onMounted(() => {
     document.addEventListener("mousedown", handleClickOutside);
+    // autoLoad: pre-fetch data ngay khi mount, không cần chờ user mở dropdown
+    if (props.autoLoad) {
+        props.store.loadData("", props.displayField);
+    }
 });
 
 onBeforeUnmount(() => {
