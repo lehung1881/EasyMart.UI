@@ -1,13 +1,13 @@
 ﻿import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
-import type { ServiceResponse } from "@/api/models/serviceResponse";
+import type { ServiceResponse } from "@/models/common/serviceResponse";
+import type { PagingRequest, PagingResponse } from "@/models/common/paging";
 import { API_CONFIG } from "@/api/configApi";
 import type { ApiService } from "@/api/configApi";
 import cacheService from "@/commons/cacheService";
 import { CacheCode } from "@/constants/cacheConfig";
 
-
-abstract class BaseApi {
+abstract class BaseAPI {
     protected abstract readonly serviceName: ApiService;
     protected abstract readonly basePath: string;
 
@@ -127,7 +127,7 @@ abstract class BaseApi {
      * @param url - Path c?a endpoint, ví d?: /profile
      * @param config - C?u hình axios tùy ch?n
      */
-    protected get<T>(url: string, config?: AxiosRequestConfig) {
+    public get<T>(url: string, config?: AxiosRequestConfig) {
         return this.instance.get<T, ServiceResponse<T>>(this.buildUrl(url), config);
     }
 
@@ -137,7 +137,7 @@ abstract class BaseApi {
      * @param payload - D? li?u g?i lên server
      * @param config - C?u hình axios tùy ch?n
      */
-    protected post<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
+    public post<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.post<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
@@ -147,7 +147,7 @@ abstract class BaseApi {
      * @param payload - D? li?u c?p nh?t
      * @param config - C?u hình axios tùy ch?n
      */
-    protected put<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
+    public put<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.put<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
@@ -157,7 +157,7 @@ abstract class BaseApi {
      * @param payload - D? li?u c?p nh?t m?t ph?n
      * @param config - C?u hình axios tùy ch?n
      */
-    protected patch<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
+    public patch<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.patch<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
@@ -166,7 +166,7 @@ abstract class BaseApi {
      * @param url - Path c?a endpoint, ví d?: /profile
      * @param config - C?u hình axios tùy ch?n
      */
-    protected delete<T>(url: string, config?: AxiosRequestConfig) {
+    public delete<T>(url: string, config?: AxiosRequestConfig) {
         return this.instance.delete<T, ServiceResponse<T>>(this.buildUrl(url), config);
     }
 
@@ -174,13 +174,18 @@ abstract class BaseApi {
      * Thêm/s?a/xóa b?n ghi.
      * @param payload - D? li?u c?a b?n ghi c?n thêm/s?a/xóa
      */
-    protected saveData<T>(payload: T) {
+    public saveData<T>(payload: T) {
         return this.post<T>("/save_data_async", payload);
+    }
+
+    /**
+     * Lây dữ liệu cho combobox với phân trang và tìm kiếm.
+     * @param payload
+     * @returns
+     */
+    public getDataCombobox(payload: PagingRequest) {
+        return this.post<PagingResponse, PagingRequest>("/paging_filter", payload);
     }
 }
 
-export default BaseApi;
-
-
-
-
+export default BaseAPI;

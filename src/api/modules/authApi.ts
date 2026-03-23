@@ -1,8 +1,8 @@
-﻿import BaseApi from "@/api/baseApi";
+﻿import BaseAPI from "@/api/baseAPI";
 import type { ApiService } from "@/api/configApi";
 import type { LoginRequest, LoginResponse, RegisterRequest, UserInfo } from "@/models/auth/auth";
 
-class AuthApi extends BaseApi {
+class AuthApi extends BaseAPI {
     protected readonly serviceName: ApiService = "AUTH";
     protected readonly basePath = "/v1/auth";
 
