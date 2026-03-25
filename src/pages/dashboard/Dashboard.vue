@@ -14,6 +14,7 @@
                     { field: 'InventoryItemCode', label: 'Mã hàng', width: 180 },
                     { field: 'InventoryItemName', label: 'Tên hàng', width: 120 },
                 ]"
+                clearIcon
             />
         </div>
 

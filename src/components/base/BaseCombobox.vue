@@ -96,7 +96,7 @@
                         :has-more="store.hasMore"
                         :max-display-item="maxDisplayItem"
                         @select="onSelect"
-                        @load-more="store.loadNextPage()"
+                        @load-more="store.loadNextPage(displayField)"
                     >
                         <!-- Pass-through slots -->
                         <template v-for="(_, name) in $slots" #[name]="slotData">
@@ -138,8 +138,8 @@ interface ComboboxStore {
     loadingMore: boolean;
     hasMore: boolean;
     loadData: (keyword: string, displayField?: string) => Promise<void>;
-    loadNextPage: () => Promise<void>;
-    configure: (...args: any[]) => void;
+    loadNextPage: (displayField?: string) => Promise<void>;
+    // configure: (...args: any[]) => void;
     syncConfig: (...args: any[]) => void;
     reset: () => void;
     $dispose: () => void;
@@ -235,6 +235,14 @@ const isOpen = ref(false);
 const isFocused = ref(false);
 /** Text hiển thị trong input */
 const inputText = ref("");
+/**
+ * Display text đã được confirm — chỉ cập nhật khi:
+ * 1. User chọn item (onSelect)
+ * 2. modelValue đổi từ ngoài (watch modelValue)
+ * 3. storeData load xong và resolve được display text (watch storeData)
+ * Dùng để revert inputText khi blur mà không phụ thuộc vào storeData đang filtered.
+ */
+const confirmedDisplayText = ref("");
 /** Index item đang active (keyboard nav), -1 = không có */
 const activeIndex = ref(-1);
 /** Timer debounce */
@@ -315,7 +323,9 @@ const onSelect = (item: any) => {
 
     emit("update:modelValue", value);
     emit("change", value);
-    inputText.value = String(item[props.displayField] ?? "");
+    const displayText = String(item[props.displayField] ?? "");
+    confirmedDisplayText.value = displayText;
+    inputText.value = displayText;
     closeDropdown();
     inputRef.value?.blur();
 };
@@ -325,6 +335,7 @@ const onSelect = (item: any) => {
  */
 const clearValue = () => {
     inputText.value = "";
+    confirmedDisplayText.value = "";
     emit("update:modelValue", null);
     emit("change", null);
     activeIndex.value = -1;
@@ -375,8 +386,11 @@ const onBlur = () => {
         // Kiểm tra focus còn trong rootRef không
         if (rootRef.value?.contains(document.activeElement)) return;
         closeDropdown();
-        // Reset text về display của modelValue hiện tại
-        inputText.value = getDisplayText(props.modelValue);
+        // Reset filter trong store (xoá keyword search đang filtered)
+        props.store.loadData("", props.displayField);
+        // Revert về confirmed display text — không dùng getDisplayText vì storeData
+        // vẫn đang ở trạng thái filtered, sẽ resolve sai (trả về "" hoặc raw primitive).
+        inputText.value = confirmedDisplayText.value;
     }, 150);
 };
 
@@ -407,14 +421,13 @@ const onKeydown = (e: KeyboardEvent) => {
             e.preventDefault();
             if (activeIndex.value >= 0 && storeData.value[activeIndex.value]) {
                 onSelect(storeData.value[activeIndex.value]);
-            } else {
-                openDropdown();
             }
             break;
 
         case "Escape":
             closeDropdown();
-            inputText.value = getDisplayText(props.modelValue);
+            props.store.loadData("", props.displayField);
+            inputText.value = confirmedDisplayText.value;
             break;
 
         case "Tab":
@@ -431,7 +444,8 @@ const onKeydown = (e: KeyboardEvent) => {
 const handleClickOutside = (e: MouseEvent) => {
     if (rootRef.value && !rootRef.value.contains(e.target as Node)) {
         closeDropdown();
-        inputText.value = getDisplayText(props.modelValue);
+        props.store.loadData("", props.displayField);
+        inputText.value = confirmedDisplayText.value;
     }
 };
 
@@ -445,6 +459,7 @@ watch(
     () => props.modelValue,
     (val) => {
         const text = getDisplayText(val);
+        confirmedDisplayText.value = text;
         if (text !== inputText.value) inputText.value = text;
     },
     { immediate: true },
@@ -463,7 +478,10 @@ watch(
 watch(storeData, () => {
     if (isFocused.value) return;
     const text = getDisplayText(props.modelValue);
-    if (text && text !== inputText.value) inputText.value = text;
+    if (text && text !== inputText.value) {
+        confirmedDisplayText.value = text;
+        inputText.value = text;
+    }
 });
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────

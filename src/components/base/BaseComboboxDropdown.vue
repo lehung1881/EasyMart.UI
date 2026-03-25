@@ -241,7 +241,7 @@ watch(
 
         observer = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting) emit("load-more");
+                if (entry?.isIntersecting) emit("load-more");
             },
             { root: scrollParent, threshold: 0 }, // threshold: 0 — 1px đủ để trigger
         );

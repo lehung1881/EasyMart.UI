@@ -10,6 +10,7 @@ export interface ComboboxStoreOptions {
     queryMode?: QueryMode;
     pageSize?: number;
     viewOrTableName?: string;
+    searchField?: string[];
 }
 
 export interface StoreConfig {
@@ -18,4 +19,5 @@ export interface StoreConfig {
     queryMode: QueryMode;
     pageSize: number;
     viewOrTableName?: string;
+    searchField?: string[];
 }
