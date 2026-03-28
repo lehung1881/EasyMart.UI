@@ -137,10 +137,11 @@ interface ComboboxStore {
     loading: boolean;
     loadingMore: boolean;
     hasMore: boolean;
+    selectedItem: any;
     loadData: (keyword: string, displayField?: string) => Promise<void>;
     loadNextPage: (displayField?: string) => Promise<void>;
-    // configure: (...args: any[]) => void;
-    syncConfig: (...args: any[]) => void;
+    initConfigStore: (...args: any[]) => void;
+    setSelectedItem: (item: any) => void;
     reset: () => void;
     $dispose: () => void;
 }
@@ -321,6 +322,7 @@ const onSelect = (item: any) => {
     const isObjectMode = typeof props.modelValue === "object" && props.modelValue !== null;
     const value = isObjectMode ? item : item[props.valueField];
 
+    props.store.setSelectedItem(item);
     emit("update:modelValue", value);
     emit("change", value);
     const displayText = String(item[props.displayField] ?? "");
@@ -336,6 +338,7 @@ const onSelect = (item: any) => {
 const clearValue = () => {
     inputText.value = "";
     confirmedDisplayText.value = "";
+    props.store.setSelectedItem(null);
     emit("update:modelValue", null);
     emit("change", null);
     activeIndex.value = -1;
@@ -385,6 +388,7 @@ const onBlur = () => {
     setTimeout(() => {
         // Kiểm tra focus còn trong rootRef không
         if (rootRef.value?.contains(document.activeElement)) return;
+        if (!isOpen.value) return;
         closeDropdown();
         // Reset filter trong store (xoá keyword search đang filtered)
         props.store.loadData("", props.displayField);
@@ -443,8 +447,8 @@ const onKeydown = (e: KeyboardEvent) => {
  */
 const handleClickOutside = (e: MouseEvent) => {
     if (rootRef.value && !rootRef.value.contains(e.target as Node)) {
+        if (!isOpen.value) return;
         closeDropdown();
-        props.store.loadData("", props.displayField);
         inputText.value = confirmedDisplayText.value;
     }
 };
@@ -481,6 +485,13 @@ watch(storeData, () => {
     if (text && text !== inputText.value) {
         confirmedDisplayText.value = text;
         inputText.value = text;
+    }
+    // Sync selectedItem khi data load xong mà modelValue đã có sẵn
+    if (props.modelValue != null && props.store.selectedItem == null) {
+        const found = storeData.value.find(
+            (item) => item[props.valueField] === props.modelValue || item === props.modelValue,
+        );
+        if (found) props.store.setSelectedItem(found);
     }
 });
 

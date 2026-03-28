@@ -41,6 +41,9 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
         /** Có còn dữ liệu để load thêm không */
         const hasMore = ref<boolean>(false);
 
+        /** Object đang được chọn trong combobox */
+        const selectedItem = ref<any>(null);
+
         // Internal state
 
         /** Data gốc (local mode) */
@@ -203,7 +206,7 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
          * @param config Cấu hình mới cho store.
          * @returns Không trả về giá trị.
          */
-        const syncConfig = (config: StoreConfig): void => {
+        const initConfigStore = (config: StoreConfig): void => {
             loadFn.value = config.fn ?? null;
             mode.value = config.queryMode;
             pageSize.value = config.pageSize;
@@ -222,6 +225,15 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
         };
 
         /**
+         * Gán object được chọn vào selectedItem.
+         * @param item Object được chọn, hoặc null để xóa lựa chọn.
+         * @returns Không trả về giá trị.
+         */
+        const setSelectedItem = (item: any): void => {
+            selectedItem.value = item ?? null;
+        };
+
+        /**
          * Đưa store về trạng thái ban đầu.
          * @returns Không trả về giá trị.
          */
@@ -235,6 +247,7 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
 
             currentPage.value = 1;
             currentTextSearch.value = "";
+            selectedItem.value = null;
         };
 
         return {
@@ -242,9 +255,11 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
             loading,
             loadingMore,
             hasMore,
+            selectedItem,
             loadData,
             loadNextPage,
-            syncConfig,
+            initConfigStore,
+            setSelectedItem,
             reset,
         };
     });
@@ -255,7 +270,7 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
     if (options) {
         const resolvedMode: QueryMode = options.queryMode ?? (options.data ? "local" : "remote");
 
-        instance.syncConfig({
+        instance.initConfigStore({
             fn: options.comboboxLoadData ?? null,
             staticData: options.data ?? null,
             queryMode: resolvedMode,
