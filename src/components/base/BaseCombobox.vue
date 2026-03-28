@@ -11,12 +11,12 @@
             },
         ]"
     >
-        <!-- ── Label ─────────────────────────────────────────────────────── -->
+        <!-- Label──-->
         <label v-if="label" class="cb-label">{{ label }}</label>
 
-        <!-- ── Control: input + dropdown — position:relative tính từ đây ── -->
+        <!-- Control: input + dropdown — position:relative tính từ đây -->
         <div class="cb-control">
-            <!-- ── Input wrapper ─────────────────────────────────────────────── -->
+            <!-- Input wrapper -->
             <div class="cb-input-wrap">
                 <input
                     ref="inputRef"
@@ -80,7 +80,7 @@
                 </button>
             </div>
 
-            <!-- ── Dropdown panel ────────────────────────────────────────────── -->
+            <!-- Dropdown panel -->
             <Transition name="cb-dropdown">
                 <div v-if="isOpen" class="cb-panel" role="dialog" aria-label="Danh sách lựa chọn">
                     <!-- Delegate rendering sang BaseComboboxDropdown (global registered) -->
@@ -96,7 +96,7 @@
                         :has-more="store.hasMore"
                         :max-display-item="maxDisplayItem"
                         @select="onSelect"
-                        @load-more="store.loadNextPage(displayField)"
+                        @load-more="store.loadNextPage()"
                     >
                         <!-- Pass-through slots -->
                         <template v-for="(_, name) in $slots" #[name]="slotData">
@@ -111,47 +111,14 @@
 </template>
 
 <script setup lang="ts">
-/**
- * BaseCombobox.vue
- * Logic layer — Component chính xử lý toàn bộ interaction.
- * Delegates rendering dropdown sang BaseComboboxDropdown.
- */
-
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import BaseComboboxDropdown from "@/components/base/BaseComboboxDropdown.vue";
+import type { ComboboxStoreInstance } from "@/composables/useComboboxStore";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface Column {
-    field: string;
-    label: string;
-    width?: string | number;
-}
-
-/**
- * Interface nội bộ của store — KHÔNG import từ useComboboxStore.
- * Pinia unwrap reactive khi access qua props, nên dùng type trực tiếp (không bọc { value }).
- */
-interface ComboboxStore {
-    data: Array<any>;
-    loading: boolean;
-    loadingMore: boolean;
-    hasMore: boolean;
-    selectedItem: any;
-    loadData: (keyword: string, displayField?: string) => Promise<void>;
-    loadNextPage: (displayField?: string) => Promise<void>;
-    initConfigStore: (...args: any[]) => void;
-    setSelectedItem: (item: any) => void;
-    reset: () => void;
-    $dispose: () => void;
-}
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
+// Types
 type ComboboxSize = "sm" | "md" | "lg";
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
+// Props
 const props = withDefaults(
     defineProps<{
         /** v-model value — object hoặc primitive */
@@ -159,13 +126,7 @@ const props = withDefaults(
         /** Nhãn hiển thị phía trên input */
         label?: string;
         /** Instance từ useComboboxStore() */
-        store: ComboboxStore;
-        /** Field tên hiển thị trong input và dropdown */
-        displayField: string;
-        /** Field làm value khi emit */
-        valueField: string;
-        /** Nếu có → dropdown dạng bảng */
-        columns?: Column[];
+        store: ComboboxStoreInstance;
         /** Placeholder của input */
         placeholder?: string;
         /** Vô hiệu hoá component */
@@ -199,13 +160,13 @@ const props = withDefaults(
         maxDisplayItem?: number;
     }>(),
     {
-        placeholder: "Tìm kiếm...",
+        placeholder: "",
         label: "",
         disabled: false,
         size: "md",
         debounceTime: 300,
         minChars: 0,
-        autoLoad: false,
+        autoLoad: true,
         searchable: true,
         clearIcon: false,
         initText: "",
@@ -213,7 +174,7 @@ const props = withDefaults(
     },
 );
 
-// ─── Emits ────────────────────────────────────────────────────────────────────
+// Emits
 
 const emit = defineEmits<{
     /** v-model binding */
@@ -224,7 +185,13 @@ const emit = defineEmits<{
     (e: "search", keyword: string): void;
 }>();
 
-// ─── Internal State ───────────────────────────────────────────────────────────
+// Computed từ store.comboConfig
+
+const displayField = computed(() => props.store.comboConfig.displayField);
+const valueField = computed(() => props.store.comboConfig.valueField);
+const columns = computed(() => props.store.comboConfig.columns);
+
+// Internal State
 
 /** Ref tới root element để detect click outside */
 const rootRef = ref<HTMLElement | null>(null);
@@ -249,8 +216,6 @@ const activeIndex = ref(-1);
 /** Timer debounce */
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-// ─── Computed ─────────────────────────────────────────────────────────────────
-
 /**
  * Guard: luôn trả về array, không bao giờ undefined/null.
  * Pinia unwrap reactive khi access qua props nên không cần .value.
@@ -270,7 +235,17 @@ const visibleText = computed(() => (inputText.value || isFocused.value ? inputTe
 /** Class size — khớp pattern với BaseInput */
 const sizeClass = computed(() => `cb-root--${props.size}`);
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
+
+/**
+ * Set selectedItem trong store dựa trên modelValue.
+ * Dùng khi data load xong mà modelValue đã có sẵn (vd: reset form với value primitive).
+ * @param value
+ */
+const setSelectedItem = (value: any) => {
+    const found = storeData.value.find((item) => item[valueField.value] === value || item === value);
+    props.store.setSelectedItem(found ?? null);
+};
 
 /**
  * getDisplayText — Lấy text hiển thị từ modelValue.
@@ -283,10 +258,10 @@ const sizeClass = computed(() => `cb-root--${props.size}`);
  */
 const getDisplayText = (value: typeof props.modelValue): string => {
     if (value == null) return "";
-    if (typeof value === "object") return String((value as Record<string, any>)[props.displayField] ?? "");
+    if (typeof value === "object") return String((value as Record<string, any>)[displayField.value] ?? "");
     // Tìm trong storeData để lấy display text
-    const found = storeData.value.find((item) => item[props.valueField] === value);
-    if (found) return String(found[props.displayField]);
+    const found = storeData.value.find((item) => item[valueField.value] === value);
+    if (found) return String(found[displayField.value]);
     // storeData rỗng = data chưa load xong → trả "" tránh hiện thô primitive (vd: "1")
     // watch(storeData) sẽ re-resolve sau khi data về
     return storeData.value.length > 0 ? String(value) : "";
@@ -298,8 +273,6 @@ const closeDropdown = () => {
     activeIndex.value = -1;
 };
 
-// ─── Core Actions ─────────────────────────────────────────────────────────────
-
 /**
  * openDropdown — Mở dropdown và trigger load data.
  * Luôn gọi store.loadData() trước khi check isOpen
@@ -308,7 +281,7 @@ const closeDropdown = () => {
 const openDropdown = () => {
     if (props.disabled) return;
     // Luôn load trước — không guard bằng isOpen
-    props.store.loadData("", props.displayField);
+    props.store.loadData("");
     if (isOpen.value) return; // guard UI
     isOpen.value = true;
 };
@@ -320,12 +293,12 @@ const openDropdown = () => {
  */
 const onSelect = (item: any) => {
     const isObjectMode = typeof props.modelValue === "object" && props.modelValue !== null;
-    const value = isObjectMode ? item : item[props.valueField];
+    const value = isObjectMode ? item : item[valueField.value];
 
     props.store.setSelectedItem(item);
     emit("update:modelValue", value);
     emit("change", value);
-    const displayText = String(item[props.displayField] ?? "");
+    const displayText = String(item[displayField.value] ?? "");
     confirmedDisplayText.value = displayText;
     inputText.value = displayText;
     closeDropdown();
@@ -344,10 +317,10 @@ const clearValue = () => {
     activeIndex.value = -1;
     inputRef.value?.focus();
     // Reset về full list
-    props.store.loadData("", props.displayField);
+    props.store.loadData("");
 };
 
-// ─── Input Handlers ───────────────────────────────────────────────────────────
+// Input Handlers
 
 /**
  * onInput — Xử lý khi user gõ vào input.
@@ -365,7 +338,7 @@ const onInput = (e: Event) => {
 
     debounceTimer = setTimeout(() => {
         if (keyword.length >= props.minChars) {
-            props.store.loadData(keyword, props.displayField);
+            props.store.loadData(keyword);
         }
         emit("search", keyword);
     }, props.debounceTime);
@@ -390,15 +363,13 @@ const onBlur = () => {
         if (rootRef.value?.contains(document.activeElement)) return;
         if (!isOpen.value) return;
         closeDropdown();
-        // Reset filter trong store (xoá keyword search đang filtered)
-        props.store.loadData("", props.displayField);
         // Revert về confirmed display text — không dùng getDisplayText vì storeData
         // vẫn đang ở trạng thái filtered, sẽ resolve sai (trả về "" hoặc raw primitive).
         inputText.value = confirmedDisplayText.value;
     }, 150);
 };
 
-// ─── Keyboard Navigation ──────────────────────────────────────────────────────
+// Keyboard Navigation
 
 /**
  * onKeydown — Xử lý phím điều hướng.
@@ -430,7 +401,6 @@ const onKeydown = (e: KeyboardEvent) => {
 
         case "Escape":
             closeDropdown();
-            props.store.loadData("", props.displayField);
             inputText.value = confirmedDisplayText.value;
             break;
 
@@ -440,7 +410,7 @@ const onKeydown = (e: KeyboardEvent) => {
     }
 };
 
-// ─── Click Outside ────────────────────────────────────────────────────────────
+// Click Outside
 
 /**
  * handleClickOutside — Đóng dropdown khi click ra ngoài rootRef.
@@ -453,7 +423,7 @@ const handleClickOutside = (e: MouseEvent) => {
     }
 };
 
-// ─── Watch ────────────────────────────────────────────────────────────────────
+// Watch
 
 /**
  * Sync inputText khi modelValue thay đổi từ ngoài (vd: reset form).
@@ -465,6 +435,8 @@ watch(
         const text = getDisplayText(val);
         confirmedDisplayText.value = text;
         if (text !== inputText.value) inputText.value = text;
+
+        setSelectedItem(val);
     },
     { immediate: true },
 );
@@ -486,22 +458,17 @@ watch(storeData, () => {
         confirmedDisplayText.value = text;
         inputText.value = text;
     }
-    // Sync selectedItem khi data load xong mà modelValue đã có sẵn
-    if (props.modelValue != null && props.store.selectedItem == null) {
-        const found = storeData.value.find(
-            (item) => item[props.valueField] === props.modelValue || item === props.modelValue,
-        );
-        if (found) props.store.setSelectedItem(found);
-    }
+    // Set selectedItem khi data load xong mà modelValue đã có sẵn
+    setSelectedItem(props.modelValue);
 });
 
-// ─── Lifecycle ────────────────────────────────────────────────────────────────
+// Lifecycle
 
 onMounted(() => {
     document.addEventListener("mousedown", handleClickOutside);
     // autoLoad: pre-fetch data ngay khi mount, không cần chờ user mở dropdown
     if (props.autoLoad) {
-        props.store.loadData("", props.displayField);
+        props.store.loadData("");
     }
 });
 
@@ -515,13 +482,13 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 @use "@/assets/styles/base" as *;
 
-// ─── SCSS Variables ────────────────────────────────────────────────────────────
+// SCSS Variables ─
 $primary: $color-primary;
 $primary-alpha-20: rgba($color-primary, 0.2);
 $border-color: #d0d0d0;
 $border-radius: 4px;
 
-// ─── Root container ────────────────────────────────────────────────────────────
+// Root container ─
 
 .cb-root {
     display: inline-block;
@@ -529,7 +496,7 @@ $border-radius: 4px;
     font-size: 14px;
     box-sizing: border-box;
 
-    // ── Size modifiers — set CSS var để cb-input-wrap và cb-panel dùng chung ──
+    // Size modifiers — set CSS var để cb-input-wrap và cb-panel dùng chung
     &--sm {
         --cb-input-height: #{$input-height-sm};
     }
@@ -547,7 +514,7 @@ $border-radius: 4px;
     }
 }
 
-// ─── Control wrapper (input + panel) ──────────────────────────────────────────
+// Control wrapper (input + panel)
 // Tách riêng khỏi label để position:relative không bị lệch bởi chiều cao label
 
 .cb-control {
@@ -555,7 +522,7 @@ $border-radius: 4px;
     width: 100%;
 }
 
-// ─── Label ─────────────────────────────────────────────────────────────────────
+// Label─
 
 .cb-label {
     display: block;
@@ -567,7 +534,7 @@ $border-radius: 4px;
     line-height: 1;
 }
 
-// ─── Input wrapper ─────────────────────────────────────────────────────────────
+// Input wrapper
 
 .cb-input-wrap {
     display: flex;
@@ -593,7 +560,7 @@ $border-radius: 4px;
     }
 }
 
-// ─── Input ─────────────────────────────────────────────────────────────────────
+// Input
 
 .cb-input {
     flex: 1;
@@ -616,7 +583,7 @@ $border-radius: 4px;
     }
 }
 
-// ─── Buttons (clear, toggle) ───────────────────────────────────────────────────
+// Buttons (clear, toggle)
 
 .cb-btn {
     display: flex;
@@ -653,7 +620,7 @@ $border-radius: 4px;
     }
 }
 
-// ─── Chevron icon ──────────────────────────────────────────────────────────────
+// Chevron icon
 
 .cb-chevron {
     transition: transform 0.2s ease;
@@ -664,7 +631,7 @@ $border-radius: 4px;
     }
 }
 
-// ─── Dropdown panel ────────────────────────────────────────────────────────────
+// Dropdown panel
 
 .cb-panel {
     position: absolute;
@@ -679,7 +646,7 @@ $border-radius: 4px;
     overflow: hidden;
 }
 
-// ─── Transition ────────────────────────────────────────────────────────────────
+// Transition
 
 .cb-dropdown-enter-active,
 .cb-dropdown-leave-active {

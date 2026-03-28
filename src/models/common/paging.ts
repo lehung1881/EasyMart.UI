@@ -29,6 +29,7 @@ export interface FilterCondition {
 export interface SelectedValue {
     property: string;
     value: any;
+    dataType: DataType;
 }
 
 /**

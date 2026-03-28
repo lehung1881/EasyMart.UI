@@ -11,9 +11,23 @@ import { DataType } from "@/constants/enums/dataType.ts";
 import { FilterOperator } from "@/constants/enums/filterOperator.ts";
 import type { FilterCondition, PagingRequest } from "@/models/common/paging";
 import type BaseAPI from "@/api/baseAPI";
-import type { ComboboxLoadData, ComboboxStoreOptions, QueryMode, StoreConfig } from "@/models/common/combobox";
+import type { ComboboxLoadData, ComboboxStoreOptions, QueryMode } from "@/models/common/combobox";
 
 const STORE_NAME_TEMPLATE = "combobox_{0}_{1}";
+
+// Types
+
+export interface Column {
+    field: string;
+    label: string;
+    width?: string | number;
+}
+
+export interface ComboConfig {
+    displayField: string;
+    valueField: string;
+    columns: Column[];
+}
 
 /**
  * Tạo và lấy instance store cho combobox theo storeID.
@@ -21,7 +35,7 @@ const STORE_NAME_TEMPLATE = "combobox_{0}_{1}";
  * @param options Cấu hình khởi tạo store.
  * @returns Instance store cho combobox.
  */
-export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions) {
+export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions) => {
     const storeName = STORE_NAME_TEMPLATE.replace("{0}", storeID)
         .replace("{1}", commonFunction.genShortID())
         .toLowerCase();
@@ -43,6 +57,19 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
 
         /** Object đang được chọn trong combobox */
         const selectedItem = ref<any>(null);
+
+        /** Object cũ được chọn trong combobox */
+        const oldSelectedItem = ref<any>(null);
+
+        /** Giá trị đang được chọn trong combobox */
+        const selectedValue = ref<any>(null);
+
+        /** Config hiển thị combobox: displayField, valueField, columns */
+        const comboConfig = ref<ComboConfig>({
+            displayField: "",
+            valueField: "",
+            columns: [],
+        });
 
         // Internal state
 
@@ -76,10 +103,9 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
          * Tạo filter text search từ keyword, searchField và displayField.
          * Gộp searchFields với displayField (dedup, bỏ rỗng) rồi tạo FilterCondition cho từng field.
          * @param searchFields Danh sách field search cấu hình.
-         * @param displayField Field hiển thị truyền từ combobox component.
          * @returns Mảng FilterCondition, rỗng nếu chưa có keyword hoặc không có field nào hợp lệ.
          */
-        const buildTextSearchFilter = (searchFields: Array<string>, displayField?: string): Array<FilterCondition> => {
+        const buildTextSearchFilter = (searchFields: Array<string>): Array<FilterCondition> => {
             const keyword = currentTextSearch.value.trim();
             if (!keyword) return [];
 
@@ -87,7 +113,8 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
             searchFields.forEach((f) => {
                 if (f.trim()) mergedFields.add(f.trim());
             });
-            if (displayField?.trim()) mergedFields.add(displayField.trim());
+            // Gộp displayField từ comboConfig vào search fields
+            mergedFields.add(comboConfig.value.displayField);
 
             if (mergedFields.size === 0) return [];
 
@@ -103,17 +130,30 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
         /**
          * Tạo payload chuẩn gửi BE.
          * @param pageIndex Trang cần tải.
-         * @param displayField Field hiển thị dùng để gộp vào filter.
          * @returns Payload phân trang/filter.
          */
-        const buildPayload = (pageIndex: number, displayField?: string): PagingRequest => ({
+        const buildPayload = (pageIndex: number): PagingRequest => ({
             pageIndex,
             pageSize: pageSize.value,
             sort: [],
-            filter: buildTextSearchFilter(configuredSearchFields.value, displayField),
+            filter: buildTextSearchFilter(configuredSearchFields.value),
             columns: "",
             viewOrTableName: viewName.value,
+            selectedValue: getSelectedValueForPayload(),
         });
+
+        /**
+         * Lấy selectedValue để đưa vào payload gửi BE, giúp BE biết giá trị nào đang được chọn (vd: để exclude khỏi kết quả).
+         * @returns
+         */
+        const getSelectedValueForPayload = (): any => {
+            if (selectedValue.value == null) return null;
+            return {
+                property: comboConfig.value.valueField,
+                value: selectedValue.value,
+                dataType: DataType.String,
+            };
+        };
 
         /**
          * Kiểm tra có phải remote mode không.
@@ -135,10 +175,11 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
         /**
          * Load trang đầu tiên hoặc reset khi keyword đổi.
          * @param keyword Từ khóa tìm kiếm.
-         * @param displayField Field hiển thị dùng cho local filter và gộp vào search field ở remote mode.
          * @returns Promise hoàn tất load data.
          */
-        const loadData = async (keyword: string, displayField?: string): Promise<void> => {
+        const loadData = async (keyword: string): Promise<void> => {
+            const displayField = comboConfig.value.displayField;
+
             // LOCAL MODE
             if (!isRemoteMode()) {
                 if (!keyword || !displayField) {
@@ -160,7 +201,7 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
 
             loading.value = true;
             try {
-                const result = await loadFn.value(buildPayload(1, displayField));
+                const result = await loadFn.value(buildPayload(1));
 
                 // Replace data
                 data.value = result;
@@ -174,10 +215,9 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
 
         /**
          * Load thêm trang tiếp theo (infinite scroll), chỉ cho remote mode.
-         * @param displayField Field hiển thị dùng để gộp vào filter (phải nhất quán với lần loadData trước).
          * @returns Promise hoàn tất load thêm.
          */
-        const loadNextPage = async (displayField?: string): Promise<void> => {
+        const loadNextPage = async (): Promise<void> => {
             if (!isRemoteMode()) return;
             if (!loadFn.value) return;
             if (loadingMore.value || !hasMore.value) return;
@@ -186,7 +226,7 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
 
             loadingMore.value = true;
             try {
-                const result = await loadFn.value(buildPayload(nextPage, displayField));
+                const result = await loadFn.value(buildPayload(nextPage));
 
                 // Append data
                 data.value = [...data.value, ...result];
@@ -206,10 +246,10 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
          * @param config Cấu hình mới cho store.
          * @returns Không trả về giá trị.
          */
-        const initConfigStore = (config: StoreConfig): void => {
-            loadFn.value = config.fn ?? null;
-            mode.value = config.queryMode;
-            pageSize.value = config.pageSize;
+        const initConfigStore = (config: ComboboxStoreOptions): void => {
+            loadFn.value = config.comboboxLoadData ?? null;
+            mode.value = config.queryMode ?? (config.data ? "local" : "remote");
+            pageSize.value = config.pageSize ?? 20;
             viewName.value = config.viewOrTableName ?? "";
 
             const uniqueFields = new Set<string>();
@@ -218,10 +258,16 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
             });
             configuredSearchFields.value = Array.from(uniqueFields);
 
-            if (config.staticData !== rawData.value) {
-                rawData.value = config.staticData ? [...config.staticData] : [];
-                data.value = config.staticData ? [...config.staticData] : [];
+            if (config.data !== rawData.value) {
+                rawData.value = config.data ? [...config.data] : [];
+                data.value = config.data ? [...config.data] : [];
             }
+
+            comboConfig.value = {
+                displayField: config.displayField,
+                valueField: config.valueField,
+                columns: config.columns ?? [],
+            };
         };
 
         /**
@@ -230,7 +276,10 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
          * @returns Không trả về giá trị.
          */
         const setSelectedItem = (item: any): void => {
+            oldSelectedItem.value = selectedItem.value ? { ...selectedItem.value } : null;
             selectedItem.value = item ?? null;
+            const vf = comboConfig.value.valueField;
+            selectedValue.value = item && vf ? item[vf] : null;
         };
 
         /**
@@ -248,6 +297,8 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
             currentPage.value = 1;
             currentTextSearch.value = "";
             selectedItem.value = null;
+            oldSelectedItem.value = null;
+            selectedValue.value = null;
         };
 
         return {
@@ -256,6 +307,9 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
             loadingMore,
             hasMore,
             selectedItem,
+            oldSelectedItem,
+            selectedValue,
+            comboConfig,
             loadData,
             loadNextPage,
             initConfigStore,
@@ -268,20 +322,11 @@ export function useComboboxStore(storeID: string, options?: ComboboxStoreOptions
 
     // Init options
     if (options) {
-        const resolvedMode: QueryMode = options.queryMode ?? (options.data ? "local" : "remote");
-
-        instance.initConfigStore({
-            fn: options.comboboxLoadData ?? null,
-            staticData: options.data ?? null,
-            queryMode: resolvedMode,
-            pageSize: options.pageSize ?? 20,
-            viewOrTableName: options.viewOrTableName ?? "",
-            searchField: options.searchField ?? [],
-        });
+        instance.initConfigStore(options);
     }
 
     return instance;
-}
+};
 
 export type ComboboxStoreInstance = ReturnType<typeof useComboboxStore>;
 
