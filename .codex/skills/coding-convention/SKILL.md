@@ -49,7 +49,7 @@
 
 ### 3. Mandatory Function Comment (BẮT BUỘC)
 
-MỌI function đều phải có comment tiếng Việt có dấu ngay phía trên:
+MỌI function đều phải có comment tiếng Việt (UTF-8) có dấu ngay phía trên:
 
 ```ts
 /**

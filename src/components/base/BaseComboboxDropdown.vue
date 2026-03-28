@@ -16,12 +16,13 @@
                     <tr>
                         <th
                             v-for="col in columns"
-                            :key="col.field"
-                            :style="{ width: columnWidth(col.width) }"
+                            :key="col.dataField"
+                            :style="columnStyle(col)"
                             class="cb-dropdown__th"
                         >
-                            {{ col.label }}
+                            {{ col.title }}
                         </th>
+                        <th :style="'width: 24px;'"></th>
                     </tr>
                 </thead>
                 <tbody class="cb-dropdown__tbody" :style="{ maxHeight: maxTableBodyHeight }">
@@ -44,12 +45,18 @@
                     >
                         <!-- Slot: custom toàn bộ <tr> -->
                         <slot name="row" :item="item" :index="index" :columns="columns">
-                            <td v-for="col in columns" :key="col.field" class="cb-dropdown__td">
+                            <td
+                                v-for="col in columns"
+                                :key="col.dataField"
+                                class="cb-dropdown__td"
+                                :style="columnStyle(col)"
+                            >
                                 <!-- Slot: custom từng cell theo field -->
-                                <slot :name="`cell-${col.field}`" :item="item" :value="item[col.field]">
-                                    {{ item[col.field] }}
+                                <slot :name="`cell-${col.dataField}`" :item="item" :value="item[col.dataField]">
+                                    {{ displayData(item[col.dataField], col) }}
                                 </slot>
                             </td>
+                            <td class="cb-dropdown__td" :style="'width: 24px;'"></td>
                         </slot>
                     </tr>
                     <!-- Sentinel row -->
@@ -108,15 +115,8 @@
  */
 
 import { ref, computed, watch, onBeforeUnmount } from "vue";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface Column {
-    field: string;
-    label: string;
-    width?: string | number;
-}
-
+import type { ColumnDefinition } from "@/models/common/columnDefinition";
+import { formatData } from "@/commons/formatData";
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 const props = withDefaults(
@@ -128,7 +128,7 @@ const props = withDefaults(
         /** Field dùng làm value */
         valueField: string;
         /** Nếu có → render dạng bảng; không có → render dạng list */
-        columns?: Column[];
+        columns?: ColumnDefinition[];
         /** Index item đang được highlight (keyboard nav) */
         activeIndex: number;
         /** Giá trị đang được chọn (để highlight selected) */
@@ -186,6 +186,9 @@ const maxListHeight = computed(() => `${ITEM_HEIGHT * props.maxDisplayItem + LIS
 const maxTableBodyHeight = computed(() => `${ITEM_HEIGHT * props.maxDisplayItem}px`);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+const displayData = (value: any, col: ColumnDefinition): string => {
+    return formatData.formatDisplayData(value, col.formatType ?? 0);
+};
 
 /**
  * isSelected — Kiểm tra item có đang được chọn không.
@@ -200,11 +203,16 @@ const isSelected = (item: any): boolean => {
 };
 
 /**
- * columnWidth — Chuẩn hoá width của column thành CSS string.
+ * columnStyle — Trả về object style cho <th> và <td>.
+ * Tập trung tất cả style liên quan đến column vào một chỗ,
+ * dễ mở rộng thêm property sau này mà không cần sửa template.
  */
-const columnWidth = (width?: string | number): string => {
-    if (!width) return "auto";
-    return typeof width === "number" ? `${width}px` : width;
+const columnStyle = (col: ColumnDefinition): Record<string, string> => {
+    const { width, align } = col;
+    return {
+        width: width === undefined || width === null ? "auto" : typeof width === "number" ? `${width}px` : width,
+        textAlign: align ?? "left",
+    };
 };
 
 // ─── Watch ────────────────────────────────────────────────────────────────────
@@ -256,6 +264,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+@use "@/assets/styles/base" as *;
 // ─── SCSS Variables ────────────────────────────────────────────────────────────
 $primary: #f48632;
 $primary-light: rgba(244, 134, 50, 0.08);
@@ -263,14 +272,15 @@ $primary-medium: rgba(244, 134, 50, 0.18);
 $border-color: #d0d0d0;
 $border-radius: 4px;
 $item-height: 36px;
+$hover-color: #f7f6ff;
 
 // ─── Container ─────────────────────────────────────────────────────────────────
 
 .cb-dropdown {
     width: 100%;
-    overflow: hidden; // scroll nội bộ từng mode
+    overflow: hidden;
     border-radius: $border-radius;
-    font-size: 14px;
+    font-size: $font-size-base;
 }
 
 // ─── Loading ───────────────────────────────────────────────────────────────────
@@ -328,43 +338,24 @@ $item-height: 36px;
     padding: 0 16px;
     min-height: $item-height;
     cursor: pointer;
-    border-left: 3px solid transparent;
     transition:
         background 0.12s ease,
         border-left-color 0.12s ease;
-    color: inherit; // không set cứng màu chữ
-
-    &::after {
-        content: "";
-        color: $primary;
-        font-weight: 700;
-        font-size: 13px;
-        width: 16px;
-        text-align: right;
-        flex-shrink: 0;
-    }
-
-    // Hover / active (keyboard)
     &--active,
     &:hover {
-        background: $primary-light;
-        border-left-color: $primary;
+        background: $hover-color;
     }
 
     // Selected
     &--selected {
-        background: $primary-medium;
-        border-left-color: $primary;
+        background: $hover-color;
+        color: $color-primary;
         font-weight: 600;
-
-        &::after {
-            content: "✓";
-        }
     }
 
     // Active + Selected — giữ màu selected, không override
     &--active#{&}--selected {
-        background: $primary-medium;
+        background: $hover-color;
     }
 }
 
@@ -386,11 +377,8 @@ $item-height: 36px;
 .cb-dropdown__th {
     padding: 6px 12px;
     text-align: left;
-    font-size: 12px;
     font-weight: 600;
     color: inherit;
-    opacity: 0.55;
-    border-bottom: 1px solid $border-color;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -411,7 +399,6 @@ $item-height: 36px;
 
 .cb-dropdown__row {
     cursor: pointer;
-    border-left: 3px solid transparent;
     transition:
         background 0.12s ease,
         border-left-color 0.12s ease;
@@ -423,14 +410,13 @@ $item-height: 36px;
     // Hover / active
     &--active,
     &:hover {
-        background: $primary-light;
-        border-left-color: $primary;
+        background: $hover-color;
     }
 
     // Selected
     &--selected {
-        background: $primary-medium;
-        border-left-color: $primary;
+        background: $hover-color;
+        color: $primary;
         font-weight: 600;
     }
 

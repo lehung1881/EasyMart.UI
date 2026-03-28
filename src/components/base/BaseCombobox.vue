@@ -185,11 +185,9 @@ const emit = defineEmits<{
     (e: "search", keyword: string): void;
 }>();
 
-// Computed từ store.comboConfig
-
-const displayField = computed(() => props.store.comboConfig.displayField);
-const valueField = computed(() => props.store.comboConfig.valueField);
-const columns = computed(() => props.store.comboConfig.columns);
+const displayField = computed(() => props.store.displayField);
+const valueField = computed(() => props.store.valueField);
+const columns = computed(() => props.store.columns);
 
 // Internal State
 
@@ -482,18 +480,10 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 @use "@/assets/styles/base" as *;
 
-// SCSS Variables ─
-$primary: $color-primary;
-$primary-alpha-20: rgba($color-primary, 0.2);
-$border-color: #d0d0d0;
-$border-radius: 4px;
-
-// Root container ─
-
 .cb-root {
     display: inline-block;
     width: 100%;
-    font-size: 14px;
+    // font-size: 14px;
     box-sizing: border-box;
 
     // Size modifiers — set CSS var để cb-input-wrap và cb-panel dùng chung
@@ -540,7 +530,7 @@ $border-radius: 4px;
     display: flex;
     align-items: center;
     height: var(--cb-input-height);
-    border: 1px solid $border-color; // 1px — không phải 2px
+    border: $input-border;
     border-radius: $border-radius;
     background: #fff;
     transition:
@@ -550,13 +540,12 @@ $border-radius: 4px;
 
     // Hover
     &:hover {
-        border-color: $primary;
+        border-color: $color-primary;
     }
 
     // Focused state — thông qua parent modifier
     .cb-root--focused & {
-        border-color: $primary;
-        box-shadow: 0 0 0 3px $primary-alpha-20;
+        border-color: $color-primary;
     }
 }
 
@@ -598,7 +587,7 @@ $border-radius: 4px;
     transition: color 0.12s ease;
 
     &:hover {
-        color: $primary;
+        color: $color-primary;
     }
 
     &--clear {
@@ -609,7 +598,7 @@ $border-radius: 4px;
         border-radius: 50%;
 
         &:hover {
-            background: rgba($primary, 0.08);
+            background: rgba($color-primary, 0.08);
         }
     }
 
@@ -635,14 +624,14 @@ $border-radius: 4px;
 
 .cb-panel {
     position: absolute;
-    top: calc(var(--cb-input-height) + 4px); // cách input 4px — không liền mạch
+    top: calc(var(--cb-input-height) + 4px);
     left: 0;
     right: 0;
     z-index: 1000;
     background: #fff;
-    border: 1px solid $border-color; // xám — không dùng màu cam
+    border: 1px solid #ddd;
     border-radius: $border-radius;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 0 10px #0000002d;
     overflow: hidden;
 }
 

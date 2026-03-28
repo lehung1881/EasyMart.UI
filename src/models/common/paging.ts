@@ -1,5 +1,4 @@
-import { DataType } from "@/constants/enums/dataType.ts";
-import { FilterOperator } from "@/constants/enums/filterOperator.ts";
+﻿import { DataType, FilterOperator } from "@/constants";
 
 /**
  * Điều kiện sắp xếp - map với SortCondition (C#)
@@ -7,8 +6,6 @@ import { FilterOperator } from "@/constants/enums/filterOperator.ts";
 export interface SortCondition {
     property: string;
     desc: boolean;
-    // dataType: DataType;
-    // operand: number;
 }
 
 /**
@@ -23,7 +20,7 @@ export interface FilterCondition {
 }
 
 /**
- * Giá trị đang selected trong Combobox - map với SelectedValue (C#)
+ * Giá trị đang selected trong Combobox - map với SelectedValue (C#).
  * Dùng để ưu tiên bản ghi đang chọn lên đầu danh sách phân trang.
  */
 export interface SelectedValue {

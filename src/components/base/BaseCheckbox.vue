@@ -90,7 +90,7 @@ function onChange(event: Event): void {
     align-items: center;
     justify-content: center;
     line-height: 0;
-    border: 1px solid #9ca3af;
+    border: $input-border;
     border-radius: 2px;
     background: #ffffff;
     color: #ffffff;

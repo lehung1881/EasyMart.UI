@@ -93,7 +93,7 @@ function onChange(event: Event): void {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #d1d5db;
+    border: $input-border;
     border-radius: 50%;
     background: #ffffff;
     transition:

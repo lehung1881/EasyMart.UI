@@ -114,7 +114,7 @@ function onChange(event: Event): void {
     flex: 1;
     width: 100%;
     padding: 0 12px;
-    border: 1px solid #e7e8e9;
+    border: $input-border;
     border-radius: 4px;
     background-color: #ffffff;
     color: $color-text-black;

@@ -1,33 +1,19 @@
 ﻿/**
  * useComboboxStore.ts
- * Data layer — Pinia factory store cho BaseCombobox.
+ * Data layer - Pinia factory store cho BaseCombobox.
  * Mỗi storeID tạo một instance độc lập; gọi cùng storeID trả về cùng instance.
  */
 
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import commonFunction from "@/commons/commonFunction";
-import { DataType } from "@/constants/enums/dataType.ts";
-import { FilterOperator } from "@/constants/enums/filterOperator.ts";
+import { DataType, FilterOperator } from "@/constants";
 import type { FilterCondition, PagingRequest } from "@/models/common/paging";
 import type BaseAPI from "@/api/baseAPI";
 import type { ComboboxLoadData, ComboboxStoreOptions, QueryMode } from "@/models/common/combobox";
+import type { ColumnDefinition } from "@/models/common/columnDefinition";
 
 const STORE_NAME_TEMPLATE = "combobox_{0}_{1}";
-
-// Types
-
-export interface Column {
-    field: string;
-    label: string;
-    width?: string | number;
-}
-
-export interface ComboConfig {
-    displayField: string;
-    valueField: string;
-    columns: Column[];
-}
 
 /**
  * Tạo và lấy instance store cho combobox theo storeID.
@@ -64,12 +50,14 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
         /** Giá trị đang được chọn trong combobox */
         const selectedValue = ref<any>(null);
 
-        /** Config hiển thị combobox: displayField, valueField, columns */
-        const comboConfig = ref<ComboConfig>({
-            displayField: "",
-            valueField: "",
-            columns: [],
-        });
+        /** Field hiển thị text trong input và dropdown */
+        const displayField = ref<string>("");
+
+        /** Field dùng làm value khi emit */
+        const valueField = ref<string>("");
+
+        /** Cấu hình cột hiển thị cho dropdown dùng bằng */
+        const columns = ref<ColumnDefinition[]>([]);
 
         // Internal state
 
@@ -113,8 +101,8 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
             searchFields.forEach((f) => {
                 if (f.trim()) mergedFields.add(f.trim());
             });
-            // Gộp displayField từ comboConfig vào search fields
-            mergedFields.add(comboConfig.value.displayField);
+            // Gộp displayField vào search fields
+            if (displayField.value.trim()) mergedFields.add(displayField.value.trim());
 
             if (mergedFields.size === 0) return [];
 
@@ -144,12 +132,12 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
 
         /**
          * Lấy selectedValue để đưa vào payload gửi BE, giúp BE biết giá trị nào đang được chọn (vd: để exclude khỏi kết quả).
-         * @returns
+         * @returns Selected value dạng payload, hoặc null nếu không có giá trị.
          */
         const getSelectedValueForPayload = (): any => {
             if (selectedValue.value == null) return null;
             return {
-                property: comboConfig.value.valueField,
+                property: valueField.value,
                 value: selectedValue.value,
                 dataType: DataType.String,
             };
@@ -178,15 +166,17 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
          * @returns Promise hoàn tất load data.
          */
         const loadData = async (keyword: string): Promise<void> => {
-            const displayField = comboConfig.value.displayField;
+            const displayFieldValue = displayField.value;
 
             // LOCAL MODE
             if (!isRemoteMode()) {
-                if (!keyword || !displayField) {
+                if (!keyword || !displayFieldValue) {
                     data.value = [...rawData.value];
                 } else {
                     const kw = keyword.toLowerCase();
-                    data.value = rawData.value.filter((item) => String(item[displayField]).toLowerCase().includes(kw));
+                    data.value = rawData.value.filter((item) =>
+                        String(item[displayFieldValue]).toLowerCase().includes(kw),
+                    );
                 }
                 return;
             }
@@ -263,11 +253,9 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
                 data.value = config.data ? [...config.data] : [];
             }
 
-            comboConfig.value = {
-                displayField: config.displayField,
-                valueField: config.valueField,
-                columns: config.columns ?? [],
-            };
+            displayField.value = config.displayField;
+            valueField.value = config.valueField;
+            columns.value = config.columns ?? [];
         };
 
         /**
@@ -278,7 +266,7 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
         const setSelectedItem = (item: any): void => {
             oldSelectedItem.value = selectedItem.value ? { ...selectedItem.value } : null;
             selectedItem.value = item ?? null;
-            const vf = comboConfig.value.valueField;
+            const vf = valueField.value;
             selectedValue.value = item && vf ? item[vf] : null;
         };
 
@@ -309,7 +297,9 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
             selectedItem,
             oldSelectedItem,
             selectedValue,
-            comboConfig,
+            displayField,
+            valueField,
+            columns,
             loadData,
             loadNextPage,
             initConfigStore,
