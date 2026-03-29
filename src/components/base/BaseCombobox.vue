@@ -562,7 +562,7 @@ onBeforeUnmount(() => {
     border: none;
     outline: none;
     background: transparent;
-    font-size: inherit;
+    font-size: $font-size-base;
     color: inherit;
     font-family: inherit;
     min-width: 0;

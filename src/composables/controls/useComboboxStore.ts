@@ -331,6 +331,6 @@ export type ComboboxStoreInstance = ReturnType<typeof useComboboxStore>;
  * @returns Mảng data trả về từ BE, hoặc mảng rỗng nếu lỗi.
  */
 export const loadDataRemoteCombobox = async (api: BaseAPI, payload: PagingRequest) => {
-    const response = await api.getDataCombobox(payload);
+    const response = await api.getPagingData(payload);
     return response.Data?.PageData ?? [];
 };

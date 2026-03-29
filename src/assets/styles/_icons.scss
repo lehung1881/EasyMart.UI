@@ -1,4 +1,4 @@
-/* _icons.scss */
+﻿/* _icons.scss */
 @use "./_variable.scss" as *;
 $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 
@@ -88,3 +88,13 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 
 /* Điều hướng */
 @include setIcon(icon-collapse, -400px, -200px, 20px, $icon-color-default, $primary-color);
+
+/* Pagination Icons */
+@include setIcon(icon-page-first, -0px, -220px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-page-prev, -20px, -220px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-page-next, -40px, -220px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-page-last, -60px, -220px, 20px, $icon-color-default, $primary-color);
+
+
+
+

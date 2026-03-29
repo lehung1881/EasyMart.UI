@@ -179,11 +179,11 @@ abstract class BaseAPI {
     }
 
     /**
-     * Lây dữ liệu cho combobox với phân trang và tìm kiếm.
+     * Lây dữ liệu phân trang và tìm kiếm.
      * @param payload
      * @returns
      */
-    public getDataCombobox(payload: PagingRequest) {
+    public getPagingData(payload: PagingRequest) {
         return this.post<PagingResponse, PagingRequest>("/paging_filter", payload);
     }
 }
