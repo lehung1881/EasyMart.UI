@@ -103,7 +103,7 @@ function onChange(event: Event): void {
 
 .base-radio__dot {
     border-radius: 50%;
-    background-color: $color-primary;
+    background-color: $primary-color;
     opacity: 0;
     transform: scale(0.75);
     transition:
@@ -116,7 +116,7 @@ function onChange(event: Event): void {
 }
 
 .base-radio__input:checked + .base-radio__circle {
-    border-color: $color-primary;
+    border-color: $primary-color;
 }
 
 .base-radio__input:checked + .base-radio__circle .base-radio__dot {
@@ -125,7 +125,7 @@ function onChange(event: Event): void {
 }
 
 .base-radio__input:focus-visible + .base-radio__circle {
-    outline: 2px solid rgba($color-primary, 0.3);
+    outline: 2px solid rgba($primary-color, 0.3);
     outline-offset: 2px;
 }
 

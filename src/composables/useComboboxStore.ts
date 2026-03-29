@@ -57,6 +57,9 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
         const valueField = ref<string>("");
 
         /** Cấu hình cột hiển thị cho dropdown dùng bằng */
+        const dropdownWidth = ref<number | null>(null);
+
+        /** Cấu hình cột hiển thị cho dropdown dùng bằng */
         const columns = ref<ColumnDefinition[]>([]);
 
         // Internal state
@@ -300,6 +303,7 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
             displayField,
             valueField,
             columns,
+            dropdownWidth,
             loadData,
             loadNextPage,
             initConfigStore,

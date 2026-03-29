@@ -55,8 +55,8 @@ class FormatData {
         if (isNaN(num)) return String(value);
 
         return num.toLocaleString("vi-VN", {
-            minimumFractionDigits: 3,
-            maximumFractionDigits: 3,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         });
     }
 

@@ -201,7 +201,7 @@ $font: "Segoe UI", system-ui, sans-serif;
 .demo__title {
     font-size: 22px;
     font-weight: 700;
-    color: $color-primary;
+    color: $primary-color;
     margin: 0 0 6px;
 }
 
@@ -214,7 +214,7 @@ $font: "Segoe UI", system-ui, sans-serif;
         padding: 2px 6px;
         border-radius: 4px;
         font-size: 12px;
-        color: $color-primary;
+        color: $primary-color;
     }
 }
 
@@ -242,8 +242,8 @@ $font: "Segoe UI", system-ui, sans-serif;
         border-color 0.15s ease;
 
     &--active {
-        color: $color-primary;
-        border-bottom-color: $color-primary;
+        color: $primary-color;
+        border-bottom-color: $primary-color;
         font-weight: 600;
     }
 
@@ -318,8 +318,8 @@ $font: "Segoe UI", system-ui, sans-serif;
     background: #fff;
 
     &:focus {
-        border-color: $color-primary;
-        box-shadow: 0 0 0 3px rgba($color-primary, 0.15);
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
     }
 
     &::placeholder {
@@ -349,7 +349,7 @@ $font: "Segoe UI", system-ui, sans-serif;
 
     &--accent {
         background: $primary-light;
-        color: $color-primary;
+        color: $primary-color;
         font-weight: 600;
     }
 }
@@ -439,7 +439,7 @@ $font: "Segoe UI", system-ui, sans-serif;
 .demo__detail-title {
     font-weight: 600;
     font-size: 13px;
-    color: $color-primary;
+    color: $primary-color;
 }
 
 .demo__detail-close {
@@ -460,8 +460,8 @@ $font: "Segoe UI", system-ui, sans-serif;
         color 0.12s ease;
 
     &:hover {
-        background: rgba($color-primary, 0.1);
-        color: $color-primary;
+        background: rgba($primary-color, 0.1);
+        color: $primary-color;
     }
 }
 

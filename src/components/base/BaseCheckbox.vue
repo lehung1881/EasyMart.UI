@@ -115,8 +115,8 @@ function onChange(event: Event): void {
 }
 
 .base-checkbox__input:checked + .base-checkbox__box {
-    background: $color-primary;
-    border-color: $color-primary;
+    background: $primary-color;
+    border-color: $primary-color;
 }
 .base-checkbox__input:checked + .base-checkbox__box svg {
     opacity: 1;
@@ -124,7 +124,7 @@ function onChange(event: Event): void {
 }
 
 .base-checkbox__input:focus-visible + .base-checkbox__box {
-    outline: 2px solid rgba($color-primary, 0.3);
+    outline: 2px solid rgba($primary-color, 0.3);
     outline-offset: 2px;
 }
 

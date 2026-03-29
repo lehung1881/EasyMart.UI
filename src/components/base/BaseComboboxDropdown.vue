@@ -22,7 +22,7 @@
                         >
                             {{ col.title }}
                         </th>
-                        <th :style="'width: 24px;'"></th>
+                        <th :style="'width: 30px;'" class="cb-dropdown__th"></th>
                     </tr>
                 </thead>
                 <tbody class="cb-dropdown__tbody" :style="{ maxHeight: maxTableBodyHeight }">
@@ -56,7 +56,10 @@
                                     {{ displayData(item[col.dataField], col) }}
                                 </slot>
                             </td>
-                            <td class="cb-dropdown__td" :style="'width: 24px;'"></td>
+                            <td
+                                class="cb-dropdown__td"
+                                :style="{ width: data.length > maxDisplayItem ? '24px' : '30px' }"
+                            ></td>
                         </slot>
                     </tr>
                     <!-- Sentinel row -->
@@ -209,8 +212,11 @@ const isSelected = (item: any): boolean => {
  */
 const columnStyle = (col: ColumnDefinition): Record<string, string> => {
     const { width, align } = col;
+    const colWidth = width === undefined || width === null ? "auto" : typeof width === "number" ? `${width}px` : width;
     return {
-        width: width === undefined || width === null ? "auto" : typeof width === "number" ? `${width}px` : width,
+        width: colWidth,
+        maxWidth: colWidth,
+        minWidth: colWidth,
         textAlign: align ?? "left",
     };
 };
@@ -265,16 +271,9 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 @use "@/assets/styles/base" as *;
-// ─── SCSS Variables ────────────────────────────────────────────────────────────
-$primary: #f48632;
-$primary-light: rgba(244, 134, 50, 0.08);
-$primary-medium: rgba(244, 134, 50, 0.18);
-$border-color: #d0d0d0;
-$border-radius: 4px;
-$item-height: 36px;
-$hover-color: #f7f6ff;
 
-// ─── Container ─────────────────────────────────────────────────────────────────
+$border-color: #d0d0d0;
+$item-height: 36px;
 
 .cb-dropdown {
     width: 100%;
@@ -282,8 +281,6 @@ $hover-color: #f7f6ff;
     border-radius: $border-radius;
     font-size: $font-size-base;
 }
-
-// ─── Loading ───────────────────────────────────────────────────────────────────
 
 .cb-dropdown__loading {
     display: flex;
@@ -299,7 +296,7 @@ $hover-color: #f7f6ff;
     width: 16px;
     height: 16px;
     border: 2px solid $border-color;
-    border-top-color: $primary;
+    border-top-color: $primary-color;
     border-radius: 50%;
     animation: cb-spin 0.7s linear infinite;
     flex-shrink: 0;
@@ -311,8 +308,6 @@ $hover-color: #f7f6ff;
     }
 }
 
-// ─── Empty ─────────────────────────────────────────────────────────────────────
-
 .cb-dropdown__empty {
     padding: 12px 16px;
     color: inherit;
@@ -321,14 +316,11 @@ $hover-color: #f7f6ff;
     font-style: italic;
 }
 
-// ─── LIST MODE ─────────────────────────────────────────────────────────────────
-
 .cb-dropdown__list {
     list-style: none;
     margin: 0;
     padding: 4px 0;
     overflow-y: auto;
-    // max-height được bind động qua :style từ prop maxDisplayItem
 }
 
 .cb-dropdown__item {
@@ -349,7 +341,7 @@ $hover-color: #f7f6ff;
     // Selected
     &--selected {
         background: $hover-color;
-        color: $color-primary;
+        color: $primary-color;
         font-weight: 600;
     }
 
@@ -382,6 +374,7 @@ $hover-color: #f7f6ff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    border-bottom: $input-border;
 }
 
 .cb-dropdown__tbody {
@@ -416,13 +409,8 @@ $hover-color: #f7f6ff;
     // Selected
     &--selected {
         background: $hover-color;
-        color: $primary;
+        color: $primary-color;
         font-weight: 600;
-    }
-
-    // Active + Selected
-    &--active#{&}--selected {
-        background: $primary-medium;
     }
 }
 
@@ -435,8 +423,6 @@ $hover-color: #f7f6ff;
     color: inherit;
     vertical-align: middle;
 }
-
-// ─── Infinite scroll ───────────────────────────────────────────────────────────
 
 .cb-sentinel {
     height: 1px;

@@ -521,14 +521,14 @@ function goToLogin(): void {
     padding: 0;
     font-family: $font-family-base;
     font-size: $font-size-base;
-    color: rgba($color-primary, 0.82);
+    color: rgba($primary-color, 0.82);
     font-weight: 500;
     cursor: pointer;
     text-decoration: none;
     transition: color 0.2s;
 }
 .link:hover {
-    color: $color-primary;
+    color: $primary-color;
     text-decoration: underline;
 }
 

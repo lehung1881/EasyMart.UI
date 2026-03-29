@@ -15,7 +15,7 @@
         <label v-if="label" class="cb-label">{{ label }}</label>
 
         <!-- Control: input + dropdown — position:relative tính từ đây -->
-        <div class="cb-control">
+        <div ref="controlRef" class="cb-control">
             <!-- Input wrapper -->
             <div class="cb-input-wrap">
                 <input
@@ -79,11 +79,12 @@
                     </svg>
                 </button>
             </div>
-
-            <!-- Dropdown panel -->
+        </div>
+        <!-- /cb-control -->
+        <!-- Dropdown panel -->
+        <Teleport to="body">
             <Transition name="cb-dropdown">
-                <div v-if="isOpen" class="cb-panel" role="dialog" aria-label="Danh sách lựa chọn">
-                    <!-- Delegate rendering sang BaseComboboxDropdown (global registered) -->
+                <div v-if="isOpen" ref="panelRef" class="cb-panel" :style="dropdownStyle">
                     <BaseComboboxDropdown
                         :data="storeData"
                         :display-field="displayField"
@@ -105,8 +106,7 @@
                     </BaseComboboxDropdown>
                 </div>
             </Transition>
-        </div>
-        <!-- /cb-control -->
+        </Teleport>
     </div>
 </template>
 
@@ -195,6 +195,18 @@ const columns = computed(() => props.store.columns);
 const rootRef = ref<HTMLElement | null>(null);
 /** Ref tới input element */
 const inputRef = ref<HTMLInputElement | null>(null);
+/** Ref tới cb-control để tính toán vị trí dropdown */
+const controlRef = ref<HTMLElement | null>(null);
+/** Style position cho cb-panel khi dùng fixed */
+const dropdownStyle = ref<{ top: any; left: string; width?: string }>({
+    top: "0px",
+    left: "0px",
+    width: "0px",
+});
+
+/** Ref tới panel element để kiểm tra click inside khi scroll */
+const panelRef = ref<HTMLElement | null>(null);
+
 /** Dropdown đang mở hay không */
 const isOpen = ref(false);
 /** Input đang được focus */
@@ -265,6 +277,21 @@ const getDisplayText = (value: typeof props.modelValue): string => {
     return storeData.value.length > 0 ? String(value) : "";
 };
 
+/**
+ * calcDropdownPosition — Tính toán vị trí fixed cho cb-panel dựa trên
+ * vị trí của cb-control trong viewport.
+ * Gọi mỗi khi mở dropdown để đảm bảo vị trí luôn chính xác dù page đã scroll.
+ */
+const calcDropdownPosition = (): void => {
+    if (!controlRef.value) return;
+    const rect = controlRef.value.getBoundingClientRect();
+    dropdownStyle.value = {
+        top: `${rect.bottom + 4}px`,
+        left: `${rect.left}px`,
+        width: `${props.store.dropdownWidth ? props.store.dropdownWidth : rect.width}px`,
+    };
+};
+
 /** closeDropdown — Đóng dropdown và reset activeIndex */
 const closeDropdown = () => {
     isOpen.value = false;
@@ -281,6 +308,7 @@ const openDropdown = () => {
     // Luôn load trước — không guard bằng isOpen
     props.store.loadData("");
     if (isOpen.value) return; // guard UI
+    calcDropdownPosition();
     isOpen.value = true;
 };
 
@@ -460,10 +488,24 @@ watch(storeData, () => {
     setSelectedItem(props.modelValue);
 });
 
+/**
+ * onWindowScroll — Đóng dropdown khi scroll xảy ra bên ngoài cb-panel.
+ * Dùng capture: true để bắt được scroll trên mọi container, nhưng
+ * bỏ qua nếu event xuất phát từ bên trong panel (list/tbody cuộn nội bộ).
+ */
+const onWindowScroll = (e: Event): void => {
+    if (!isOpen.value) return;
+    if (panelRef.value && panelRef.value.contains(e.target as Node)) return;
+    closeDropdown();
+    inputText.value = confirmedDisplayText.value;
+};
+
 // Lifecycle
 
 onMounted(() => {
     document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", onWindowScroll, { passive: true, capture: true });
+    window.addEventListener("resize", closeDropdown, { passive: true });
     // autoLoad: pre-fetch data ngay khi mount, không cần chờ user mở dropdown
     if (props.autoLoad) {
         props.store.loadData("");
@@ -472,6 +514,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     document.removeEventListener("mousedown", handleClickOutside);
+    window.removeEventListener("scroll", onWindowScroll, { capture: true });
+    window.removeEventListener("resize", closeDropdown);
     if (debounceTimer) clearTimeout(debounceTimer);
     props.store.$dispose();
 });
@@ -505,10 +549,9 @@ onBeforeUnmount(() => {
 }
 
 // Control wrapper (input + panel)
-// Tách riêng khỏi label để position:relative không bị lệch bởi chiều cao label
+// position: relative không còn cần thiết vì cb-panel dùng fixed
 
 .cb-control {
-    position: relative;
     width: 100%;
 }
 
@@ -540,12 +583,12 @@ onBeforeUnmount(() => {
 
     // Hover
     &:hover {
-        border-color: $color-primary;
+        border-color: $primary-color;
     }
 
     // Focused state — thông qua parent modifier
     .cb-root--focused & {
-        border-color: $color-primary;
+        border-color: $primary-color;
     }
 }
 
@@ -587,7 +630,7 @@ onBeforeUnmount(() => {
     transition: color 0.12s ease;
 
     &:hover {
-        color: $color-primary;
+        color: $primary-color;
     }
 
     &--clear {
@@ -598,7 +641,7 @@ onBeforeUnmount(() => {
         border-radius: 50%;
 
         &:hover {
-            background: rgba($color-primary, 0.08);
+            background: rgba($primary-color, 0.08);
         }
     }
 
@@ -620,13 +663,10 @@ onBeforeUnmount(() => {
     }
 }
 
-// Dropdown panel
+// Dropdown panel — position: fixed, vị trí được tính động qua dropdownStyle
 
 .cb-panel {
-    position: absolute;
-    top: calc(var(--cb-input-height) + 4px);
-    left: 0;
-    right: 0;
+    position: fixed;
     z-index: 1000;
     background: #fff;
     border: 1px solid #ddd;

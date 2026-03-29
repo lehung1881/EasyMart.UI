@@ -141,11 +141,11 @@ function onChange(event: Event): void {
     }
 
     &:hover:not(:disabled):not(.is-readonly) {
-        border-color: $color-primary;
+        border-color: $primary-color;
     }
 
     &:focus-visible:not(:disabled):not(.is-readonly) {
-        border-color: $color-primary;
+        border-color: $primary-color;
     }
 
     &:disabled {
@@ -163,7 +163,7 @@ function onChange(event: Event): void {
     &:-webkit-autofill:focus {
         -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
         -webkit-text-fill-color: $color-text-black !important;
-        border-color: $color-primary !important;
+        border-color: $primary-color !important;
     }
 }
 

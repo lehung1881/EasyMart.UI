@@ -70,7 +70,7 @@ function onClick(event: MouseEvent): void {
         box-shadow 0.2s ease;
 
     &:focus-visible {
-        outline: 2px solid rgba($color-primary, 0.3);
+        outline: 2px solid rgba($primary-color, 0.3);
         outline-offset: 2px;
     }
 
@@ -118,23 +118,23 @@ function onClick(event: MouseEvent): void {
 }
 
 .variant-primary {
-    background-color: $color-primary;
-    border-color: $color-primary;
+    background-color: $primary-color;
+    border-color: $primary-color;
     color: #ffffff;
 
     &:hover:not(:disabled) {
-        background-color: darken($color-primary, 6%);
-        border-color: darken($color-primary, 6%);
+        background-color: darken($primary-color, 6%);
+        border-color: darken($primary-color, 6%);
     }
 }
 
 .variant-outline-primary {
     background-color: #ffffff;
-    border-color: $color-primary;
-    color: $color-primary;
+    border-color: $primary-color;
+    color: $primary-color;
 
     &:hover:not(:disabled) {
-        background-color: rgba($color-primary, 0.08);
+        background-color: rgba($primary-color, 0.08);
     }
 }
 </style>
