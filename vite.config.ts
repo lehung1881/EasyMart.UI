@@ -9,4 +9,15 @@ export default defineConfig({
             "@": resolve(__dirname, "./src"),
         },
     },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                additionalData: `
+          @use "sass:map";
+          @use "@/assets/styles/_variable.scss" as *;
+          @use "@/assets/styles/_icons.scss" as *;
+        `,
+            },
+        },
+    },
 });

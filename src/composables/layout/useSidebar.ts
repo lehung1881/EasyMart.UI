@@ -1,9 +1,7 @@
 import { ref, computed } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import type { MenuItem, MenuGroupType } from "@/constants";
 import { MenuGroup } from "@/constants";
-
-const route = useRoute();
 
 /**
  * Composable quản lý state và logic của Sidebar

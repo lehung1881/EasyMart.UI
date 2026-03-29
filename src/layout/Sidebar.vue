@@ -55,7 +55,7 @@ const { isCollapsed, activeKey, menuGroups, toggleCollapse, setActive } = useSid
 
 <style lang="scss" scoped>
 @use "@/assets/styles/variable" as *;
-@use "@/assets/styles/icons" as *;
+// @use "@/assets/styles/icons" as *;
 
 .app-sidebar {
     width: $sidebar-width;

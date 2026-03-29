@@ -5,7 +5,6 @@ import router from "./routers";
 import { i18nPlugin } from "./i18n";
 import globalComponentsPlugin from "@/plugins/globalComponents";
 import "./style.css";
-import "@/assets/styles/_variable.scss";
 
 const app = createApp(App);
 

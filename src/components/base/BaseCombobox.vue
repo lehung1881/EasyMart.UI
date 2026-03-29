@@ -38,15 +38,8 @@
                 />
 
                 <!-- Nút clear (×) — dùng mousedown.prevent để tránh blur -->
-                <button
-                    v-if="hasClearValue"
-                    class="cb-btn cb-btn--clear"
-                    type="button"
-                    aria-label="Xoá giá trị"
-                    tabindex="-1"
-                    @mousedown.prevent="clearValue"
-                >
-                    <span aria-hidden="true">×</span>
+                <button v-if="hasClearValue" class="cb-btn cb-btn--clear" type="button" @mousedown.prevent="clearValue">
+                    <div class="icon-close-small"></div>
                 </button>
 
                 <!-- Nút toggle (▼) — chevron xoay khi mở -->
@@ -59,24 +52,7 @@
                     :readonly="!searchable"
                     @mousedown.prevent="isOpen ? closeDropdown() : openDropdown()"
                 >
-                    <svg
-                        class="cb-chevron"
-                        :class="{ 'cb-chevron--open': isOpen }"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M2 4L6 8L10 4"
-                            stroke="currentColor"
-                            stroke-width="1.6"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
+                    <div class="icon-chevron-small" :class="{ 'cb-chevron--open': isOpen }"></div>
                 </button>
             </div>
         </div>
@@ -522,15 +498,11 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
-@use "@/assets/styles/variable" as *;
-
 .cb-root {
     display: inline-block;
     width: 100%;
-    // font-size: 14px;
     box-sizing: border-box;
 
-    // Size modifiers — set CSS var để cb-input-wrap và cb-panel dùng chung
     &--sm {
         --cb-input-height: #{$input-height-sm};
     }
@@ -548,14 +520,9 @@ onBeforeUnmount(() => {
     }
 }
 
-// Control wrapper (input + panel)
-// position: relative không còn cần thiết vì cb-panel dùng fixed
-
 .cb-control {
     width: 100%;
 }
-
-// Label─
 
 .cb-label {
     display: block;
@@ -566,8 +533,6 @@ onBeforeUnmount(() => {
     color: $color-text-black;
     line-height: 1;
 }
-
-// Input wrapper
 
 .cb-input-wrap {
     display: flex;
@@ -581,18 +546,14 @@ onBeforeUnmount(() => {
         box-shadow 0.15s ease;
     overflow: hidden;
 
-    // Hover
     &:hover {
         border-color: $primary-color;
     }
 
-    // Focused state — thông qua parent modifier
     .cb-root--focused & {
         border-color: $primary-color;
     }
 }
-
-// Input
 
 .cb-input {
     flex: 1;
@@ -614,8 +575,6 @@ onBeforeUnmount(() => {
         cursor: not-allowed;
     }
 }
-
-// Buttons (clear, toggle)
 
 .cb-btn {
     display: flex;
@@ -652,8 +611,6 @@ onBeforeUnmount(() => {
     }
 }
 
-// Chevron icon
-
 .cb-chevron {
     transition: transform 0.2s ease;
     color: #666;
@@ -662,8 +619,6 @@ onBeforeUnmount(() => {
         transform: rotate(180deg);
     }
 }
-
-// Dropdown panel — position: fixed, vị trí được tính động qua dropdownStyle
 
 .cb-panel {
     position: fixed;
@@ -674,8 +629,6 @@ onBeforeUnmount(() => {
     box-shadow: 0 0 10px #0000002d;
     overflow: hidden;
 }
-
-// Transition
 
 .cb-dropdown-enter-active,
 .cb-dropdown-leave-active {
