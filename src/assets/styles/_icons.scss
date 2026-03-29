@@ -2,7 +2,7 @@
 @use "./_variable.scss" as *;
 $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 
-@mixin setIcon($icon-name, $icon-x, $icon-y, $icon-size, $color: "", $icon-link: "") {
+@mixin setIcon($icon-name, $icon-x, $icon-y, $icon-size, $color: "", $color-hover: "", $icon-link: "") {
     @if $icon-link == "" {
         $icon-link: $link-default-icon;
     }
@@ -25,6 +25,12 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
             mask: $icon-link no-repeat $icon-x $icon-y;
             background-color: $color;
             cursor: pointer;
+
+            @if $color-hover != "" {
+                &:hover {
+                    background-color: $color-hover;
+                }
+            }
         }
     }
 }
@@ -43,11 +49,39 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
     }
 }
 
-
-/* Trong một file SCSS nào đó */
-@include setIcon(icon-home, 0px, 0px, 20px);
-@include setIcon(icon-delete, 0px, 0px, 20px, green);
-
 /* Eye Icons for Password Visibility Toggle - colored directly in SVG */
 @include setIcon(icon-eye-closed, -374px, 0px, 20px);
 @include setIcon(icon-eye-open, -348px, 0px, 20px);
+
+/* Sidebar Icons */
+
+/* Tổng quan */
+@include setIcon(icon-dashboard, -0px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-finance, -20px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-business, -40px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-hr, -60px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-operations, -80px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-system, -100px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-loan, -120px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-knowledge, -140px, -200px, 20px, $icon-color-default, $primary-color);
+
+/* Bán hàng */
+@include setIcon(icon-orders, -160px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-customers, -180px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-invoices, -200px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-promotions, -220px, -200px, 20px, $icon-color-default, $primary-color);
+
+/* Kho */
+@include setIcon(icon-inventory, -240px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-import, -260px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-export, -280px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-warehouse, -300px, -200px, 20px, $icon-color-default, $primary-color);
+
+/* Danh mục */
+@include setIcon(icon-inventory-item, -320px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-categories, -340px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-units, -360px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-suppliers, -380px, -200px, 20px, $icon-color-default, $primary-color);
+
+/* Điều hướng */
+@include setIcon(icon-collapse, -400px, -200px, 20px, $icon-color-default, $primary-color);

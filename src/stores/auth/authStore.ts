@@ -3,7 +3,7 @@ import { ref } from "vue";
 import authApi from "@/api/modules/authApi";
 import cacheService from "@/commons/cacheService";
 import { CacheAction, CacheCode } from "@/constants/cacheConfig";
-import { StoreNameConstant } from "@/constants/storeNameConstant";
+import { StoreNameConstant } from "@/constants";
 import type { LoginRequest, LoginResponse, RegisterRequest, UserInfo } from "@/models/auth/auth";
 
 export const useAuthStore = defineStore(StoreNameConstant.Auth, () => {

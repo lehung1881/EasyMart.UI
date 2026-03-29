@@ -67,7 +67,7 @@ function onChange(event: Event): void {
 </script>
 
 <style scoped lang="scss">
-@use "@/assets/styles/base" as *;
+@use "@/assets/styles/variable" as *;
 
 .base-radio {
     display: inline-flex;

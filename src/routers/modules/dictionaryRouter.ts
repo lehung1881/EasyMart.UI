@@ -2,9 +2,9 @@
 
 const dictionaryRoutes: RouteRecordRaw[] = [
     {
-        path: "dictionary",
-        name: "Dictionary",
-        component: () => import("@/pages/dictionary/Dictionary.vue"),
+        path: "dictionary/inventory-items",
+        name: "inventory-items",
+        component: () => import("@/pages/dictionary/inventoryItem/InventoryItemList.vue"),
     },
 ];
 

@@ -6,12 +6,12 @@
 
 <script setup lang="ts"></script>
 
-<style scoped>
+<style lang="scss" scoped>
+@use "@/assets/styles/variable" as *;
 .app-content {
-    margin-top: 48px;
-    margin-left: 240px;
-    min-height: calc(100vh - 48px);
-    padding: 16px;
-    background: #f8fafc;
+    height: 100%;
+    padding: 0 12px;
+    width: calc(100% - $sidebar-width);
+    // background: #fff;
 }
 </style>

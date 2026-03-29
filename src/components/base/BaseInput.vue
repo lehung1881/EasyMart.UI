@@ -87,7 +87,7 @@ function onChange(event: Event): void {
 </script>
 
 <style scoped lang="scss">
-@use "@/assets/styles/base" as *;
+@use "@/assets/styles/variable" as *;
 
 .base-input-wrapper {
     width: 100%;

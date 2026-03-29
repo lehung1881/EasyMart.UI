@@ -1,25 +1,20 @@
 ﻿<template>
-    <header class="app-header">
-        <div class="header-title">EasyMart</div>
-    </header>
+    <header class="app-header"></header>
 </template>
 
 <script setup lang="ts"></script>
 
-<style scoped>
+<style lang="scss" scoped>
+@use "@/assets/styles/variable" as *;
 .app-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 48px;
+    height: $header-height;
     z-index: 1000;
     display: flex;
     align-items: center;
     padding: 0 16px;
-    background: #0f172a;
+    background: $header-color;
     color: #f8fafc;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    box-shadow: 0 1px 10px #0000000f;
 }
 
 .header-title {

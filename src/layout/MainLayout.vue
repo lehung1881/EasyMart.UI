@@ -1,10 +1,12 @@
 ﻿<template>
     <div class="main-layout">
         <Header />
-        <Sidebar />
-        <Content>
-            <RouterView />
-        </Content>
+        <div class="main-layout_content">
+            <Sidebar />
+            <Content>
+                <RouterView />
+            </Content>
+        </div>
     </div>
 </template>
 
@@ -15,9 +17,19 @@ import Sidebar from "@/layout/Sidebar.vue";
 import Content from "@/layout/Content.vue";
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "@/assets/styles/variable" as *;
 .main-layout {
-    --header-height: 48px;
-    --sidebar-width: 240px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    .main-layout_content {
+        height: calc(100% - $header-height);
+        max-height: calc(100% - $header-height);
+        display: flex;
+        background-color: rgba($primary-color, 0.05);
+        padding: 12px 12px 0;
+    }
 }
 </style>

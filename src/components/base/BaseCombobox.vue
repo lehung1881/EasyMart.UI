@@ -113,7 +113,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import BaseComboboxDropdown from "@/components/base/BaseComboboxDropdown.vue";
-import type { ComboboxStoreInstance } from "@/composables/useComboboxStore";
+import type { ComboboxStoreInstance } from "@/composables/controls/useComboboxStore";
 
 // Types
 type ComboboxSize = "sm" | "md" | "lg";
@@ -522,7 +522,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
-@use "@/assets/styles/base" as *;
+@use "@/assets/styles/variable" as *;
 
 .cb-root {
     display: inline-block;

@@ -13,7 +13,7 @@ const appRoutes: RouteRecordRaw[] = [
             },
             {
                 path: "dashboard",
-                name: "Dashboard",
+                name: "dashboard",
                 component: () => import("@/pages/dashboard/Dashboard.vue"),
             },
             ...dictionaryRoutes,

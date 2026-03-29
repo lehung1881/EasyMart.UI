@@ -215,7 +215,7 @@ function handleGoToRegister(): void {
 </script>
 
 <style scoped lang="scss">
-@use "@/assets/styles/base" as *;
+@use "@/assets/styles/variable" as *;
 
 *,
 *::before,

@@ -60,7 +60,7 @@
 
 <script lang="ts">
 import { defineComponent, reactive, ref, onMounted, getCurrentInstance } from "vue";
-import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/useComboboxStore";
+import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls/useComboboxStore";
 import authApi from "@/api/modules/authApi";
 import { FormatType } from "@/constants";
 
@@ -174,7 +174,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use "@/assets/styles/base" as *;
+@use "@/assets/styles/variable" as *;
 $primary: #f48632;
 $primary-light: rgba(244, 134, 50, 0.09);
 $border: #e2e2e2;

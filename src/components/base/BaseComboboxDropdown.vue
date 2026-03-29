@@ -270,7 +270,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
-@use "@/assets/styles/base" as *;
+@use "@/assets/styles/variable" as *;
 
 $border-color: #d0d0d0;
 $item-height: 36px;

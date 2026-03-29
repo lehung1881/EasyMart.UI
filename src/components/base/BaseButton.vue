@@ -47,7 +47,7 @@ function onClick(event: MouseEvent): void {
 </script>
 
 <style scoped lang="scss">
-@use "@/assets/styles/base" as *;
+@use "@/assets/styles/variable" as *;
 
 .base-button {
     display: inline-flex;
