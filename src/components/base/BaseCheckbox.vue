@@ -19,7 +19,7 @@
                 />
             </svg>
         </div>
-        <div class="base-checkbox__label">
+        <div class="base-checkbox__label" v-if="label">
             <slot name="label">{{ label }}</slot>
         </div>
     </label>
@@ -91,7 +91,7 @@ function onChange(event: Event): void {
     justify-content: center;
     line-height: 0;
     border: $input-border;
-    border-radius: 2px;
+    border-radius: 4px;
     background: #ffffff;
     color: #ffffff;
     transition:

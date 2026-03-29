@@ -54,19 +54,21 @@ import BaseTable from "@/components/base/BaseTable.vue";
 import { useTableStore, loadDataRemoteTable, type TableRow } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import authApi from "@/api/modules/authApi";
+import { FormatType } from "@/constants";
 
-const localColumns: ColumnDefinition[] = [
+const tableColumns: ColumnDefinition[] = [
     { dataField: "InventoryItemCode", title: "Mã hàng", width: 160 },
     { dataField: "InventoryItemName", title: "Tên hàng", width: 260 },
-    { dataField: "BuyPrice", title: "Giá mua", width: 140, align: "right" },
-    { dataField: "QuantityBalance", title: "Số lượng tồn kho", width: 140, align: "right" },
-];
-
-const remoteColumns: ColumnDefinition[] = [
-    { dataField: "InventoryItemCode", title: "Mã hàng", width: 160 },
-    { dataField: "InventoryItemName", title: "Tên hàng", width: 260 },
-    { dataField: "BuyPrice", title: "Giá mua", width: 140, align: "right" },
-    { dataField: "QuantityBalance", title: "Số lượng tồn kho", width: 140, align: "right" },
+    { dataField: "BuyPrice", title: "Giá mua", width: 140, align: "right", formatType: FormatType.Currency },
+    { dataField: "SellPrice", title: "Giá bán", width: 140, align: "right", formatType: FormatType.Currency },
+    { dataField: "UnitName", title: "Đơn vị tính", width: 120 },
+    {
+        dataField: "QuantityBalance",
+        title: "Số lượng tồn kho",
+        width: 140,
+        align: "right",
+        formatType: FormatType.Quantity,
+    },
 ];
 
 const localRows: TableRow[] = [
@@ -130,14 +132,14 @@ export default defineComponent({
         const localTableStore = useTableStore("dashboard_local_table", {
             queryMode: "local",
             data: localRows,
-            columns: localColumns,
+            columns: tableColumns,
         });
 
         const remoteTableStore = useTableStore("dashboard_remote_table", {
             queryMode: "remote",
             tableLoadData: (payload) => loadDataRemoteTable(authApi, payload),
             viewOrTableName: "di_inventory_item",
-            columns: remoteColumns,
+            columns: tableColumns,
         });
 
         const localQuery = ref<string>("");

@@ -374,6 +374,12 @@ onBeforeUnmount(() => {
     background: #fff;
 }
 
+.tb-pagination__controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .tb-pagination__left {
     display: flex;
     align-items: center;
@@ -419,12 +425,8 @@ onBeforeUnmount(() => {
         cursor: not-allowed;
     }
 }
+
 .tb-pagination__btn :deep(div) {
     pointer-events: none;
-}
-.tb-pagination__controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
 }
 </style>

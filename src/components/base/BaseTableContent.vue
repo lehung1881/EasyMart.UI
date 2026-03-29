@@ -49,7 +49,7 @@
                     :style="getColumnStyle(column)"
                 >
                     <slot :name="`cell-${column.dataField}`" :row="row" :value="row[column.dataField]" :column="column">
-                        {{ row[column.dataField] }}
+                        {{ displayData(row[column.dataField], column) }}
                     </slot>
                 </td>
             </slot>
@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import BaseCheckbox from "@/components/base/BaseCheckbox.vue";
+import { formatData } from "@/commons/formatData";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import type { TableRow } from "@/composables/controls/useTableStore";
 
@@ -127,6 +128,16 @@ const getColumnStyle = (column: ColumnDefinition): Record<string, string> => {
         minWidth: normalizedWidth,
         textAlign: column.align ?? "left",
     };
+};
+
+/**
+ * Format giá trị hiển thị theo cấu hình formatType của cột.
+ * @param value Giá trị raw của ô dữ liệu.
+ * @param column Cấu hình cột chứa formatType.
+ * @returns Chuỗi hiển thị đã được format.
+ */
+const displayData = (value: unknown, column: ColumnDefinition): string => {
+    return formatData.formatDisplayData(value, column.formatType ?? 0);
 };
 
 /**
@@ -211,12 +222,13 @@ $border-color: #d0d0d0;
 
 .tb-content__cell {
     font-size: $font-size-base;
-    padding: 10px 12px;
+    padding: 0 12px;
     border-bottom: 1px solid rgba($border-color, 0.5);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     color: inherit;
+    height: 36px;
 }
 
 .tb-content__cell--selection {

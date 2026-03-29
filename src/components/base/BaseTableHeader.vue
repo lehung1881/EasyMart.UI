@@ -4,7 +4,12 @@
             <th v-if="showSelection" class="tb-header__cell tb-header__cell--selection">
                 <BaseCheckbox :model-value="allSelected" @update:model-value="onToggleAll" />
             </th>
-            <th v-for="column in visibleColumns" :key="column.dataField" class="tb-header__cell" :style="getColumnStyle(column)">
+            <th
+                v-for="column in visibleColumns"
+                :key="column.dataField"
+                class="tb-header__cell"
+                :style="getColumnStyle(column)"
+            >
                 <slot :name="`header-${column.dataField}`" :column="column">
                     {{ column.title ?? column.dataField }}
                 </slot>
@@ -50,7 +55,11 @@ const visibleColumns = computed<ColumnDefinition[]>(() =>
 const getColumnStyle = (column: ColumnDefinition): Record<string, string> => {
     const rawWidth = column.width;
     const normalizedWidth =
-        rawWidth === undefined || rawWidth === null ? "auto" : typeof rawWidth === "number" ? `${rawWidth}px` : rawWidth;
+        rawWidth === undefined || rawWidth === null
+            ? "auto"
+            : typeof rawWidth === "number"
+              ? `${rawWidth}px`
+              : rawWidth;
 
     return {
         width: normalizedWidth,
@@ -88,13 +97,14 @@ const onToggleAll = (checked: boolean): void => {
 
 .tb-header__cell {
     font-size: $font-size-base;
-    padding: 8px 12px;
+    padding: 0 12px;
     font-weight: 600;
     border-bottom: $input-border;
     color: inherit;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    height: 36px;
 }
 
 .tb-header__cell--selection {
