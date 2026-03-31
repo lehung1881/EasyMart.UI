@@ -11,8 +11,7 @@
 .app-content {
     height: 100%;
     padding: 0 12px;
-    width: calc(100% - $sidebar-width);
-    // background: #fff;
+    flex: 1;
     overflow: hidden;
 }
 </style>

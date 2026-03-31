@@ -1,8 +1,8 @@
 ﻿<template>
-    <div class="inventory-item-list-page">
+    <div class="list-page">
         <div class="page-header">
             <div>
-                <h1 class="page-title">Danh sách hàng hóa</h1>
+                <h1 class="page-title">Danh mục hàng hóa</h1>
             </div>
             <div class="page-actions">
                 <BaseButton size="md" variant="primary" @click="onCreateItem">Thêm hàng hóa</BaseButton>
@@ -11,14 +11,13 @@
         <div class="page-content">
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2">
-                    <BaseButton size="sm" variant="normal" @click="onClearSearch">Lọc</BaseButton>
+                    <BaseButton size="sm" icon-left="icon-filter"></BaseButton>
                 </div>
                 <div class="flex gap-2">
                     <BaseInput v-model="searchKeyword" size="sm" placeholder="Tìm kiếm" @change="onSearch" />
                     <BaseButton size="sm" @click="onRefresh" icon-left="icon-refresh"></BaseButton>
                 </div>
             </div>
-
             <div class="table-container">
                 <BaseTable
                     :store="tableStore"
@@ -26,8 +25,7 @@
                     :auto-load="false"
                     :show-selection="true"
                     row-key="InventoryItemID"
-                    empty-text="Không có dữ liệu hàng hóa"
-                    @row-click="onRowClick"
+                    empty-text="Không có dữ liệu"
                 />
             </div>
         </div>
@@ -117,11 +115,11 @@ const onRefresh = async (): Promise<void> => {
  * @returns Không trả về giá trị.
  */
 const onRowClick = (payload: { row: TableRow }): void => {
-    tableStore.toggleRowSelection(
-        payload.row,
-        !tableStore.isRowSelected(payload.row, "InventoryItemID"),
-        "InventoryItemID",
-    );
+    // tableStore.toggleRowSelection(
+    //     payload.row,
+    //     !tableStore.isRowSelected(payload.row, "InventoryItemID"),
+    //     "InventoryItemID",
+    // );
 };
 
 /**
@@ -136,10 +134,10 @@ const onCreateItem = (): void => {
 <style lang="scss" scoped>
 @use "@/assets/styles/variable" as *;
 
-.inventory-item-list-page {
+.list-page {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     padding: 12px 0;
     height: 100%;
     min-height: 0;
@@ -159,17 +157,17 @@ const onCreateItem = (): void => {
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    border-radius: 4px;
 }
 
 .table-container {
     flex: 1;
     min-height: 0;
-    overflow: auto;
 }
 
 .page-title {
     margin: 0;
-    font-size: 24px;
+    font-size: 20px;
     color: $color-text-black;
     font-weight: 700;
 }

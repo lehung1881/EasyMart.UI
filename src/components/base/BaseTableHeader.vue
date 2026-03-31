@@ -85,9 +85,7 @@ const onToggleAll = (checked: boolean): void => {
 .tb-header {
     position: sticky;
     top: 0;
-    z-index: 1;
-    background: #f8f8f8;
-
+    z-index: 2;
     tr {
         display: table;
         width: 100%;
@@ -105,6 +103,8 @@ const onToggleAll = (checked: boolean): void => {
     overflow: hidden;
     text-overflow: ellipsis;
     height: 36px;
+    position: sticky;
+    background: #f8f8f8;
 }
 
 .tb-header__cell--selection {
@@ -112,5 +112,8 @@ const onToggleAll = (checked: boolean): void => {
     min-width: 44px;
     max-width: 44px;
     text-align: center;
+    position: sticky;
+    left: 0;
+    z-index: 3;
 }
 </style>

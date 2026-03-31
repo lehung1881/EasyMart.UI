@@ -114,7 +114,7 @@ $icon-only-width-offset: 4px;
     padding: 0 $button-padding-x;
     border-radius: 4px;
     border: 1px solid transparent;
-    font-family: $font-family-base;
+    // font-family: $font-family-base;
     font-size: $font-size-base;
     font-weight: $font-weight-button;
     line-height: 1;
@@ -139,7 +139,7 @@ $icon-only-width-offset: 4px;
 .base-button__icon {
     width: 16px;
     height: 16px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
 }

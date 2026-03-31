@@ -55,19 +55,17 @@ const { isCollapsed, activeKey, menuGroups, toggleCollapse, setActive } = useSid
 
 <style lang="scss" scoped>
 @use "@/assets/styles/variable" as *;
-// @use "@/assets/styles/icons" as *;
 
 .app-sidebar {
     width: $sidebar-width;
-    height: 100%;
+    height: calc(100% - 12px);
     display: flex;
     flex-direction: column;
     padding: 12px 8px;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: #fff;
-    border-radius: 2px;
-    border-right: 1px solid #f0f0f0;
+    background-color: #ffffff;
+    border-radius: 4px;
     transition: width 0.25s ease;
 
     &.collapsed {

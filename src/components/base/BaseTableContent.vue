@@ -74,6 +74,7 @@ const props = withDefaults(
         loadingText?: string;
         emptyText?: string;
         showSelection?: boolean;
+        pageSize?: number;
     }>(),
     {
         rowKey: "id",
@@ -106,7 +107,7 @@ const rows = computed<TableRow[]>(() => props.data ?? []);
  * Xác định số dòng skeleton hiển thị khi loading.
  * @returns Số dòng skeleton.
  */
-const skeletonRowCount = computed<number>(() => 10);
+const skeletonRowCount = computed<number>(() => props.pageSize ?? 20);
 
 /**
  * Trả về style inline cho từng cell.
@@ -195,6 +196,7 @@ $border-color: #d0d0d0;
         width: 100%;
         table-layout: fixed;
     }
+    z-index: 1;
 }
 
 .tb-content__state {
@@ -209,6 +211,11 @@ $border-color: #d0d0d0;
 
     &:hover {
         background: $hover-color;
+    }
+    &:last-child {
+        .tb-content__cell {
+            border-bottom: unset;
+        }
     }
 }
 
@@ -236,6 +243,10 @@ $border-color: #d0d0d0;
     min-width: 44px;
     max-width: 44px;
     text-align: center;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: #ffffff;
 }
 
 .tb-content__skeleton-line {

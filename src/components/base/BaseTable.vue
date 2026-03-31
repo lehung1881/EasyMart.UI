@@ -1,6 +1,6 @@
 ﻿<template>
     <div class="tb-root" :class="{ 'tb-root--disabled': disabled }">
-        <div class="tb-root__wrapper">
+        <div class="tb-root__wrapper overflow-auto">
             <table class="tb-root__table">
                 <BaseTableHeader
                     :columns="tableColumns"
@@ -30,44 +30,38 @@
                     </template>
                 </BaseTableContent>
             </table>
-
-            <div v-if="showPagination" class="tb-pagination">
-                <div class="tb-pagination__label">
-                    Tổng số: <span>{{ store.totalRecords }}</span>
+        </div>
+        <div v-if="showPagination" class="tb-pagination">
+            <div class="tb-pagination__label">
+                Tổng số: <span>{{ store.totalRecords }}</span>
+            </div>
+            <div class="tb-pagination__controls">
+                <div class="tb-pagination__left">
+                    <span class="tb-pagination__label">Số dòng/trang</span>
+                    <div class="tb-pagination__page-size-combobox">
+                        <BaseCombobox
+                            v-model="selectedPageSize"
+                            :store="pageSizeStore"
+                            :searchable="false"
+                            :auto-load="true"
+                            size="sm"
+                        />
+                    </div>
+                    <span class="tb-pagination__range">{{ rowRangeText }}</span>
                 </div>
-                <div class="tb-pagination__controls">
-                    <div class="tb-pagination__left">
-                        <span class="tb-pagination__label">Số dòng/trang</span>
-                        <div class="tb-pagination__page-size-combobox">
-                            <BaseCombobox
-                                v-model="selectedPageSize"
-                                :store="pageSizeStore"
-                                :searchable="false"
-                                :auto-load="true"
-                                size="sm"
-                            />
-                        </div>
-                        <span class="tb-pagination__range">{{ rowRangeText }}</span>
-                    </div>
-                    <div class="tb-pagination__nav">
-                        <button
-                            class="tb-pagination__btn"
-                            type="button"
-                            :disabled="!store.canGoPrev"
-                            @click="onGoFirst"
-                        >
-                            <div class="icon-page-first"></div>
-                        </button>
-                        <button class="tb-pagination__btn" type="button" :disabled="!store.canGoPrev" @click="onGoPrev">
-                            <div class="icon-page-prev"></div>
-                        </button>
-                        <button class="tb-pagination__btn" type="button" :disabled="!store.canGoNext" @click="onGoNext">
-                            <div class="icon-page-next"></div>
-                        </button>
-                        <button class="tb-pagination__btn" type="button" :disabled="!store.canGoNext" @click="onGoLast">
-                            <div class="icon-page-last"></div>
-                        </button>
-                    </div>
+                <div class="tb-pagination__nav">
+                    <button class="tb-pagination__btn" type="button" :disabled="!store.canGoPrev" @click="onGoFirst">
+                        <div class="icon-page-first"></div>
+                    </button>
+                    <button class="tb-pagination__btn" type="button" :disabled="!store.canGoPrev" @click="onGoPrev">
+                        <div class="icon-page-prev"></div>
+                    </button>
+                    <button class="tb-pagination__btn" type="button" :disabled="!store.canGoNext" @click="onGoNext">
+                        <div class="icon-page-next"></div>
+                    </button>
+                    <button class="tb-pagination__btn" type="button" :disabled="!store.canGoNext" @click="onGoLast">
+                        <div class="icon-page-last"></div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -348,6 +342,7 @@ onBeforeUnmount(() => {
         opacity: 0.55;
         pointer-events: none;
     }
+    height: 100%;
 }
 
 .tb-root__wrapper {
@@ -355,7 +350,8 @@ onBeforeUnmount(() => {
     border: $input-border;
     border-radius: $border-radius;
     background: #fff;
-    overflow: hidden;
+    // overflow: hidden;
+    height: calc(100% - 48px);
 }
 
 .tb-root__table {
@@ -369,9 +365,9 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 12px;
-    border-top: 1px solid rgba($border-color, 0.6);
+    padding: 0 12px;
     background: #fff;
+    height: 48px;
 }
 
 .tb-pagination__controls {

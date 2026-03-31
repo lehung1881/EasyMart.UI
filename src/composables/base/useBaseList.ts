@@ -161,43 +161,6 @@ export const useBaseList = (options: BaseListOptions) => {
     const selectedCount = computed<number>(() => tableStore.selectedRows.length);
 
     /**
-     * Kiểm tra có item nào được chọn không.
-     */
-    const hasSelection = computed<boolean>(() => selectedCount.value > 0);
-
-    /**
-     * Kiểm tra table có dữ liệu không.
-     */
-    const hasData = computed<boolean>(() => data.value.length > 0);
-
-    /**
-     * Kiểm tra table rỗng (không có data và không có search query).
-     */
-    const isEmpty = computed<boolean>(() => {
-        return !loading.value && !hasData.value && !state.value.searchQuery;
-    });
-
-    /**
-     * Tổng số records.
-     */
-    const totalRecords = computed<number>(() => tableStore.totalRecords);
-
-    /**
-     * Trang hiện tại.
-     */
-    const currentPage = computed<number>(() => tableStore.currentPage);
-
-    /**
-     * Số items mỗi trang.
-     */
-    const pageSize = computed<number>(() => tableStore.pageSize);
-
-    /**
-     * Tổng số trang.
-     */
-    const pageCount = computed<number>(() => tableStore.pageCount);
-
-    /**
      * Tìm kiếm dữ liệu với debounce.
      * @param query Từ khóa tìm kiếm.
      * @returns Promise hoàn tất khi search được trigger.
@@ -247,10 +210,6 @@ export const useBaseList = (options: BaseListOptions) => {
             onLoadError?.(err);
         }
     };
-
-    // =====================
-    // DELETE OPERATIONS
-    // =====================
 
     /**
      * Xóa một item theo bản ghi.
@@ -407,50 +366,6 @@ export const useBaseList = (options: BaseListOptions) => {
     };
 
     /**
-     * Chuyển đến trang cụ thể.
-     *
-     * @param page Số trang cần chuyển đến.
-     * @returns Promise hoàn tất khi chuyển trang.
-     */
-    const goToPage = async (page: number): Promise<void> => {
-        try {
-            await tableStore.goToPage(page);
-            onLoadSuccess?.();
-        } catch (error) {
-            const err = error instanceof Error ? error : new Error("Go to page failed");
-            onLoadError?.(err);
-        }
-    };
-
-    /**
-     * Chuyển đến trang đầu tiên.
-     */
-    const goToFirstPage = async (): Promise<void> => {
-        await tableStore.goToFirstPage();
-    };
-
-    /**
-     * Chuyển đến trang cuối cùng.
-     */
-    const goToLastPage = async (): Promise<void> => {
-        await tableStore.goToLastPage();
-    };
-
-    /**
-     * Chuyển đến trang trước.
-     */
-    const goToPrevPage = async (): Promise<void> => {
-        await tableStore.goToPrevPage();
-    };
-
-    /**
-     * Chuyển đến trang sau.
-     */
-    const goToNextPage = async (): Promise<void> => {
-        await tableStore.goToNextPage();
-    };
-
-    /**
      * Thay đổi page size và load lại từ trang 1.
      *
      * @param size Page size mới.
@@ -464,25 +379,6 @@ export const useBaseList = (options: BaseListOptions) => {
             const err = error instanceof Error ? error : new Error("Change page size failed");
             onLoadError?.(err);
         }
-    };
-
-    /**
-     * Toggle selection cho một row.
-     *
-     * @param row Row data.
-     * @param checked Trạng thái checked.
-     */
-    const toggleRowSelection = (row: any, checked: boolean): void => {
-        tableStore.toggleRowSelection(row, checked, rowKey);
-    };
-
-    /**
-     * Chọn tất cả rows hiện tại.
-     */
-    const selectAll = (): void => {
-        data.value.forEach((row) => {
-            tableStore.toggleRowSelection(row, true, rowKey);
-        });
     };
 
     /**
@@ -528,50 +424,21 @@ export const useBaseList = (options: BaseListOptions) => {
     };
 
     return {
-        // State
         state,
-        // Table store proxy
         tableStore,
-        // Computed states
         loading,
         data,
         selectedRows,
         selectedCount,
-        hasSelection,
-        hasData,
-        isEmpty,
-        totalRecords,
-        currentPage,
-        pageSize,
-        pageCount,
-
-        // Search operations
         search,
         clearSearch,
-
-        // Delete operations
         deleteItem,
         deleteSelected,
-
-        // Refresh & reload
         refresh,
         reload,
-
-        // Pagination
-        goToPage,
-        goToFirstPage,
-        goToLastPage,
-        goToPrevPage,
-        goToNextPage,
         changePageSize,
-
-        // Selection
-        toggleRowSelection,
-        selectAll,
         clearSelection,
         isRowSelected,
-
-        // Cleanup
         cleanup,
     };
 };
