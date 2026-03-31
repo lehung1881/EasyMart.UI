@@ -1,7 +1,7 @@
 ﻿<template>
-    <main class="app-content">
+    <div class="app-content">
         <slot />
-    </main>
+    </div>
 </template>
 
 <script setup lang="ts"></script>
@@ -13,5 +13,6 @@
     padding: 0 12px;
     width: calc(100% - $sidebar-width);
     // background: #fff;
+    overflow: hidden;
 }
 </style>

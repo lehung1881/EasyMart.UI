@@ -1,18 +1,20 @@
-<template>
+﻿<template>
     <button
         :type="type"
         class="base-button"
-        :class="[sizeClass, variantClass, { 'no-select': noSelect }]"
+        :class="[sizeClass, variantClass, { 'no-select': noSelect, 'base-button--icon-only': isIconOnly }]"
         :disabled="disabled"
         v-bind="$attrs"
         @click="onClick"
     >
+        <span v-if="leftIconClass" class="base-button__icon" :class="leftIconClass" aria-hidden="true"></span>
         <slot />
+        <span v-if="rightIconClass" class="base-button__icon" :class="rightIconClass" aria-hidden="true"></span>
     </button>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useSlots, type VNode } from "vue";
 
 type ButtonSize = "sm" | "md" | "lg" | "xl" | "xxl";
 type ButtonVariant = "normal" | "primary" | "outline-primary";
@@ -23,6 +25,9 @@ interface Props {
     type?: "button" | "submit" | "reset";
     disabled?: boolean;
     noSelect?: boolean;
+    icon?: string;
+    iconLeft?: string;
+    iconRight?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,15 +36,64 @@ const props = withDefaults(defineProps<Props>(), {
     type: "button",
     disabled: false,
     noSelect: true,
+    icon: "",
+    iconLeft: "",
+    iconRight: "",
 });
 
 const emit = defineEmits<{
     (event: "click", value: MouseEvent): void;
 }>();
 
+const slots = useSlots();
+
 const sizeClass = computed(() => `size-${props.size}`);
 const variantClass = computed(() => `variant-${props.variant}`);
+const leftIconClass = computed(() => props.iconLeft || props.icon);
+const rightIconClass = computed(() => props.iconRight);
+const hasIcon = computed(() => Boolean(leftIconClass.value || rightIconClass.value));
 
+/**
+ * Trích xuất text hiển thị từ VNode theo cách đệ quy.
+ * @param node VNode cần đọc nội dung text.
+ * @returns Chuỗi text thu được từ node.
+ */
+function extractTextFromVNode(node: VNode): string {
+    if (typeof node.children === "string") return node.children;
+
+    if (Array.isArray(node.children)) {
+        return node.children
+            .map((child) => {
+                if (typeof child === "string") return child;
+                if (typeof child === "object" && child !== null) return extractTextFromVNode(child as VNode);
+                return "";
+            })
+            .join("");
+    }
+
+    return "";
+}
+
+/**
+ * Kiểm tra slot mặc định có text hiển thị hay không.
+ * @returns `true` nếu có text, ngược lại `false`.
+ */
+function hasDefaultSlotText(): boolean {
+    const nodes = slots.default?.() ?? [];
+    const content = nodes
+        .map((node) => extractTextFromVNode(node))
+        .join("")
+        .trim();
+    return content.length > 0;
+}
+
+const isIconOnly = computed(() => hasIcon.value && !hasDefaultSlotText());
+
+/**
+ * Xử lý sự kiện click của nút.
+ * @param event Sự kiện click từ DOM.
+ * @returns Không trả về dữ liệu.
+ */
 function onClick(event: MouseEvent): void {
     if (props.disabled) return;
     emit("click", event);
@@ -48,6 +102,8 @@ function onClick(event: MouseEvent): void {
 
 <style scoped lang="scss">
 @use "@/assets/styles/variable" as *;
+
+$icon-only-width-offset: 4px;
 
 .base-button {
     display: inline-flex;
@@ -78,6 +134,40 @@ function onClick(event: MouseEvent): void {
         opacity: 0.7;
         cursor: not-allowed;
     }
+}
+
+.base-button__icon {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.base-button--icon-only {
+    min-width: 0;
+    padding: 0;
+    gap: 0;
+}
+
+.base-button--icon-only.size-sm {
+    width: calc(#{$button-height-sm} + #{$icon-only-width-offset});
+}
+
+.base-button--icon-only.size-md {
+    width: calc(#{$button-height-md} + #{$icon-only-width-offset});
+}
+
+.base-button--icon-only.size-lg {
+    width: calc(#{$button-height-lg} + #{$icon-only-width-offset});
+}
+
+.base-button--icon-only.size-xl {
+    width: calc(#{$button-height-xl} + #{$icon-only-width-offset});
+}
+
+.base-button--icon-only.size-xxl {
+    width: calc(#{$button-height-xxl} + #{$icon-only-width-offset});
 }
 
 .no-select {

@@ -59,9 +59,9 @@ import { FormatType } from "@/constants";
 const tableColumns: ColumnDefinition[] = [
     { dataField: "InventoryItemCode", title: "Mã hàng", width: 160 },
     { dataField: "InventoryItemName", title: "Tên hàng", width: 260 },
+    { dataField: "UnitName", title: "Đơn vị tính", width: 120 },
     { dataField: "BuyPrice", title: "Giá mua", width: 140, align: "right", formatType: FormatType.Currency },
     { dataField: "SellPrice", title: "Giá bán", width: 140, align: "right", formatType: FormatType.Currency },
-    { dataField: "UnitName", title: "Đơn vị tính", width: 120 },
     {
         dataField: "QuantityBalance",
         title: "Số lượng tồn kho",

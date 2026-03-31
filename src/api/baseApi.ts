@@ -162,20 +162,19 @@ abstract class BaseAPI {
     }
 
     /**
-     * G?i HTTP DELETE request.
-     * @param url - Path c?a endpoint, ví d?: /profile
-     * @param config - C?u hình axios tùy ch?n
-     */
-    public delete<T>(url: string, config?: AxiosRequestConfig) {
-        return this.instance.delete<T, ServiceResponse<T>>(this.buildUrl(url), config);
-    }
-
-    /**
      * Thêm/s?a/xóa b?n ghi.
      * @param payload - D? li?u c?a b?n ghi c?n thêm/s?a/xóa
      */
     public saveData<T>(payload: T) {
         return this.post<T>("/save_data_async", payload);
+    }
+
+    /**
+     * Thêm/sửa/xóa nhiều bản ghi
+     * @param items - Danh sách bản ghi cần xử lý
+     */
+    public saveListData<T>(items: T[]) {
+        return this.post<T[]>("/save_list_data_async", items);
     }
 
     /**
