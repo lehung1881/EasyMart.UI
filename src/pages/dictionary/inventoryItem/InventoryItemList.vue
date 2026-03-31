@@ -14,7 +14,7 @@
                 <div class="flex gap-2">
                     <BaseInput v-model="searchKeyword" size="sm" placeholder="Tìm kiếm" @change="onSearch" />
                     <BaseButton size="sm" @click="onRefresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
-                    <BaseButton size="sm" icon-left="icon-filter"></BaseButton>
+                    <BaseButton size="sm" icon-left="icon-filter" @click="baseList.deleteItem"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
                 </div>
             </div>
@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
-import { loadDataRemoteTable, useTableStore } from "@/composables/controls/useTableStore";
+import { useTableStore } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemApi";
 import { FormatType } from "@/constants";
@@ -81,22 +81,18 @@ const tableColumns: ColumnDefinition[] = [
  */
 const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
     if (payload.ids.length === 0) return false;
-
-    const message = payload.isDeleteSelected
-        ? `Bạn có chắc chắn muốn xóa ${payload.ids.length} hàng hóa đã chọn?`
-        : "Bạn có chắc chắn muốn xóa hàng hóa này?";
-
-    return window.confirm(message);
+    return true;
 };
 
 const tableStore = useTableStore("inventory_item", {
     queryMode: "remote",
-    tableLoadData: (payload) => loadDataRemoteTable(inventoryItemApi, payload),
+    tableLoadData: (payload) => baseList.loadListData(payload),
     viewOrTableName: "di_inventory_item",
     columns: tableColumns,
 });
 
 const baseList = useBaseList({
+    formID: "InventoryItemList",
     tableStore,
     api: inventoryItemApi,
     rowKey: "InventoryItemID",

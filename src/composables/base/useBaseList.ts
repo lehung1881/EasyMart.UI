@@ -4,9 +4,13 @@
  * Layer này nằm trên useTableStore, xử lý logic nghiệp vụ như search, delete, refresh.
  */
 
-import { computed, ref } from "vue";
+import { computed, ref, onBeforeMount } from "vue";
 import type { TableStoreInstance } from "@/composables/controls/useTableStore";
 import type BaseAPI from "@/api/baseAPI";
+import { showConfirm } from "@/commons/messageBox";
+import { loadDataRemoteTable } from "@/composables/controls/useTableStore";
+import type { PagingRequest } from "@/models/common/paging";
+import { debounce } from "lodash";
 
 /**
  * Dữ liệu đầu vào cho callback validate trước khi xóa.
@@ -23,7 +27,7 @@ export interface ValidateBeforeDeletePayload {
     /**
      * Đánh dấu thao tác xóa nhiều bản ghi đã chọn.
      */
-    isDeleteSelected: boolean;
+    isDeleteMultiple: boolean;
 }
 
 /**
@@ -36,6 +40,10 @@ export type ValidateBeforeDeleteCallback = (payload: ValidateBeforeDeletePayload
  */
 export interface BaseListOptions {
     /**
+     * ID của mỗi màn danh sách lấy ra cấu hình static
+     */
+    formID: string;
+    /**
      * Table store instance (bắt buộc).
      */
     tableStore: TableStoreInstance;
@@ -43,7 +51,7 @@ export interface BaseListOptions {
     /**
      * API instance để gọi các endpoint CRUD.
      */
-    api?: BaseAPI;
+    api: BaseAPI;
 
     /**
      * Callback validate trước khi xóa.
@@ -104,7 +112,7 @@ export interface BaseListState {
     /**
      * Query text hiện tại cho search.
      */
-    searchQuery: string;
+    textSearch: string;
 
     /**
      * Trạng thái đang refresh data.
@@ -122,9 +130,7 @@ export const useBaseList = (options: BaseListOptions) => {
         tableStore,
         api,
         validateBeforeDelete,
-        searchDebounce = 500,
         rowKey = "id",
-        autoLoad = true,
         onLoadSuccess,
         onLoadError,
         onDeleteSuccess,
@@ -134,12 +140,14 @@ export const useBaseList = (options: BaseListOptions) => {
     const state = ref<BaseListState>({
         deleting: false,
         deleteError: null,
-        searchQuery: "",
+        textSearch: "",
         refreshing: false,
     });
 
-    let searchTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
+    /**
+     * Cấu hình thời gian search
+     */
+    const searchDebounce = 500;
     /**
      * Proxy cho loading state từ table store.
      */
@@ -161,32 +169,32 @@ export const useBaseList = (options: BaseListOptions) => {
     const selectedCount = computed<number>(() => tableStore.selectedRows.length);
 
     /**
+     * Hàm xử lý search thực tế (sẽ được debounce).
+     */
+    const performSearch = async (query: string): Promise<void> => {
+        try {
+            await tableStore.loadData(query, 1);
+            onLoadSuccess?.();
+        } catch (error) {
+            const err = error instanceof Error ? error : new Error("Search failed");
+            onLoadError?.(err);
+        }
+    };
+
+    /**
+     * Debounced search function.
+     */
+    const debouncedSearch = debounce(performSearch, searchDebounce);
+
+    /**
      * Tìm kiếm dữ liệu với debounce.
      * @param query Từ khóa tìm kiếm.
      * @returns Promise hoàn tất khi search được trigger.
      */
     const search = (query: string): Promise<void> => {
-        return new Promise((resolve) => {
-            state.value.searchQuery = query;
-
-            // Clear timeout cũ nếu có
-            if (searchTimeoutId !== null) {
-                clearTimeout(searchTimeoutId);
-            }
-
-            // Set timeout mới
-            searchTimeoutId = setTimeout(async () => {
-                try {
-                    await tableStore.loadData(query, 1);
-                    onLoadSuccess?.();
-                } catch (error) {
-                    const err = error instanceof Error ? error : new Error("Search failed");
-                    onLoadError?.(err);
-                } finally {
-                    resolve();
-                }
-            }, searchDebounce);
-        });
+        state.value.textSearch = query;
+        debouncedSearch(query);
+        return Promise.resolve();
     };
 
     /**
@@ -195,12 +203,10 @@ export const useBaseList = (options: BaseListOptions) => {
      * @returns Promise hoàn tất khi clear search.
      */
     const clearSearch = async (): Promise<void> => {
-        state.value.searchQuery = "";
+        state.value.textSearch = "";
 
-        if (searchTimeoutId !== null) {
-            clearTimeout(searchTimeoutId);
-            searchTimeoutId = null;
-        }
+        // Cancel pending debounced search
+        debouncedSearch.cancel();
 
         try {
             await tableStore.loadData("", 1);
@@ -229,7 +235,7 @@ export const useBaseList = (options: BaseListOptions) => {
                 isValidForDelete = await validateBeforeDelete({
                     records: [record],
                     ids: [record?.[rowKey] as string | number],
-                    isDeleteSelected: false,
+                    isDeleteMultiple: false,
                 });
             }
 
@@ -241,13 +247,16 @@ export const useBaseList = (options: BaseListOptions) => {
                 throw new Error("No API configured for delete operation");
             }
 
+            const result = await showConfirm("Bạn có chắc chắn muốn xóa bản ghi này?");
+            if (!result) return false;
+
             // Base mặc định luôn xóa bằng saveData
             const response = await api.saveData(record);
             const success = response.Success === true;
 
             if (success) {
                 // Reload data sau khi xóa thành công
-                await tableStore.loadData(state.value.searchQuery, tableStore.currentPage);
+                await tableStore.loadData(state.value.textSearch, tableStore.currentPage);
 
                 // Xóa khỏi selection nếu có
                 const updatedSelection = tableStore.selectedRows.filter((row) => row[rowKey] !== record[rowKey]);
@@ -288,7 +297,7 @@ export const useBaseList = (options: BaseListOptions) => {
                 isValidForDelete = await validateBeforeDelete({
                     records: selectedItems,
                     ids,
-                    isDeleteSelected: true,
+                    isDeleteMultiple: true,
                 });
             }
 
@@ -300,13 +309,16 @@ export const useBaseList = (options: BaseListOptions) => {
                 throw new Error("No API configured for delete operation");
             }
 
+            const result = await showConfirm("Bạn có chắc chắn muốn xóa những bản ghi đã chọn này?");
+            if (!result) return false;
+
             // Base mặc định luôn xóa bằng saveListData
             const response = await api.saveListData(selectedItems);
             const success = response.Success === true;
 
             if (success) {
                 // Reload data và clear selection
-                await tableStore.loadData(state.value.searchQuery, tableStore.currentPage);
+                await tableStore.loadData(state.value.textSearch, tableStore.currentPage);
                 tableStore.clearSelectedRows();
                 onDeleteSuccess?.();
             } else {
@@ -332,7 +344,7 @@ export const useBaseList = (options: BaseListOptions) => {
     const refresh = async (): Promise<void> => {
         state.value.refreshing = true;
         try {
-            await tableStore.loadData(state.value.searchQuery, tableStore.currentPage);
+            await tableStore.loadData(state.value.textSearch, tableStore.currentPage);
             onLoadSuccess?.();
         } catch (error) {
             const err = error instanceof Error ? error : new Error("Refresh failed");
@@ -350,7 +362,7 @@ export const useBaseList = (options: BaseListOptions) => {
     const reload = async (): Promise<void> => {
         state.value.refreshing = true;
         try {
-            await tableStore.loadData(state.value.searchQuery, 1);
+            await tableStore.loadData(state.value.textSearch, 1);
             onLoadSuccess?.();
         } catch (error) {
             const err = error instanceof Error ? error : new Error("Reload failed");
@@ -396,7 +408,7 @@ export const useBaseList = (options: BaseListOptions) => {
     /**
      * Auto load data khi khởi tạo.
      */
-    if (autoLoad) {
+    onBeforeMount(() => {
         tableStore
             .loadData()
             .then(() => {
@@ -406,18 +418,50 @@ export const useBaseList = (options: BaseListOptions) => {
                 const err = error instanceof Error ? error : new Error("Auto load failed");
                 onLoadError?.(err);
             });
-    }
+    });
 
     /**
-     * Cleanup function để clear timeout khi component unmount.
+     * Cleanup function để clear debounce khi component unmount.
      */
     const cleanup = (): void => {
-        if (searchTimeoutId !== null) {
-            clearTimeout(searchTimeoutId);
-            searchTimeoutId = null;
+        debouncedSearch.cancel();
+    };
+
+    /**
+     * Load danh sách dữ liệu
+     * @param payload
+     * @returns
+     */
+    const loadListData = (payload: PagingRequest) => {
+        // Ngầm định sắp xếp
+        defaultSort(payload);
+
+        // Build filter
+        buildFilterCondition(payload);
+
+        return loadDataRemoteTable(api, payload);
+    };
+
+    /**
+     * Ngầm định sắp xếp
+     * @param payload
+     */
+    const defaultSort = (payload: PagingRequest) => {
+        if (!payload.sort || payload.sort.length == 0) {
+            payload.sort = [
+                {
+                    property: "CreatedDate",
+                    desc: true,
+                },
+            ];
         }
     };
 
+    /**
+     * Xử lý build filter cho danh sách
+     * @param payload
+     */
+    const buildFilterCondition = (payload: PagingRequest) => {};
     return {
         state,
         tableStore,
@@ -435,6 +479,7 @@ export const useBaseList = (options: BaseListOptions) => {
         clearSelection,
         isRowSelected,
         cleanup,
+        loadListData,
     };
 };
 

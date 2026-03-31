@@ -117,7 +117,6 @@ $icon-only-width-offset: 2px;
     // font-family: $font-family-base;
     font-size: $font-size-base;
     font-weight: $font-weight-button;
-    line-height: 1;
     white-space: nowrap;
     transition:
         background-color 0.2s ease,
