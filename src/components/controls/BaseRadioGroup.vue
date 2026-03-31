@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import { computed, useId } from "vue";
-import BaseRadio from "@/components/base/BaseRadio.vue";
+import BaseRadio from "@/components/controls/BaseRadio.vue";
 
 type RadioValue = string | number | boolean;
 type RadioModelValue = RadioValue | null;

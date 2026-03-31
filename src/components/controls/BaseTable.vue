@@ -70,9 +70,9 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import BaseCombobox from "@/components/base/BaseCombobox.vue";
-import BaseTableHeader from "@/components/base/BaseTableHeader.vue";
-import BaseTableContent from "@/components/base/BaseTableContent.vue";
+import BaseCombobox from "@/components/controls/BaseCombobox.vue";
+import BaseTableHeader from "@/components/controls/BaseTableHeader.vue";
+import BaseTableContent from "@/components/controls/BaseTableContent.vue";
 import { useComboboxStore } from "@/composables/controls/useComboboxStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import type { TableRow, TableStoreInstance } from "@/composables/controls/useTableStore";

@@ -34,11 +34,8 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import BaseButton from "@/components/base/BaseButton.vue";
-import BaseInput from "@/components/base/BaseInput.vue";
-import BaseTable from "@/components/base/BaseTable.vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
-import { loadDataRemoteTable, useTableStore, type TableRow } from "@/composables/controls/useTableStore";
+import { loadDataRemoteTable, useTableStore } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemApi";
 import { FormatType } from "@/constants";

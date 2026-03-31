@@ -88,7 +88,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
-import BaseComboboxDropdown from "@/components/base/BaseComboboxDropdown.vue";
+import BaseComboboxDropdown from "@/components/controls/BaseComboboxDropdown.vue";
 import type { ComboboxStoreInstance } from "@/composables/controls/useComboboxStore";
 
 // Types

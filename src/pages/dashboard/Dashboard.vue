@@ -50,7 +50,7 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from "vue";
-import BaseTable from "@/components/base/BaseTable.vue";
+import BaseTable from "@/components/controls/BaseTable.vue";
 import { useTableStore, loadDataRemoteTable, type TableRow } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import authApi from "@/api/modules/authApi";

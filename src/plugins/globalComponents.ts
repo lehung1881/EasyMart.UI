@@ -1,10 +1,11 @@
 import type { App, Plugin } from "vue";
-import BaseButton from "@/components/base/BaseButton.vue";
-import BaseInput from "@/components/base/BaseInput.vue";
-import BaseCheckbox from "@/components/base/BaseCheckbox.vue";
-import BaseRadio from "@/components/base/BaseRadio.vue";
-import BaseRadioGroup from "@/components/base/BaseRadioGroup.vue";
-import BaseCombobox from "@/components/base/BaseCombobox.vue";
+import BaseButton from "@/components/controls/BaseButton.vue";
+import BaseInput from "@/components/controls/BaseInput.vue";
+import BaseCheckbox from "@/components/controls/BaseCheckbox.vue";
+import BaseRadio from "@/components/controls/BaseRadio.vue";
+import BaseRadioGroup from "@/components/controls/BaseRadioGroup.vue";
+import BaseCombobox from "@/components/controls/BaseCombobox.vue";
+import BaseTable from "@/components/controls/BaseTable.vue";
 
 const globalComponentsPlugin: Plugin = {
     /**
@@ -29,6 +30,7 @@ const globalComponentsPlugin: Plugin = {
         app.component("BaseRadio", BaseRadio);
         app.component("BaseRadioGroup", BaseRadioGroup);
         app.component("BaseCombobox", BaseCombobox);
+        app.component("BaseTable", BaseTable);
     },
 };
 

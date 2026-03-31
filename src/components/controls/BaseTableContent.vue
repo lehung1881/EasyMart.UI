@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import BaseCheckbox from "@/components/base/BaseCheckbox.vue";
+import BaseCheckbox from "@/components/controls/BaseCheckbox.vue";
 import { formatData } from "@/commons/formatData";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import type { TableRow } from "@/composables/controls/useTableStore";
