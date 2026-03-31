@@ -10,12 +10,12 @@
         </div>
         <div class="page-content">
             <div class="flex justify-between search-bar">
-                <div class="flex gap-2">
-                    <BaseButton size="sm" icon-left="icon-filter"></BaseButton>
-                </div>
+                <div class="flex gap-2"></div>
                 <div class="flex gap-2">
                     <BaseInput v-model="searchKeyword" size="sm" placeholder="Tìm kiếm" @change="onSearch" />
-                    <BaseButton size="sm" @click="onRefresh" icon-left="icon-refresh"></BaseButton>
+                    <BaseButton size="sm" @click="onRefresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
+                    <BaseButton size="sm" icon-left="icon-filter"></BaseButton>
+                    <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
                 </div>
             </div>
             <div class="table-container">
@@ -41,6 +41,7 @@ import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/bas
 import { loadDataRemoteTable, useTableStore, type TableRow } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemApi";
+import { FormatType } from "@/constants";
 
 const searchKeyword = ref<string>("");
 
@@ -49,9 +50,30 @@ const tableColumns: ColumnDefinition[] = [
     { dataField: "InventoryItemName", title: "Tên hàng hóa", width: 260, align: "left", visible: true },
     { dataField: "InventoryItemCategoryNameList", title: "Nhóm hàng", width: 180, align: "left", visible: true },
     { dataField: "UnitName", title: "Đơn vị tính", width: 120, align: "left", visible: true },
-    { dataField: "BuyPrice", title: "Giá vốn", width: 140, align: "right", visible: true },
-    { dataField: "SellPrice", title: "Giá bán", width: 140, align: "right", visible: true },
-    { dataField: "QuantityBalance", title: "Tồn kho", width: 110, align: "right", visible: true },
+    {
+        dataField: "BuyPrice",
+        title: "Giá vốn",
+        width: 140,
+        align: "right",
+        visible: true,
+        formatType: FormatType.Currency,
+    },
+    {
+        dataField: "SellPrice",
+        title: "Giá bán",
+        width: 140,
+        align: "right",
+        visible: true,
+        formatType: FormatType.Currency,
+    },
+    {
+        dataField: "QuantityBalance",
+        title: "Tồn kho",
+        width: 110,
+        align: "right",
+        visible: true,
+        formatType: FormatType.Quantity,
+    },
     { dataField: "Inactive", title: "Trạng thái", width: 160, align: "center", visible: true },
 ];
 
@@ -93,33 +115,11 @@ const onSearch = async (): Promise<void> => {
 };
 
 /**
- * Xóa bỏ điều kiện tìm kiếm và tải lại trang đầu.
- * @returns Promise hoàn tất clear search.
- */
-const onClearSearch = async (): Promise<void> => {
-    searchKeyword.value = "";
-    await baseList.clearSearch();
-};
-
-/**
  * Tải lại dữ liệu trang hiện tại.
  * @returns Promise hoàn tất refresh.
  */
 const onRefresh = async (): Promise<void> => {
     await baseList.refresh();
-};
-
-/**
- * Xử lý sự kiện click vào một dòng dữ liệu.
- * @param payload Dữ liệu dòng được click.
- * @returns Không trả về giá trị.
- */
-const onRowClick = (payload: { row: TableRow }): void => {
-    // tableStore.toggleRowSelection(
-    //     payload.row,
-    //     !tableStore.isRowSelected(payload.row, "InventoryItemID"),
-    //     "InventoryItemID",
-    // );
 };
 
 /**

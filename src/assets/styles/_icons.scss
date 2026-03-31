@@ -96,7 +96,9 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 @include setIcon(icon-page-last, -60px, -220px, 20px, $icon-color-default, $primary-color);
 
 /* Icons*/
-@include setIcon(icon-refresh, -0px, -240px, 18px);
+@include setIcon(icon-refresh, -21px, -41px, 18px, $icon-color-default);
+@include setIcon(icon-filter, -261px, 0px, 18px, $icon-color-default);
+@include setIcon(icon-setting, -48px, -60px, 24px, $icon-color-default);
 
 
 

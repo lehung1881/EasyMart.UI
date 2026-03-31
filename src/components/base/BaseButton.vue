@@ -103,7 +103,7 @@ function onClick(event: MouseEvent): void {
 <style scoped lang="scss">
 @use "@/assets/styles/variable" as *;
 
-$icon-only-width-offset: 4px;
+$icon-only-width-offset: 2px;
 
 .base-button {
     display: inline-flex;
@@ -151,23 +151,23 @@ $icon-only-width-offset: 4px;
 }
 
 .base-button--icon-only.size-sm {
-    width: calc(#{$button-height-sm} + #{$icon-only-width-offset});
+    min-width: calc(#{$button-height-sm} + #{$icon-only-width-offset});
 }
 
 .base-button--icon-only.size-md {
-    width: calc(#{$button-height-md} + #{$icon-only-width-offset});
+    min-width: calc(#{$button-height-md} + #{$icon-only-width-offset});
 }
 
 .base-button--icon-only.size-lg {
-    width: calc(#{$button-height-lg} + #{$icon-only-width-offset});
+    min-width: calc(#{$button-height-lg} + #{$icon-only-width-offset});
 }
 
 .base-button--icon-only.size-xl {
-    width: calc(#{$button-height-xl} + #{$icon-only-width-offset});
+    min-width: calc(#{$button-height-xl} + #{$icon-only-width-offset});
 }
 
 .base-button--icon-only.size-xxl {
-    width: calc(#{$button-height-xxl} + #{$icon-only-width-offset});
+    min-width: calc(#{$button-height-xxl} + #{$icon-only-width-offset});
 }
 
 .no-select {

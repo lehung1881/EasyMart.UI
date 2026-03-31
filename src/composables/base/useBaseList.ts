@@ -275,11 +275,6 @@ export const useBaseList = (options: BaseListOptions) => {
      * @returns Promise trả về true nếu tất cả đều xóa thành công.
      */
     const deleteSelected = async (): Promise<boolean> => {
-        if (!hasSelection.value) {
-            console.warn("No items selected for deletion");
-            return false;
-        }
-
         state.value.deleting = true;
         state.value.deleteError = null;
 
