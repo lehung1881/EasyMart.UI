@@ -49,11 +49,11 @@ router.beforeEach(async (to) => {
 
     // Tránh vào lại login/register khi đã đăng nhập.
     if (isAuthRoute) {
-        if (hasUserInStore) return { name: "Dashboard" };
+        if (hasUserInStore) return { name: "dashboard" };
 
         try {
             const isValid = await authStore.checkAuth();
-            return isValid ? { name: "Dashboard" } : true;
+            return isValid ? { name: "dashboard" } : true;
         } catch {
             return true;
         }

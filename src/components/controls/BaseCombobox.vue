@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 import BaseComboboxDropdown from "@/components/controls/BaseComboboxDropdown.vue";
 import type { ComboboxStoreInstance } from "@/composables/controls/useComboboxStore";
 
@@ -259,12 +259,26 @@ const getDisplayText = (value: typeof props.modelValue): string => {
  * Gọi mỗi khi mở dropdown để đảm bảo vị trí luôn chính xác dù page đã scroll.
  */
 const calcDropdownPosition = (): void => {
-    if (!controlRef.value) return;
-    const rect = controlRef.value.getBoundingClientRect();
+    if (!controlRef.value || !panelRef.value) return;
+
+    const controlRect = controlRef.value.getBoundingClientRect();
+    const panelRect = panelRef.value.getBoundingClientRect();
+    const gap = 4;
+    const spaceBelow = window.innerHeight - controlRect.bottom;
+    const spaceAbove = controlRect.top;
+    const panelHeight = panelRect.height;
+
+    const topPosition =
+        spaceBelow >= panelHeight + gap
+            ? controlRect.bottom + gap
+            : spaceAbove >= panelHeight + gap
+              ? controlRect.top - panelHeight - gap
+              : controlRect.bottom + gap;
+
     dropdownStyle.value = {
-        top: `${rect.bottom + 4}px`,
-        left: `${rect.left}px`,
-        width: `${props.store.dropdownWidth ? props.store.dropdownWidth : rect.width}px`,
+        top: `${topPosition}px`,
+        left: `${controlRect.left}px`,
+        width: `${props.store.dropdownWidth ? props.store.dropdownWidth : controlRect.width}px`,
     };
 };
 
@@ -279,13 +293,14 @@ const closeDropdown = () => {
  * Luôn gọi store.loadData() trước khi check isOpen
  * để đảm bảo data luôn fresh kể cả khi dropdown đã mở.
  */
-const openDropdown = () => {
+const openDropdown = async () => {
     if (props.disabled) return;
     // Luôn load trước — không guard bằng isOpen
     props.store.loadData("");
     if (isOpen.value) return; // guard UI
-    calcDropdownPosition();
     isOpen.value = true;
+    await nextTick();
+    calcDropdownPosition();
 };
 
 /**

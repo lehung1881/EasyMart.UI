@@ -1,7 +1,16 @@
 ﻿/**
+ * Form config
+ */
+export interface FormConfig {
+    FormID: string;
+    Name: string;
+    RefType: number;
+}
+
+/**
  * Danh sách cấu hình một số data đầu của các form.
  */
-export const formConfig = [
+export const formConfig: FormConfig[] = [
     {
         FormID: "InventoryItemList",
         Name: "Hàng hóa",

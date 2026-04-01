@@ -53,6 +53,14 @@
                     </slot>
                 </td>
             </slot>
+            <td class="tb-content__cell tb-content__cell--row-action">
+                <slot name="row-action" :row="row" :index="index">
+                    <div class="flex gap-2 flex-end w-full h-full items-center justify-center">
+                        <div class="row-action__item"></div>
+                        <div class="row-action__item"></div>
+                    </div>
+                </slot>
+            </td>
         </tr>
     </tbody>
 </template>
@@ -264,6 +272,21 @@ $border-color: #d0d0d0;
     }
     to {
         background-position: -200% 0;
+    }
+}
+.tb-content__cell--row-action {
+    height: 36px;
+    position: sticky;
+    width: 100px;
+    right: 0;
+    background-color: #ffffff;
+
+    .row-action__item {
+        width: 24px;
+        height: 24px;
+        background-color: #ffffff;
+        border-radius: 100%;
+        box-shadow: 0 1px 10px rgba(0, 0, 0, 0.0588235294);
     }
 }
 </style>

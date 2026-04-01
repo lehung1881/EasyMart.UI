@@ -2,7 +2,9 @@
     <thead class="tb-header">
         <tr>
             <th v-if="showSelection" class="tb-header__cell tb-header__cell--selection">
-                <BaseCheckbox :model-value="allSelected" @update:model-value="onToggleAll" />
+                <div class="header-title">
+                    <BaseCheckbox :model-value="allSelected" @update:model-value="onToggleAll" />
+                </div>
             </th>
             <th
                 v-for="column in visibleColumns"
@@ -11,9 +13,12 @@
                 :style="getColumnStyle(column)"
             >
                 <slot :name="`header-${column.dataField}`" :column="column">
-                    {{ column.title ?? column.dataField }}
+                    <div class="header-title">
+                        {{ column.title ?? column.dataField }}
+                    </div>
                 </slot>
             </th>
+            <th class="tb-header__cell tb-header__cell--actions"><div class="header-title-action"></div></th>
         </tr>
     </thead>
 </template>
@@ -95,7 +100,6 @@ const onToggleAll = (checked: boolean): void => {
 
 .tb-header__cell {
     font-size: $font-size-base;
-    padding: 0 12px;
     font-weight: 600;
     border-bottom: $input-border;
     color: inherit;
@@ -105,6 +109,21 @@ const onToggleAll = (checked: boolean): void => {
     height: 36px;
     position: sticky;
     background: #f8f8f8;
+    .header-title {
+        max-width: 100%;
+        padding: 0 12px;
+        border-right: 1px solid #d1d5db;
+        height: 20px;
+    }
+    &:nth-last-child(2) {
+        .header-title {
+            border-right: unset;
+        }
+    }
+    .header-title-action {
+        border-left: 1px solid #d1d5db;
+        height: 20px;
+    }
 }
 
 .tb-header__cell--selection {
@@ -115,5 +134,13 @@ const onToggleAll = (checked: boolean): void => {
     position: sticky;
     left: 0;
     z-index: 3;
+}
+.tb-header__cell--actions {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    position: sticky;
+    right: 0;
+    z-index: 1;
 }
 </style>

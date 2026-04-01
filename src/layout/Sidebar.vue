@@ -4,7 +4,7 @@
         <div class="sidebar-logo">
             <!-- <span class="logo-icon">⬡</span> -->
             <transition name="fade">
-                <span v-if="!isCollapsed" class="logo-text">BizSuite</span>
+                <span v-if="!isCollapsed" class="logo-text">EasyMart</span>
             </transition>
         </div>
 
