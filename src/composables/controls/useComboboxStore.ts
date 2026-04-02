@@ -13,7 +13,7 @@ import type BaseAPI from "@/api/baseAPI";
 import type { ComboboxLoadData, ComboboxStoreOptions, QueryMode } from "@/models/common/combobox";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 
-const STORE_NAME_TEMPLATE = "combobox_{0}_{1}";
+const STORE_NAME_TEMPLATE = "store_combobox_{0}_{1}";
 
 /**
  * Tạo và lấy instance store cho combobox theo storeID.

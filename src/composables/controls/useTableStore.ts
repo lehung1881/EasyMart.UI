@@ -11,7 +11,7 @@ import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import type { PagingRequest } from "@/models/common/paging";
 import type BaseAPI from "@/api/baseAPI";
 
-const STORE_NAME_TEMPLATE = "table_{0}_{1}";
+const STORE_NAME_TEMPLATE = "store_table_{0}_{1}";
 
 /**
  * Default row model for the table.
