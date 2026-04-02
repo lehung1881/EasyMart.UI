@@ -16,12 +16,18 @@
             >
                 <div class="tb-content__skeleton-line" />
             </td>
+            <td v-if="showRowAction" class="tb-content__cell tb-content__cell--row-action">
+                <div class="tb-content__skeleton-line" />
+            </td>
         </tr>
     </tbody>
 
     <tbody v-else-if="rows.length === 0" class="tb-content tb-content--state">
         <tr>
-            <td class="tb-content__state" :colspan="visibleColumns.length + (showSelection ? 1 : 0)">
+            <td
+                class="tb-content__state"
+                :colspan="visibleColumns.length + (showSelection ? 1 : 0) + (showRowAction ? 1 : 0)"
+            >
                 {{ emptyText }}
             </td>
         </tr>
@@ -53,11 +59,19 @@
                     </slot>
                 </td>
             </slot>
-            <td class="tb-content__cell tb-content__cell--row-action">
+            <td v-if="showRowAction" class="tb-content__cell tb-content__cell--row-action">
                 <slot name="row-action" :row="row" :index="index">
-                    <div class="flex gap-2 flex-end w-full h-full items-center justify-center">
-                        <div class="row-action__item"></div>
-                        <div class="row-action__item"></div>
+                    <div class="row-action">
+                        <button
+                            v-for="action in getVisibleRowActions(row)"
+                            :key="action.actionName"
+                            type="button"
+                            class="row-action__item"
+                            :title="action.actionName"
+                            @click="onRowAction(action, row)"
+                        >
+                            <div :class="action.icon"></div>
+                        </button>
                     </div>
                 </slot>
             </td>
@@ -72,6 +86,36 @@ import { formatData } from "@/commons/formatData";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import type { TableRow } from "@/composables/controls/useTableStore";
 
+export interface TableRowAction {
+    actionName: string;
+    icon: string;
+    show: (row: TableRow) => boolean;
+}
+
+/**
+ * Luôn cho phép hiển thị action với mọi dòng.
+ * @param _row Dữ liệu dòng hiện tại.
+ * @returns Luôn trả về true.
+ */
+const alwaysShowRowAction = (_row: TableRow): boolean => true;
+
+/**
+ * Tạo danh sách action mặc định cho row-action.
+ * @returns Danh sách gồm Sửa và Xóa._i
+ */
+const getDefaultRowActions = (): TableRowAction[] => [
+    {
+        actionName: "Edit",
+        icon: "icon-row-edit scale-[0.9]",
+        show: alwaysShowRowAction,
+    },
+    {
+        actionName: "Delete",
+        icon: "icon-row-delete scale-[0.9]",
+        show: alwaysShowRowAction,
+    },
+];
+
 const props = withDefaults(
     defineProps<{
         data: TableRow[];
@@ -79,22 +123,25 @@ const props = withDefaults(
         selectedRows: TableRow[];
         rowKey?: string;
         loading: boolean;
-        loadingText?: string;
         emptyText?: string;
         showSelection?: boolean;
+        showRowAction?: boolean;
+        listRowAction?: TableRowAction[];
         pageSize?: number;
     }>(),
     {
         rowKey: "id",
-        loadingText: "Dang tai...",
-        emptyText: "Khong co du lieu",
+        emptyText: "Không có dữ liệu",
         showSelection: true,
+        showRowAction: true,
+        listRowAction: () => [],
     },
 );
 
 const emit = defineEmits<{
     (e: "row-click", payload: { row: TableRow; index: number }): void;
     (e: "toggle-row", payload: { row: TableRow; checked: boolean }): void;
+    (e: "row-action-click", action: TableRowAction, row: TableRow): void;
 }>();
 
 /**
@@ -116,6 +163,27 @@ const rows = computed<TableRow[]>(() => props.data ?? []);
  * @returns Số dòng skeleton.
  */
 const skeletonRowCount = computed<number>(() => props.pageSize ?? 20);
+
+/**
+ * Lấy danh sách action hợp lệ cần hiển thị cho từng dòng.
+ * @param row Dữ liệu dòng hiện tại.
+ * @returns Danh sách action được phép hiển thị.
+ */
+const getVisibleRowActions = (row: TableRow): TableRowAction[] => {
+    const rowActions =
+        !props.listRowAction || props.listRowAction.length === 0 ? getDefaultRowActions() : props.listRowAction;
+    return rowActions.filter((action) => action.show(row));
+};
+
+/**
+ * Emit sự kiện khi người dùng click một row action.
+ * @param action Action được click.
+ * @param row Dữ liệu dòng tương ứng với action.
+ * @returns Không trả về giá trị.
+ */
+const onRowAction = (action: TableRowAction, row: TableRow): void => {
+    emit("row-action-click", action, row);
+};
 
 /**
  * Trả về style inline cho từng cell.
@@ -219,12 +287,22 @@ $border-color: #d0d0d0;
 
     &:hover {
         background: $hover-color;
+        .tb-content__cell {
+            background: $hover-color;
+        }
     }
     &:last-child {
         .tb-content__cell {
             border-bottom: unset;
         }
     }
+}
+
+.tb-content__row:hover .tb-content__cell--row-action .row-action,
+.tb-content__row:focus-within .tb-content__cell--row-action .row-action {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .tb-content__row--skeleton {
@@ -277,9 +355,22 @@ $border-color: #d0d0d0;
 .tb-content__cell--row-action {
     height: 36px;
     position: sticky;
-    width: 100px;
+    width: 80px;
     right: 0;
     background-color: #ffffff;
+
+    .row-action {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.12s ease;
+    }
 
     .row-action__item {
         width: 24px;
@@ -287,6 +378,11 @@ $border-color: #d0d0d0;
         background-color: #ffffff;
         border-radius: 100%;
         box-shadow: 0 1px 10px rgba(0, 0, 0, 0.0588235294);
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
     }
 }
 </style>

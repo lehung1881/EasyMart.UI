@@ -1,17 +1,18 @@
-/**
+﻿/**
  * useBaseList.ts
  * Business logic layer - Composable factory cho màn hình danh sách với CRUD operations.
  * Layer này nằm trên useTableStore, xử lý logic nghiệp vụ như search, delete, refresh.
  */
 
 import { computed, ref, onBeforeMount, getCurrentInstance } from "vue";
-import type { TableStoreInstance } from "@/composables/controls/useTableStore";
+import type { TableRow, TableStoreInstance } from "@/composables/controls/useTableStore";
 import type BaseAPI from "@/api/baseAPI";
 import { showConfirm } from "@/commons/messageBox";
 import { loadDataRemoteTable } from "@/composables/controls/useTableStore";
 import type { PagingRequest } from "@/models/common/paging";
 import { debounce } from "lodash";
 import { formConfigMap, type FormConfig } from "@/constants/formConfig";
+import { ModelState } from "@/constants/enumration/modelState";
 
 /**
  * Dữ liệu đầu vào cho callback validate trước khi xóa.
@@ -177,7 +178,7 @@ export const useBaseList = (options: BaseListOptions) => {
      * @param query Từ khóa tìm kiếm.
      * @returns Promise hoàn tất khi search được trigger.
      */
-    const search = (query: string): Promise<void> => {
+    const onSearch = (query: string): Promise<void> => {
         textSearch.value = query;
         debouncedSearch(query);
         return Promise.resolve();
@@ -204,6 +205,63 @@ export const useBaseList = (options: BaseListOptions) => {
     };
 
     /**
+     * Chuẩn bị dữ liệu trước khi thực hiện xóa.
+     * @param records Danh sách bản ghi cần xóa.
+     * @param isDeleteMultiple Đánh dấu thao tác xóa một hay nhiều bản ghi.
+     * @returns Kết quả validate cùng danh sách bản ghi đã gắn State xóa.
+     */
+    const beforeDelete = async (
+        records: Array<Record<string, unknown>>,
+        isDeleteMultiple: boolean,
+    ): Promise<{
+        canDelete: boolean;
+        ids: Array<string | number>;
+        recordsForDelete: Array<Record<string, unknown>>;
+    }> => {
+        const ids = records
+            .map((record) => record[rowKey])
+            .filter((id): id is string | number => typeof id === "string" || typeof id === "number");
+
+        if (ids.length === 0) {
+            return {
+                canDelete: false,
+                ids,
+                recordsForDelete: [],
+            };
+        }
+
+        let isValidForDelete = true;
+
+        // Cho phép màn hình custom validate trước khi xóa
+        if (validateBeforeDelete) {
+            isValidForDelete = await validateBeforeDelete({
+                records,
+                ids,
+                isDeleteMultiple,
+            });
+        }
+
+        if (!isValidForDelete) {
+            return {
+                canDelete: false,
+                ids,
+                recordsForDelete: [],
+            };
+        }
+
+        const recordsForDelete = records.map((record) => ({
+            ...record,
+            ModelState: ModelState.Delete,
+        }));
+
+        return {
+            canDelete: true,
+            ids,
+            recordsForDelete,
+        };
+    };
+
+    /**
      * Xóa một item theo bản ghi.
      *
      * @param record Bản ghi cần xóa.
@@ -211,20 +269,8 @@ export const useBaseList = (options: BaseListOptions) => {
      */
     const deleteItem = async (record: any): Promise<boolean> => {
         try {
-            let isValidForDelete = true;
-
-            // Cho phép màn hình custom validate trước khi xóa
-            if (validateBeforeDelete) {
-                isValidForDelete = await validateBeforeDelete({
-                    records: [record],
-                    ids: [record?.[rowKey] as string | number],
-                    isDeleteMultiple: false,
-                });
-            }
-
-            if (!isValidForDelete) {
-                return false;
-            }
+            const { canDelete, recordsForDelete } = await beforeDelete([record], false);
+            if (!canDelete) return false;
 
             if (!api) {
                 throw new Error("No API configured for delete operation");
@@ -234,17 +280,12 @@ export const useBaseList = (options: BaseListOptions) => {
             if (!result) return false;
 
             // Base mặc định luôn xóa bằng saveData
-            const response = await api.saveData(record);
+            const response = await api.saveData(recordsForDelete[0]);
             const success = response.Success === true;
 
             if (success) {
-                // Reload data sau khi xóa thành công
-                await tableStore.loadData(textSearch.value, tableStore.currentPage);
-
-                // Xóa khỏi selection nếu có
-                const updatedSelection = tableStore.selectedRows.filter((row) => row[rowKey] !== record[rowKey]);
-                tableStore.setSelectedRows(updatedSelection);
-
+                // Tối ưu hiệu năng: cập nhật local store thay vì gọi reload từ API.
+                tableStore.deleteRecord(record);
                 onDeleteSuccess?.();
             } else {
                 throw new Error("Delete operation failed");
@@ -260,27 +301,13 @@ export const useBaseList = (options: BaseListOptions) => {
 
     /**
      * Xóa nhiều items đã được chọn.
-     *
      * @returns Promise trả về true nếu tất cả đều xóa thành công.
      */
     const deleteSelected = async (): Promise<boolean> => {
         try {
-            const ids = tableStore.selectedRows.map((row) => row[rowKey] as string | number);
-            const selectedItems = [...tableStore.selectedRows];
-            let isValidForDelete = true;
-
-            // Cho phép màn hình custom validate trước khi xóa
-            if (validateBeforeDelete) {
-                isValidForDelete = await validateBeforeDelete({
-                    records: selectedItems,
-                    ids,
-                    isDeleteMultiple: true,
-                });
-            }
-
-            if (!isValidForDelete) {
-                return false;
-            }
+            const selectedItems = [...tableStore.selectedRows] as Array<Record<string, unknown>>;
+            const { canDelete, recordsForDelete } = await beforeDelete(selectedItems, true);
+            if (!canDelete) return false;
 
             if (!api) {
                 throw new Error("No API configured for delete operation");
@@ -290,7 +317,7 @@ export const useBaseList = (options: BaseListOptions) => {
             if (!result) return false;
 
             // Base mặc định luôn xóa bằng saveListData
-            const response = await api.saveListData(selectedItems);
+            const response = await api.saveListData(recordsForDelete);
             const success = response.Success === true;
 
             if (success) {
@@ -427,6 +454,22 @@ export const useBaseList = (options: BaseListOptions) => {
     };
 
     /**
+     * Xử lý action thao tác trên từng dòng dữ liệu danh sách.
+     * @param action Action được click từ danh sách.
+     * @param row Bản ghi tương ứng với action.
+     * @returns Không trả về giá trị.
+     */
+    const onListItemAction = (action: any, row: TableRow): void => {
+        switch (action.actionName) {
+            case "Delete":
+                deleteItem(row);
+                break;
+            default:
+                break;
+        }
+    };
+
+    /**
      * Xử lý build filter cho danh sách
      * @param payload
      */
@@ -439,7 +482,7 @@ export const useBaseList = (options: BaseListOptions) => {
         selectedRows,
         selectedCount,
         staticConfig,
-        search,
+        onSearch,
         clearSearch,
         deleteItem,
         deleteSelected,
@@ -450,6 +493,7 @@ export const useBaseList = (options: BaseListOptions) => {
         isRowSelected,
         cleanup,
         loadListData,
+        onListItemAction,
         proxy,
     };
 };

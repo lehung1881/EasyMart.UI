@@ -41,6 +41,7 @@ export interface TableStoreOptions {
     pageSize?: number;
     viewOrTableName?: string;
     columns?: ColumnDefinition[];
+    keyID?: string;
 }
 
 /**
@@ -69,6 +70,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
         const currentQuery = ref<string>("");
         const totalRecords = ref<number>(0);
         const viewName = ref<string>("");
+        const keyID = ref<string>("id");
 
         /**
          * Check if store is running in remote mode.
@@ -89,11 +91,11 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
         /**
          * Resolve key value from row by row key field.
          * @param row Row data.
-         * @param rowKey Row key field name.
+         * @param keyID Row key field name.
          * @returns Primitive key value or undefined.
          */
-        const resolveRowKey = (row: TableRow, rowKey = "id"): string | number | undefined => {
-            const key = row[rowKey];
+        const resolveRowKey = (row: TableRow, keyID = "id"): string | number | undefined => {
+            const key = row[keyID];
             if (typeof key === "string" || typeof key === "number") return key;
             return undefined;
         };
@@ -200,33 +202,33 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
         /**
          * Check whether a row is selected.
          * @param row Row data.
-         * @param rowKey Row key field.
+         * @param keyID Row key field.
          * @returns True when row exists in selectedRows.
          */
-        const isRowSelected = (row: TableRow, rowKey = "id"): boolean => {
-            const key = resolveRowKey(row, rowKey);
+        const isRowSelected = (row: TableRow, keyID = "id"): boolean => {
+            const key = resolveRowKey(row, keyID);
             if (key === undefined) return false;
-            return selectedRows.value.some((selectedRow) => resolveRowKey(selectedRow, rowKey) === key);
+            return selectedRows.value.some((selectedRow) => resolveRowKey(selectedRow, keyID) === key);
         };
 
         /**
          * Add or remove a row in selectedRows.
          * @param row Row data.
          * @param checked Checkbox state.
-         * @param rowKey Row key field.
+         * @param keyID Row key field.
          * @returns No return value.
          */
-        const toggleRowSelection = (row: TableRow, checked: boolean, rowKey = "id"): void => {
-            const key = resolveRowKey(row, rowKey);
+        const toggleRowSelection = (row: TableRow, checked: boolean, keyID = "id"): void => {
+            const key = resolveRowKey(row, keyID);
             if (key === undefined) return;
 
             if (checked) {
-                if (isRowSelected(row, rowKey)) return;
+                if (isRowSelected(row, keyID)) return;
                 selectedRows.value = [...selectedRows.value, row];
                 return;
             }
 
-            selectedRows.value = selectedRows.value.filter((selectedRow) => resolveRowKey(selectedRow, rowKey) !== key);
+            selectedRows.value = selectedRows.value.filter((selectedRow) => resolveRowKey(selectedRow, keyID) !== key);
         };
 
         /**
@@ -245,6 +247,31 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
         const clearSelectedRows = (): void => {
             selectedRows.value = [];
         };
+        /**
+         * Delete one record from store collections by object value.
+         * @param record Record object that needs to be removed.
+         * @returns No return value.
+         */
+        const deleteRecord = (record: TableRow): void => {
+            const key = resolveRowKey(record, keyID.value);
+            if (key === undefined) return;
+
+            const hasRemovedFromData = data.value.some((row) => resolveRowKey(row, keyID.value) === key);
+
+            data.value = data.value.filter((row) => resolveRowKey(row, keyID.value) !== key);
+            rawData.value = rawData.value.filter((row) => resolveRowKey(row, keyID.value) !== key);
+            filteredData.value = filteredData.value.filter((row) => resolveRowKey(row, keyID.value) !== key);
+            selectedRows.value = selectedRows.value.filter((row) => resolveRowKey(row, keyID.value) !== key);
+
+            if (isRemoteMode()) {
+                if (hasRemovedFromData) {
+                    totalRecords.value = Math.max(0, totalRecords.value - 1);
+                }
+                return;
+            }
+
+            totalRecords.value = filteredData.value.length;
+        };
 
         /**
          * Load data for provided page and query.
@@ -252,6 +279,31 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
          * @param page Target page index.
          * @returns Promise when load completes.
          */
+        /**
+         * Clear toàn bộ dữ liệu trong store.
+         * @returns Không trả về giá trị.
+         */
+        const clearData = (): void => {
+            data.value = [];
+            rawData.value = [];
+            filteredData.value = [];
+            selectedRows.value = [];
+            totalRecords.value = 0;
+            currentPage.value = 1;
+        };
+
+        /**
+         * Thêm một bản ghi mới vào đầu danh sách trong store.
+         * @param record Bản ghi cần thêm.
+         * @returns Không trả về giá trị.
+         */
+        const insertRecord = (record: TableRow): void => {
+            data.value = [record, ...data.value];
+            rawData.value = [record, ...rawData.value];
+            filteredData.value = [record, ...filteredData.value];
+            totalRecords.value += 1;
+        };
+
         const loadData = async (query = "", page = 1): Promise<void> => {
             currentQuery.value = query;
             currentPage.value = Math.max(1, page);
@@ -351,6 +403,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             pageSize.value = config.pageSize ?? 20;
             viewName.value = config.viewOrTableName ?? "";
             columns.value = config.columns ?? [];
+            keyID.value = config.keyID ?? "id";
             rawData.value = config.data ? [...config.data] : [];
             filteredData.value = config.data ? [...config.data] : [];
             totalRecords.value = filteredData.value.length;
@@ -370,12 +423,14 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             currentQuery.value = "";
             totalRecords.value = 0;
             selectedRows.value = [];
+            keyID.value = "id";
         };
 
         return {
             data,
             loading,
             columns,
+            keyID,
             selectedRows,
             currentPage,
             pageSize,
@@ -390,6 +445,9 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             toggleRowSelection,
             setSelectedRows,
             clearSelectedRows,
+            deleteRecord,
+            clearData,
+            insertRecord,
             loadData,
             goToPage,
             goToFirstPage,

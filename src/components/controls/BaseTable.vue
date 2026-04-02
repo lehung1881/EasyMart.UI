@@ -5,6 +5,7 @@
                 <BaseTableHeader
                     :columns="tableColumns"
                     :show-selection="showSelection"
+                    :show-row-action="showRowAction"
                     :all-selected="allCurrentPageSelected"
                     @toggle-all="onToggleAllCurrentPage"
                 >
@@ -17,13 +18,15 @@
                     :data="tableData"
                     :columns="tableColumns"
                     :selected-rows="store.selectedRows"
-                    :row-key="rowKey"
+                    :row-key="store.keyID"
                     :loading="store.loading"
-                    :loading-text="loadingText"
                     :empty-text="emptyText"
                     :show-selection="showSelection"
+                    :show-row-action="showRowAction"
+                    :list-row-action="listRowAction"
                     @row-click="onRowClick"
                     @toggle-row="onToggleRow"
+                    @row-action-click="onRowAction"
                 >
                     <template v-for="(_, name) in $slots" #[name]="slotData">
                         <slot :name="name" v-bind="slotData ?? {}" />
@@ -82,28 +85,34 @@ interface PageSizeOption {
     value: number;
 }
 
+interface TableRowAction {
+    actionName: string;
+    icon: string;
+    show: (row: TableRow) => boolean;
+}
+
 const props = withDefaults(
     defineProps<{
         store: TableStoreInstance;
         columns?: ColumnDefinition[];
-        rowKey?: string;
         autoLoad?: boolean;
         disabled?: boolean;
-        loadingText?: string;
         emptyText?: string;
         showPagination?: boolean;
         showSelection?: boolean;
+        showRowAction?: boolean;
+        listRowAction?: TableRowAction[];
         pageSizeOptions?: number[];
     }>(),
     {
         columns: undefined,
-        rowKey: "id",
         autoLoad: true,
         disabled: false,
-        loadingText: "Dang tai...",
         emptyText: "Khong co du lieu",
         showPagination: true,
         showSelection: true,
+        showRowAction: true,
+        listRowAction: () => [],
         pageSizeOptions: () => [10, 20, 30, 50, 100],
     },
 );
@@ -112,6 +121,7 @@ const emit = defineEmits<{
     (e: "row-click", payload: { row: TableRow; index: number }): void;
     (e: "page-change", page: number): void;
     (e: "page-size-change", pageSize: number): void;
+    (e: "row-action-click", action: TableRowAction, row: TableRow): void;
 }>();
 
 const selectedPageSize = ref<number>(props.store.pageSize);
@@ -135,7 +145,7 @@ const tableData = computed<TableRow[]>(() => props.store.data ?? []);
 const allCurrentPageSelected = computed<boolean>(() => {
     if (!props.showSelection) return false;
     if (tableData.value.length === 0) return false;
-    return tableData.value.every((row) => props.store.isRowSelected(row, props.rowKey));
+    return tableData.value.every((row) => props.store.isRowSelected(row, props.store.keyID));
 });
 
 /**
@@ -190,7 +200,17 @@ const onRowClick = (payload: { row: TableRow; index: number }): void => {
  * @returns Không trả về giá trị.
  */
 const onToggleRow = (payload: { row: TableRow; checked: boolean }): void => {
-    props.store.toggleRowSelection(payload.row, payload.checked, props.rowKey);
+    props.store.toggleRowSelection(payload.row, payload.checked, props.store.keyID);
+};
+
+/**
+ * Emit sự kiện row action ra ngoài component cha.
+ * @param action Action được click trên dòng.
+ * @param row Dữ liệu dòng tương ứng với action.
+ * @returns Không trả về giá trị.
+ */
+const onRowAction = (action: TableRowAction, row: TableRow): void => {
+    emit("row-action-click", action, row);
 };
 
 /**
@@ -200,7 +220,7 @@ const onToggleRow = (payload: { row: TableRow; checked: boolean }): void => {
  */
 const onToggleAllCurrentPage = (checked: boolean): void => {
     tableData.value.forEach((row) => {
-        props.store.toggleRowSelection(row, checked, props.rowKey);
+        props.store.toggleRowSelection(row, checked, props.store.keyID);
     });
 };
 

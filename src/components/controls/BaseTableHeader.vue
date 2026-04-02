@@ -18,7 +18,9 @@
                     </div>
                 </slot>
             </th>
-            <th class="tb-header__cell tb-header__cell--actions"><div class="header-title-action"></div></th>
+            <th v-if="showRowAction" class="tb-header__cell tb-header__cell--actions">
+                <div class="header-title-action"></div>
+            </th>
         </tr>
     </thead>
 </template>
@@ -32,10 +34,12 @@ const props = withDefaults(
     defineProps<{
         columns: ColumnDefinition[];
         showSelection?: boolean;
+        showRowAction?: boolean;
         allSelected?: boolean;
     }>(),
     {
         showSelection: true,
+        showRowAction: true,
         allSelected: false,
     },
 );
@@ -136,9 +140,9 @@ const onToggleAll = (checked: boolean): void => {
     z-index: 3;
 }
 .tb-header__cell--actions {
-    width: 100px;
-    min-width: 100px;
-    max-width: 100px;
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
     position: sticky;
     right: 0;
     z-index: 1;

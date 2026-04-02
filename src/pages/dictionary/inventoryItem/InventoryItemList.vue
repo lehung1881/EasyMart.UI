@@ -13,8 +13,8 @@
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
                     <BaseInput v-model="searchKeyword" size="sm" placeholder="Tìm kiếm" @change="onSearch" />
-                    <BaseButton size="sm" @click="onRefresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
-                    <BaseButton size="sm" icon-left="icon-filter" @click="baseList.deleteItem"></BaseButton>
+                    <BaseButton size="sm" @click="refresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
+                    <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
                 </div>
             </div>
@@ -24,8 +24,8 @@
                     :columns="tableColumns"
                     :auto-load="false"
                     :show-selection="true"
-                    row-key="InventoryItemID"
                     empty-text="Không có dữ liệu"
+                    @row-action-click="onListItemAction"
                 />
             </div>
         </div>
@@ -71,7 +71,7 @@ const tableColumns: ColumnDefinition[] = [
         visible: true,
         formatType: FormatType.Quantity,
     },
-    { dataField: "Inactive", title: "Trạng thái", width: 160, align: "center", visible: true },
+    // { dataField: "Inactive", title: "Trạng thái", width: 160, align: "center", visible: true },
 ];
 
 /**
@@ -84,36 +84,29 @@ const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promi
     return true;
 };
 
+/**
+ * Store quản lý trạng thái và dữ liệu của bảng hàng hóa.
+ * Cấu hình chế độ truy vấn dữ liệu từ server và hàm tải dữ liệu.
+ */
 const tableStore = useTableStore("inventory_item", {
-    queryMode: "remote",
-    tableLoadData: (payload) => baseList.loadListData(payload),
+    keyID: "InventoryItemID",
     viewOrTableName: "di_inventory_item",
     columns: tableColumns,
+    tableLoadData: (payload) => loadListData(payload),
 });
 
-const baseList = useBaseList({
+/**
+ * Sử dụng composable useBaseList để xử lý logic chung cho các trang danh sách, bao gồm:
+ * - loadListData: Hàm tải dữ liệu từ API dựa trên payload của tableStore.
+ * - search: Hàm thực hiện tìm kiếm với từ khóa hiện tại.
+ */
+const { loadListData, onSearch, refresh, deleteItem, onListItemAction } = useBaseList({
     formID: "InventoryItemList",
     tableStore,
     api: inventoryItemApi,
     rowKey: "InventoryItemID",
     validateBeforeDelete,
 });
-
-/**
- * Thực hiện tìm kiếm danh sách theo từ khóa hiện tại.
- * @returns Promise hoàn tất tìm kiếm.
- */
-const onSearch = async (): Promise<void> => {
-    await baseList.search(searchKeyword.value.trim());
-};
-
-/**
- * Tải lại dữ liệu trang hiện tại.
- * @returns Promise hoàn tất refresh.
- */
-const onRefresh = async (): Promise<void> => {
-    await baseList.refresh();
-};
 
 /**
  * Điều hướng đến màn hình tạo mới hàng hóa.
