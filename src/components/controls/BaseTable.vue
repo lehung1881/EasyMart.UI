@@ -347,7 +347,6 @@ onMounted(async () => {
  * @returns Không trả về giá trị.
  */
 onBeforeUnmount(() => {
-    pageSizeStore.$dispose();
     props.store.$dispose();
 });
 </script>

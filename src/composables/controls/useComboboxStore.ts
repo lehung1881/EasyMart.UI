@@ -280,11 +280,9 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
         const reset = (): void => {
             data.value = [];
             rawData.value = [];
-
             loading.value = false;
             loadingMore.value = false;
             hasMore.value = false;
-
             currentPage.value = 1;
             currentTextSearch.value = "";
             selectedItem.value = null;
