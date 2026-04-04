@@ -4,7 +4,7 @@
  * Layer này nằm trên useTableStore, xử lý logic nghiệp vụ như search, delete, refresh.
  */
 
-import { computed, ref, onBeforeMount, getCurrentInstance } from "vue";
+import { computed, ref, onBeforeMount, onBeforeUnmount, getCurrentInstance } from "vue";
 import type { TableRow, TableStoreInstance } from "@/composables/controls/useTableStore";
 import type BaseAPI from "@/api/baseAPI";
 import { showConfirm } from "@/commons/messageBox";
@@ -13,6 +13,7 @@ import type { PagingRequest } from "@/models/common/paging";
 import { debounce } from "lodash";
 import { formConfigMap, type FormConfig } from "@/constants/formConfig";
 import { ModelState } from "@/constants/enumration/modelState";
+import { attachListDebug, detachListDebug } from "@/composables/base/useDebug";
 
 /**
  * Dữ liệu đầu vào cho callback validate trước khi xóa.
@@ -163,8 +164,8 @@ export const useBaseList = (options: BaseListOptions) => {
             await tableStore.loadData(query, 1);
             onLoadSuccess?.();
         } catch (error) {
-            const err = error instanceof Error ? error : new Error("Search failed");
-            onLoadError?.(err);
+            const normalizedError = error instanceof Error ? error : new Error("Search failed");
+            onLoadError?.(normalizedError);
         }
     };
 
@@ -199,8 +200,8 @@ export const useBaseList = (options: BaseListOptions) => {
             await tableStore.loadData("", 1);
             onLoadSuccess?.();
         } catch (error) {
-            const err = error instanceof Error ? error : new Error("Clear search failed");
-            onLoadError?.(err);
+            const normalizedError = error instanceof Error ? error : new Error("Clear search failed");
+            onLoadError?.(normalizedError);
         }
     };
 
@@ -267,9 +268,9 @@ export const useBaseList = (options: BaseListOptions) => {
      * @param record Bản ghi cần xóa.
      * @returns Promise trả về true nếu xóa thành công.
      */
-    const deleteItem = async (record: any): Promise<boolean> => {
+    const deleteItem = async (recordData: any): Promise<boolean> => {
         try {
-            const { canDelete, recordsForDelete } = await beforeDelete([record], false);
+            const { canDelete, recordsForDelete } = await beforeDelete([recordData], false);
             if (!canDelete) return false;
 
             if (!api) {
@@ -285,7 +286,7 @@ export const useBaseList = (options: BaseListOptions) => {
 
             if (success) {
                 // Tối ưu hiệu năng: cập nhật local store thay vì gọi reload từ API.
-                tableStore.deleteRecord(record);
+                tableStore.deleteRecord(recordData);
                 onDeleteSuccess?.();
             } else {
                 throw new Error("Delete operation failed");
@@ -293,8 +294,8 @@ export const useBaseList = (options: BaseListOptions) => {
 
             return success;
         } catch (error) {
-            const err = error instanceof Error ? error : new Error("Delete failed");
-            onDeleteError?.(err);
+            const normalizedError = error instanceof Error ? error : new Error("Delete failed");
+            onDeleteError?.(normalizedError);
             return false;
         }
     };
@@ -331,8 +332,8 @@ export const useBaseList = (options: BaseListOptions) => {
 
             return success;
         } catch (error) {
-            const err = error instanceof Error ? error : new Error("Delete multiple failed");
-            onDeleteError?.(err);
+            const normalizedError = error instanceof Error ? error : new Error("Delete multiple failed");
+            onDeleteError?.(normalizedError);
             return false;
         }
     };
@@ -347,8 +348,8 @@ export const useBaseList = (options: BaseListOptions) => {
             await tableStore.loadData(textSearch.value, tableStore.currentPage);
             onLoadSuccess?.();
         } catch (error) {
-            const err = error instanceof Error ? error : new Error("Refresh failed");
-            onLoadError?.(err);
+            const normalizedError = error instanceof Error ? error : new Error("Refresh failed");
+            onLoadError?.(normalizedError);
         }
     };
 
@@ -362,8 +363,8 @@ export const useBaseList = (options: BaseListOptions) => {
             await tableStore.loadData(textSearch.value, 1);
             onLoadSuccess?.();
         } catch (error) {
-            const err = error instanceof Error ? error : new Error("Reload failed");
-            onLoadError?.(err);
+            const normalizedError = error instanceof Error ? error : new Error("Reload failed");
+            onLoadError?.(normalizedError);
         }
     };
 
@@ -378,8 +379,8 @@ export const useBaseList = (options: BaseListOptions) => {
             await tableStore.setPageSize(size);
             onLoadSuccess?.();
         } catch (error) {
-            const err = error instanceof Error ? error : new Error("Change page size failed");
-            onLoadError?.(err);
+            const normalizedError = error instanceof Error ? error : new Error("Change page size failed");
+            onLoadError?.(normalizedError);
         }
     };
 
@@ -396,8 +397,8 @@ export const useBaseList = (options: BaseListOptions) => {
      * @param row Row data.
      * @returns True nếu row được chọn.
      */
-    const isRowSelected = (row: any): boolean => {
-        return tableStore.isRowSelected(row, rowKey);
+    const isRowSelected = (rowData: any): boolean => {
+        return tableStore.isRowSelected(rowData, rowKey);
     };
 
     /**
@@ -411,8 +412,8 @@ export const useBaseList = (options: BaseListOptions) => {
                 onLoadSuccess?.();
             })
             .catch((error) => {
-                const err = error instanceof Error ? error : new Error("Auto load failed");
-                onLoadError?.(err);
+                const normalizedError = error instanceof Error ? error : new Error("Auto load failed");
+                onLoadError?.(normalizedError);
             });
     });
 
@@ -459,10 +460,10 @@ export const useBaseList = (options: BaseListOptions) => {
      * @param row Bản ghi tương ứng với action.
      * @returns Không trả về giá trị.
      */
-    const onListItemAction = (action: any, row: TableRow): void => {
-        switch (action.actionName) {
+    const onListItemAction = (rowAction: any, rowData: TableRow): void => {
+        switch (rowAction.actionName) {
             case "Delete":
-                deleteItem(row);
+                deleteItem(rowData);
                 break;
             default:
                 break;
@@ -474,7 +475,8 @@ export const useBaseList = (options: BaseListOptions) => {
      * @param payload
      */
     const buildFilterCondition = (payload: PagingRequest) => {};
-    return {
+
+    const baseListInstance = {
         textSearch,
         tableStore,
         loading,
@@ -496,6 +498,14 @@ export const useBaseList = (options: BaseListOptions) => {
         onListItemAction,
         proxy,
     };
+
+    attachListDebug(baseListInstance);
+
+    onBeforeUnmount(() => {
+        detachListDebug();
+    });
+
+    return baseListInstance;
 };
 
 /**

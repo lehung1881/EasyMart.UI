@@ -1,0 +1,17 @@
+import { defineAsyncComponent, type App, type Plugin } from "vue";
+
+const globalPopup: Plugin = {
+    /**
+     * Đăng ký các popup dùng chung theo dạng import động.
+     * @param app Vue app instance dùng để đăng ký component toàn cục.
+     * @returns Không trả về dữ liệu.
+     */
+    install(app: App) {
+        app.component(
+            "InventoryItemDetail",
+            defineAsyncComponent(() => import("@/pages/dictionary/inventoryItem/InventoryItemDetail.vue")),
+        );
+    },
+};
+
+export default globalPopup;

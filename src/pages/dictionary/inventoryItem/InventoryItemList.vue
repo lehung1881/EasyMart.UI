@@ -39,8 +39,10 @@ import { useTableStore } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemApi";
 import { FormatType } from "@/constants";
+import { useDialog } from "@/composables/popup/usePopup";
 
 const searchKeyword = ref<string>("");
+const { show } = useDialog();
 
 const tableColumns: ColumnDefinition[] = [
     { dataField: "InventoryItemCode", title: "Mã hàng", width: 140, align: "left", visible: true },
@@ -109,11 +111,13 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction } = useBas
 });
 
 /**
- * Điều hướng đến màn hình tạo mới hàng hóa.
+ * Hiển thị popup thêm mới hàng hóa.
  * @returns Không trả về giá trị.
  */
 const onCreateItem = (): void => {
-    window.alert("Cần cấu hình route chi tiết để tạo mới hàng hóa.");
+    show("InventoryItemDetail", {
+        name: "inventory-item-detail-create",
+    });
 };
 </script>
 
