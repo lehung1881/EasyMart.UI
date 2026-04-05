@@ -12,8 +12,9 @@ import { loadDataRemoteTable } from "@/composables/controls/useTableStore";
 import type { PagingRequest } from "@/models/common/paging";
 import { debounce } from "lodash";
 import { formConfigMap, type FormConfig } from "@/constants/formConfig";
-import { ModelState } from "@/constants/enumration/modelState";
+import { FormState, ModelState } from "@/constants/enumration/modelState";
 import { attachListDebug, detachListDebug } from "@/composables/base/useDebug";
+import { usePopup } from "@/composables/popup/usePopup";
 
 /**
  * Dữ liệu đầu vào cho callback validate trước khi xóa.
@@ -115,6 +116,7 @@ export const useBaseList = (options: BaseListOptions) => {
         onDeleteSuccess,
         onDeleteError,
     } = options;
+    const { show } = usePopup();
 
     /**
      * Instance của màn danh sách
@@ -129,7 +131,7 @@ export const useBaseList = (options: BaseListOptions) => {
     /**
      * Cấu hình mặc định ban đầu của form
      */
-    const staticConfig = ref<FormConfig | null>(formConfigMap.get(formID) ?? null);
+    const staticConfig = formConfigMap.get(formID) as FormConfig;
 
     /**
      * Cấu hình thời gian search
@@ -462,6 +464,9 @@ export const useBaseList = (options: BaseListOptions) => {
      */
     const onListItemAction = (rowAction: any, rowData: TableRow): void => {
         switch (rowAction.actionName) {
+            case "Edit":
+                editItem(rowData);
+                break;
             case "Delete":
                 deleteItem(rowData);
                 break;
@@ -475,6 +480,36 @@ export const useBaseList = (options: BaseListOptions) => {
      * @param payload
      */
     const buildFilterCondition = (payload: PagingRequest) => {};
+
+    /**
+     * Hiển thị popup thêm mới theo cấu hình của màn danh sách.
+     * @returns Không trả về giá trị.
+     */
+    const createItem = (): void => {
+        const detailFormID = staticConfig.DetailFormID;
+        if (!detailFormID) {
+            return;
+        }
+        show(detailFormID, {
+            FormState: FormState.Add,
+        });
+    };
+
+    /**
+     * Hiển thị popup chỉnh sửa theo bản ghi được chọn.
+     * @param rowData Dữ liệu bản ghi cần chỉnh sửa.
+     * @returns Không trả về giá trị.
+     */
+    const editItem = (rowData: TableRow): void => {
+        const detailFormID = staticConfig.DetailFormID;
+        if (!detailFormID) {
+            return;
+        }
+        show(detailFormID, {
+            FormState: FormState.Edit,
+            RecordData: rowData,
+        });
+    };
 
     const baseListInstance = {
         textSearch,
@@ -495,6 +530,8 @@ export const useBaseList = (options: BaseListOptions) => {
         isRowSelected,
         cleanup,
         loadListData,
+        createItem,
+        editItem,
         onListItemAction,
         proxy,
     };

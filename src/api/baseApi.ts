@@ -185,6 +185,15 @@ abstract class BaseAPI {
     public getPagingData(payload: PagingRequest) {
         return this.post<PagingResponse, PagingRequest>("/paging_filter", payload);
     }
+
+    /**
+     * Lấy dữ liệu bản ghi theo ID.
+     * @param id
+     * @returns
+     */
+    public getByID<T>(id: string) {
+        return this.get<ServiceResponse<T>>(`/get_by_id/${id}`);
+    }
 }
 
 export default BaseAPI;

@@ -15,22 +15,28 @@ interface ModalInstance {
 // Store để quản lý các modal instances
 const modalInstances = new Map<string | Symbol, ModalInstance>();
 
-export function useDialog() {
+export const usePopup = () => {
     /**
      * Hiển thị modal/dialog.
      * @param componentOrName Vue component hoặc tên component đã đăng ký global.
      * @param options Options truyền vào component.
      * @returns Modal instance với các method để control.
      */
-    function show(componentOrName: Component | string, options: DialogOptions = {}) {
+    const show = (componentOrName: Component | string, options: DialogOptions = {}) => {
         if (!componentOrName) {
             throw new Error("Component không được để trống!");
         }
 
+        // Chuyển hết vào thành params để truyền vào component qua props
+        const optionParams = {
+            params: options,
+        };
+
         const { open, close, patchOptions, destroy } = useModal({
             component: componentOrName as Component,
             attrs: {
-                ...options,
+                ...optionParams,
+                name: componentOrName as string,
                 onClosed() {
                     // Cleanup khi modal đóng
                     options.onClosed?.();
@@ -51,49 +57,49 @@ export function useDialog() {
         }
 
         return instance;
-    }
+    };
 
     /**
      * Đóng modal theo name.
      * @param name Tên hoặc ID của modal.
      * @returns Không trả về dữ liệu.
      */
-    function hide(name: string | Symbol): void {
+    const hide = (name: string | Symbol): void => {
         const instance = modalInstances.get(name);
         if (instance) {
             instance.close();
             modalInstances.delete(name);
         }
-    }
+    };
 
     /**
      * Đóng tất cả modal đang mở.
      * @returns Không trả về dữ liệu.
      */
-    function hideAll(): void {
+    const hideAll = (): void => {
         modalInstances.forEach((instance) => {
             instance.close();
         });
         modalInstances.clear();
-    }
+    };
 
     /**
      * Kiểm tra modal có đang mở không.
      * @param name Tên hoặc ID của modal.
      * @returns `true` nếu modal đang mở, ngược lại `false`.
      */
-    function isOpen(name: string | Symbol): boolean {
+    const isOpen = (name: string | Symbol): boolean => {
         return modalInstances.has(name);
-    }
+    };
 
     /**
      * Lấy instance của modal theo name.
      * @param name Tên hoặc ID của modal.
      * @returns Modal instance nếu có, ngược lại `undefined`.
      */
-    function getInstance(name: string | Symbol): ModalInstance | undefined {
+    const getInstance = (name: string | Symbol): ModalInstance | undefined => {
         return modalInstances.get(name);
-    }
+    };
 
     return {
         show,
@@ -102,4 +108,4 @@ export function useDialog() {
         isOpen,
         getInstance,
     };
-}
+};

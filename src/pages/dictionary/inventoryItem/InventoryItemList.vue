@@ -5,7 +5,7 @@
                 <h1 class="page-title">Danh mục hàng hóa</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="onCreateItem">Thêm hàng hóa</BaseButton>
+                <BaseButton size="md" variant="primary" @click="createItem">Thêm hàng hóa</BaseButton>
             </div>
         </div>
         <div class="page-content">
@@ -39,10 +39,8 @@ import { useTableStore } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemApi";
 import { FormatType } from "@/constants";
-import { useDialog } from "@/composables/popup/usePopup";
 
 const searchKeyword = ref<string>("");
-const { show } = useDialog();
 
 const tableColumns: ColumnDefinition[] = [
     { dataField: "InventoryItemCode", title: "Mã hàng", width: 140, align: "left", visible: true },
@@ -102,23 +100,13 @@ const tableStore = useTableStore("inventory_item", {
  * - loadListData: Hàm tải dữ liệu từ API dựa trên payload của tableStore.
  * - search: Hàm thực hiện tìm kiếm với từ khóa hiện tại.
  */
-const { loadListData, onSearch, refresh, deleteItem, onListItemAction } = useBaseList({
+const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList({
     formID: "InventoryItemList",
     tableStore,
     api: inventoryItemApi,
     rowKey: "InventoryItemID",
     validateBeforeDelete,
 });
-
-/**
- * Hiển thị popup thêm mới hàng hóa.
- * @returns Không trả về giá trị.
- */
-const onCreateItem = (): void => {
-    show("InventoryItemDetail", {
-        name: "inventory-item-detail-create",
-    });
-};
 </script>
 
 <style lang="scss" scoped>

@@ -5,6 +5,8 @@ export interface FormConfig {
     FormID: string;
     Name: string;
     RefType: number;
+    DetailFormID?: string;
+    ModelKeyID?: string;
 }
 
 /**
@@ -13,17 +15,26 @@ export interface FormConfig {
 export const formConfig: FormConfig[] = [
     {
         FormID: "InventoryItemList",
-        Name: "Hàng hóa",
+        DetailFormID: "InventoryItemDetail",
+        Name: "Danh sách hàng hóa",
         RefType: 100,
+        ModelKeyID: "InventoryItemID",
+    },
+    {
+        FormID: "InventoryItemDetail",
+        Name: "Chi tiết hàng hóa",
+        RefType: 110,
+        ModelKeyID: "InventoryItemID",
     },
     {
         FormID: "StockList",
+        DetailFormID: "StockDetail",
         Name: "Kho",
-        RefType: 110,
+        RefType: 120,
     },
 ];
 
 /**
- * Map tra cứu nhanh config theo Code.
+ * Cập nhật lại Map để nó hiểu key truyền vào BẮT BUỘC phải thuộc FormIDKeys
  */
-export const formConfigMap = new Map(formConfig.map((item) => [item.FormID, item]));
+export const formConfigMap = new Map<string, FormConfig>(formConfig.map((item) => [item.FormID, item]));

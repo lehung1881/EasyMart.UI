@@ -27,7 +27,7 @@ export const showAlert = async (message: string, options?: Partial<MessageBoxOpt
         title: options?.title,
         message,
         showCancelButton: false,
-        confirmButtonText: options?.confirmButtonText || "OK",
+        confirmButtonText: options?.confirmButtonText || "Đóng",
         closeOnClickOverlay: options?.closeOnClickOverlay ?? false,
     });
 };

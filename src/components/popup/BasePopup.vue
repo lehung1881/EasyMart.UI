@@ -10,20 +10,24 @@
         :click-to-close="false"
         :drag="dragable"
         overlay-transition="vfm-fade"
-        content-transition="vfm-slide-right"
+        @beforeOpen="beforeOpen"
     >
         <div class="popup-content relative">
-            <button
+            <div
                 v-if="showIconClose"
                 type="button"
-                class="icon-close absolute w-9 h-9 right-4 top-4 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                class="absolute w-[32px] h-[32px] right-4 top-4 flex items-center justify-center rounded-full hover:bg-[#eff1f6] transition-colors"
                 aria-label="Đóng"
                 @click="close"
             >
                 <div class="icon-close-24" />
-            </button>
+            </div>
 
-            <div v-if="title" class="modal-header modal-title flex items-center text-2xl font-bold" :class="{ 'cursor-move': dragable }">
+            <div
+                v-if="title"
+                class="modal-header modal-title flex items-center text-xl font-bold"
+                :class="{ 'cursor-move': dragable }"
+            >
                 {{ title }}
             </div>
             <div v-else class="modal-header" :class="{ 'cursor-move': dragable }">
@@ -45,6 +49,11 @@
 import { computed } from "vue";
 import { VueFinalModal } from "vue-final-modal";
 
+const emit = defineEmits<{
+    /** Sự kiện được gọi trước khi mở popup */
+    (e: "beforeOpen", params: any): void;
+}>();
+
 interface Props {
     /** Hiển thị modal ở bên phải màn hình */
     isRight?: boolean;
@@ -60,6 +69,11 @@ interface Props {
     showIconClose?: boolean;
     /** Modal toàn màn hình */
     fullSize?: boolean;
+
+    /**
+     * Dữ liệu tùy chỉnh truyền vào popup khi mở. Có thể truy cập trong sự kiện `beforeOpen` của popup để bind dữ liệu vào form.
+     */
+    params: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -67,6 +81,7 @@ const props = withDefaults(defineProps<Props>(), {
     dragable: false,
     showIconClose: true,
     fullSize: false,
+    params: {},
 });
 
 const contentStyles = computed(() => {
@@ -92,6 +107,10 @@ const contentStyles = computed(() => {
 
     return style;
 });
+
+const beforeOpen = (e: any): void => {
+    emit("beforeOpen", { e, params: props.params });
+};
 </script>
 
 <style scoped lang="scss">
@@ -103,7 +122,9 @@ const contentStyles = computed(() => {
 }
 
 .modal-header,
-.modal-body,
+.modal-body {
+    padding: 0 16px;
+}
 .modal-footer {
     padding: 16px;
 }
@@ -117,18 +138,5 @@ const contentStyles = computed(() => {
     &:hover {
         background-color: #eff1f6;
     }
-}
-
-:deep(.vfm-slide-right-enter-active),
-:deep(.vfm-slide-right-leave-active) {
-    transition: transform 0.3s ease;
-}
-
-:deep(.vfm-slide-right-enter-from) {
-    transform: translateX(100%);
-}
-
-:deep(.vfm-slide-right-leave-to) {
-    transform: translateX(100%);
 }
 </style>

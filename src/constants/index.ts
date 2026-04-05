@@ -19,3 +19,6 @@ export type { StoreNameConstant as StoreNameConstantType } from "@/constants/enu
 
 export { ModelState } from "@/constants/enumration/modelState";
 export type { ModelState as ModelStateType } from "@/constants/enumration/modelState";
+
+export { FormState } from "@/constants/enumration/modelState";
+export type { FormState as FormStateType } from "@/constants/enumration/modelState";
