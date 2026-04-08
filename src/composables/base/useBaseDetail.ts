@@ -61,6 +61,9 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
      */
     const { api, formID, createDefaultData } = options;
 
+    /**
+     * Lấy proxy của component để truy cập props hoặc options nếu cần thiết.
+     */
     const { proxy } = getCurrentInstance() as any;
 
     /**
@@ -116,74 +119,18 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
         Object.assign(model, buildModel(payload));
     };
 
-    const beforeOpen = async ({ e, params }: any) => {
+    /**
+     * Xử lý trước khi mở form detail
+     * @param params
+     */
+    const beforeOpen = async ({ params }: any) => {
         try {
-            formState.value = params?.FormState ?? FormState.Add;
-
-            let recordData = params?.RecordData;
-
-            if (params?.FormState === FormState.Edit && recordData) {
-                const detailID = recordData[staticConfig.ModelKeyID ? staticConfig.ModelKeyID : "ID"];
-                if (!detailID) {
-                    throw new Error("Missing record ID for edit form");
-                }
-
-                const res = await api.getByID<TModel>(detailID);
-
-                if (res.Success && res.Data) {
-                    recordData = res.Data;
-                }
-            }
-
-            Object.assign(model, buildModel(recordData));
-
-            // options.bindingData?.(formState.value, recordData);
+            const { FormState, RecordData } = params || {};
+            formState.value = FormState ?? FormState.Add;
+            Object.assign(model, buildModel(RecordData));
+            options.bindingData?.(formState.value, RecordData);
         } catch (error) {
             console.error("[ERROR] beforeOpen:", error);
-        }
-    };
-
-    const createItem = () => {
-        Object.assign(model, buildModel());
-    };
-
-    const editItem = async () => {
-        try {
-            let recordData = proxy._options;
-
-            if (recordData) {
-                const detailID = recordData[staticConfig.ModelKeyID ? staticConfig.ModelKeyID : "ID"];
-                if (!detailID) {
-                    throw new Error("Missing record ID for edit form");
-                }
-
-                const res = await api.getByID<TModel>(detailID);
-
-                if (res.Success && res.Data) {
-                    recordData = reactive(res.Data);
-                }
-            }
-
-            Object.assign(model, buildModel(recordData));
-
-            options.bindingData?.(formState.value, recordData);
-        } catch (error) {
-            console.error("[ERROR] beforeOpen:", error);
-        }
-    };
-
-    // onMounted(() => {
-    //     showDetail();
-    // });
-
-    const showDetail = () => {
-        switch (formState.value) {
-            case FormState.Add:
-                createItem();
-                break;
-            case FormState.Edit:
-                editItem();
-                break;
         }
     };
 

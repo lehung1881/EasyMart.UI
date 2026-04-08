@@ -8,7 +8,7 @@ import { defineStore } from "pinia";
 import commonFunction from "@/commons/commonFunction";
 import type { QueryMode } from "@/models/common/combobox";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
-import type { PagingRequest } from "@/models/common/paging";
+import type { PagingRequest, SortCondition } from "@/models/common/paging";
 import type BaseAPI from "@/api/baseAPI";
 
 const STORE_NAME_TEMPLATE = "store_table_{0}_{1}";
@@ -42,6 +42,7 @@ export interface TableStoreOptions {
     viewOrTableName?: string;
     columns?: ColumnDefinition[];
     keyID?: string;
+    sorts?: SortCondition[];
 }
 
 /**
@@ -154,7 +155,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
         const buildPayload = (pageIndex: number): PagingRequest => ({
             pageIndex,
             pageSize: pageSize.value,
-            sort: [],
+            sort: options?.sorts ?? [],
             filter: [],
             columns: "",
             viewOrTableName: viewName.value,

@@ -91,7 +91,7 @@ function onChange(event: Event): void {
     justify-content: center;
     line-height: 0;
     border: $input-border;
-    border-radius: 4px;
+    border-radius: 6px;
     background: #ffffff;
     color: #ffffff;
     transition:

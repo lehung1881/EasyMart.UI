@@ -64,10 +64,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import BasePopup from "@/components/popup/BasePopup.vue";
-import inventoryItemApi from "@/api/modules/dictionary/inventoryItemApi";
+import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
 import { useBaseDetail } from "@/composables/base/useBaseDetail";
 import InventoryItemModel from "@/models/dictionary/inventoryItem";
-import { showError, showSuccess } from "@/commons/messageBox";
 
 type InventoryDetailTab = "general" | "stockNorm" | "supplier" | "defaultInfo";
 

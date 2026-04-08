@@ -115,7 +115,7 @@ function onChange(event: Event): void {
     width: 100%;
     padding: 0 12px;
     border: $input-border;
-    border-radius: 4px;
+    border-radius: $control-border-radius;
     background-color: #ffffff;
     color: $color-text-black;
     font-family: $font-family-base;

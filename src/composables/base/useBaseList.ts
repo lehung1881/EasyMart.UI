@@ -15,6 +15,7 @@ import { formConfigMap, type FormConfig } from "@/constants/formConfig";
 import { FormState, ModelState } from "@/constants/enumration/modelState";
 import { attachListDebug, detachListDebug } from "@/composables/base/useDebug";
 import { usePopup } from "@/composables/popup/usePopup";
+import type { BaseModel } from "@/models/common/baseModel";
 
 /**
  * Dữ liệu đầu vào cho callback validate trước khi xóa.
@@ -42,7 +43,7 @@ export type ValidateBeforeDeleteCallback = (payload: ValidateBeforeDeletePayload
 /**
  * Options khởi tạo cho useBaseList.
  */
-export interface BaseListOptions {
+export interface BaseListOptions<TModel extends BaseModel> {
     /**
      * ID của mỗi màn danh sách lấy ra cấu hình static
      */
@@ -104,7 +105,7 @@ export interface BaseListOptions {
  * @param options Cấu hình cho base list.
  * @returns Base list instance với các methods và state.
  */
-export const useBaseList = (options: BaseListOptions) => {
+export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<TModel>) => {
     const {
         formID,
         tableStore,
@@ -492,6 +493,7 @@ export const useBaseList = (options: BaseListOptions) => {
         }
         show(detailFormID, {
             FormState: FormState.Add,
+            RecordData: null,
         });
     };
 
@@ -500,14 +502,32 @@ export const useBaseList = (options: BaseListOptions) => {
      * @param rowData Dữ liệu bản ghi cần chỉnh sửa.
      * @returns Không trả về giá trị.
      */
-    const editItem = (rowData: TableRow): void => {
+    const editItem = async (rowData: TableRow) => {
         const detailFormID = staticConfig.DetailFormID;
         if (!detailFormID) {
             return;
         }
+
+        let recordData = {};
+        try {
+            if (rowData) {
+                const detailID = rowData[rowKey] as string;
+                if (!detailID) {
+                    throw new Error("Missing record ID for edit form");
+                }
+                const res = await api.getByID<TModel>(detailID);
+                if (res.Success && res.Data) {
+                    recordData = res.Data;
+                }
+            }
+        } catch (error) {
+            console.error("[ERROR] editItem:", error);
+        }
+
+        // Hiển thị form chi tiết với data đã lấy được
         show(detailFormID, {
             FormState: FormState.Edit,
-            RecordData: rowData,
+            RecordData: recordData,
         });
     };
 

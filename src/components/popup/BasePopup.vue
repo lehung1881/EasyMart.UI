@@ -71,9 +71,9 @@ interface Props {
     fullSize?: boolean;
 
     /**
-     * Dữ liệu tùy chỉnh truyền vào popup khi mở. Có thể truy cập trong sự kiện `beforeOpen` của popup để bind dữ liệu vào form.
+     * Dữ liệu tùy chỉnh truyền vào popup khi mở
      */
-    params: any;
+    params: any | undefined;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -81,7 +81,6 @@ const props = withDefaults(defineProps<Props>(), {
     dragable: false,
     showIconClose: true,
     fullSize: false,
-    params: {},
 });
 
 const contentStyles = computed(() => {
@@ -118,7 +117,7 @@ const beforeOpen = (e: any): void => {
     height: 100%;
     width: 100%;
     background: white;
-    border-radius: 4px;
+    border-radius: 8px;
 }
 
 .modal-header,

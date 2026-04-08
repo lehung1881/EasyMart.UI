@@ -554,7 +554,7 @@ onBeforeUnmount(() => {
     align-items: center;
     height: var(--cb-input-height);
     border: $input-border;
-    border-radius: $border-radius;
+    border-radius: $control-border-radius;
     background: #fff;
     transition:
         border-color 0.15s ease,

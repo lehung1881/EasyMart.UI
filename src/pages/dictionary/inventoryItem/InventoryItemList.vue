@@ -37,8 +37,9 @@ import { ref } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
-import inventoryItemApi from "@/api/modules/dictionary/inventoryItemApi";
+import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
 import { FormatType } from "@/constants";
+import InventoryItemModel from "@/models/dictionary/inventoryItem";
 
 const searchKeyword = ref<string>("");
 
@@ -100,7 +101,7 @@ const tableStore = useTableStore("inventory_item", {
  * - loadListData: Hàm tải dữ liệu từ API dựa trên payload của tableStore.
  * - search: Hàm thực hiện tìm kiếm với từ khóa hiện tại.
  */
-const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList({
+const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<InventoryItemModel>({
     formID: "InventoryItemList",
     tableStore,
     api: inventoryItemApi,
