@@ -11,7 +11,7 @@ src/
 │   ├── models/
 │   │   └── serviceResponse.ts
 │   └── modules/
-│       ├── authApi.ts
+│       ├── authAPI.ts
 │       ├── dictionary/
 │       │   ├── inventoryItemApi.ts
 │       │   ├── stockApi.ts

@@ -49,8 +49,12 @@ export class InventoryItemModel extends BaseModel {
 }
 
 InventoryItemModel.prototype._fields = [
-    { name: "InventoryItemID", dataType: "string", defaultValue: null, isPrimaryKey: true },
-
+    {
+        name: "InventoryItemID",
+        dataType: "string",
+        defaultValue: null,
+        isPrimaryKey: true,
+    },
     {
         name: "InventoryItemCode",
         title: "Mã hàng hóa",
@@ -58,7 +62,6 @@ InventoryItemModel.prototype._fields = [
         defaultValue: null,
         validateRules: [{ type: "NotNull" }, { type: "MaxLength", length: 50 }],
     },
-
     {
         name: "InventoryItemName",
         title: "Tên hàng hóa",
@@ -66,24 +69,60 @@ InventoryItemModel.prototype._fields = [
         defaultValue: null,
         validateRules: [{ type: "NotNull" }, { type: "MaxLength", length: 255 }],
     },
+    {
+        name: "InventoryItemType",
+        title: "Loại hàng hóa",
+        dataType: "number",
+        defaultValue: 0,
+        validateRules: [{ type: "NotNull" }],
+    },
 
-    { name: "InventoryItemType", dataType: "number", defaultValue: 0 },
+    {
+        name: "UnitID",
+        dataType: "string",
+        defaultValue: null,
+    },
+    {
+        name: "UnitName",
+        dataType: "string",
+        defaultValue: null,
+    },
 
-    { name: "UnitID", dataType: "string", defaultValue: null },
-    { name: "UnitName", dataType: "string", defaultValue: null },
-
-    { name: "BuyPrice", dataType: "number", defaultValue: 0 },
-    { name: "SellPrice", dataType: "number", defaultValue: 0 },
-
-    { name: "StockID", dataType: "string", defaultValue: null },
-
-    { name: "MinimumStock", dataType: "number", defaultValue: 0 },
-
-    { name: "Images", dataType: "string", defaultValue: null },
-
-    { name: "Status", dataType: "number", defaultValue: 1 },
-
-    { name: "Description", dataType: "string", defaultValue: null },
+    {
+        name: "BuyPrice",
+        dataType: "number",
+        defaultValue: 0,
+    },
+    {
+        name: "SellPrice",
+        dataType: "number",
+        defaultValue: 0,
+    },
+    {
+        name: "StockID",
+        dataType: "string",
+        defaultValue: null,
+    },
+    {
+        name: "MinimumStock",
+        dataType: "number",
+        defaultValue: 0,
+    },
+    {
+        name: "Images",
+        dataType: "string",
+        defaultValue: null,
+    },
+    {
+        name: "Status",
+        dataType: "number",
+        defaultValue: 1,
+    },
+    {
+        name: "Description",
+        dataType: "string",
+        defaultValue: null,
+    },
 ] as BaseFieldConfig[];
 
 export default InventoryItemModel;

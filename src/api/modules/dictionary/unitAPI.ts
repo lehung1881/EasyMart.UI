@@ -5,6 +5,4 @@ class UnitAPI extends BaseAPI {
     protected readonly basePath = "v1/unit";
 }
 
-const unitApi = new UnitAPI();
-
-export default unitApi;
+export default new UnitAPI();

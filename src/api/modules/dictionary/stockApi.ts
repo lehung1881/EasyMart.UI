@@ -5,6 +5,4 @@ class StockAPI extends BaseAPI {
     protected readonly basePath = "v1/stock";
 }
 
-const stockApi = new StockAPI();
-
-export default stockApi;
+export default new StockAPI();

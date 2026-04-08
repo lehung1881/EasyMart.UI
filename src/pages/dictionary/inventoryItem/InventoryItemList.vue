@@ -26,7 +26,13 @@
                     :show-selection="true"
                     empty-text="Không có dữ liệu"
                     @row-action-click="onListItemAction"
-                />
+                >
+                    <template #cell-Status="{ row }">
+                        <span :class="`status-${row.Status === 1 ? 'active' : 'inactive'}`">
+                            {{ row.Status === 1 ? "Đang kinh doanh" : "Ngừng kinh doanh" }}
+                        </span>
+                    </template>
+                </BaseTable>
             </div>
         </div>
     </div>
@@ -44,10 +50,34 @@ import InventoryItemModel from "@/models/dictionary/inventoryItem";
 const searchKeyword = ref<string>("");
 
 const tableColumns: ColumnDefinition[] = [
-    { dataField: "InventoryItemCode", title: "Mã hàng", width: 140, align: "left", visible: true },
-    { dataField: "InventoryItemName", title: "Tên hàng hóa", width: 260, align: "left", visible: true },
-    { dataField: "InventoryItemCategoryNameList", title: "Nhóm hàng", width: 180, align: "left", visible: true },
-    { dataField: "UnitName", title: "Đơn vị tính", width: 120, align: "left", visible: true },
+    {
+        dataField: "InventoryItemCode",
+        title: "Mã hàng",
+        width: 140,
+        align: "left",
+        visible: true,
+    },
+    {
+        dataField: "InventoryItemName",
+        title: "Tên hàng hóa",
+        width: 260,
+        align: "left",
+        visible: true,
+    },
+    {
+        dataField: "InventoryItemCategoryNameList",
+        title: "Nhóm hàng hóa",
+        width: 180,
+        align: "left",
+        visible: true,
+    },
+    {
+        dataField: "UnitName",
+        title: "Đơn vị tính",
+        width: 120,
+        align: "left",
+        visible: true,
+    },
     {
         dataField: "BuyPrice",
         title: "Giá vốn",
@@ -66,13 +96,27 @@ const tableColumns: ColumnDefinition[] = [
     },
     {
         dataField: "QuantityBalance",
-        title: "Tồn kho",
+        title: "Số lượng tồn",
         width: 110,
         align: "right",
         visible: true,
         formatType: FormatType.Quantity,
     },
-    // { dataField: "Inactive", title: "Trạng thái", width: 160, align: "center", visible: true },
+    {
+        dataField: "MinimumStock",
+        title: "Tồn tối thiểu",
+        width: 120,
+        align: "right",
+        visible: true,
+        formatType: FormatType.Quantity,
+    },
+    {
+        dataField: "Status",
+        title: "Trạng thái",
+        width: 150,
+        align: "center",
+        visible: true,
+    },
 ];
 
 /**
@@ -182,12 +226,12 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
 
 .status-active {
     background: #d1fae5;
-    color: #047857;
+    color: #00c28b;
 }
 
 .status-inactive {
     background: #fee2e2;
-    color: #b91c1c;
+    color: #e91111;
 }
 
 @media (max-width: 768px) {

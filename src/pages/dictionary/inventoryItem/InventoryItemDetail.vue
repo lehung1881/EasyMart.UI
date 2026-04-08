@@ -1,12 +1,19 @@
 ﻿<template>
-    <BasePopup title="Thêm mới hàng hóa" width="720px" :show-icon-close="true" @beforeOpen="beforeOpen">
+    <BasePopup
+        title="Thêm mới hàng hóa"
+        width="820px"
+        :show-icon-close="true"
+        @beforeOpen="beforeOpen"
+        :params="{}"
+        isRight
+    >
         <template #content>
             <div class="inventory-item-detail">
+                <!-- Tabs -->
                 <div class="detail-tabs">
                     <div
                         v-for="tab in tabs"
                         :key="tab.key"
-                        type="button"
                         class="detail-tab flex items-center"
                         :class="{ 'detail-tab--active': activeTab === tab.key }"
                         @click="setActiveTab(tab.key)"
@@ -15,39 +22,33 @@
                     </div>
                 </div>
 
+                <!-- Tab: Thông tin chung -->
                 <div v-if="activeTab === 'general'" class="detail-grid">
-                    <BaseInput v-model="model.InventoryItemCode" label="Mã hàng hóa" placeholder="Nhập mã hàng hóa" />
-                    <BaseInput v-model="model.InventoryItemName" label="Tên hàng hóa" placeholder="Nhập tên hàng hóa" />
-                    <BaseInput
-                        v-model="model.InventoryItemCategoryNameList"
-                        label="Nhóm hàng"
-                        placeholder="Nhập nhóm hàng"
+                    <BaseInput v-model="model.InventoryItemCode" label="Mã hàng hóa" />
+                    <BaseInput v-model="model.InventoryItemName" label="Tên hàng hóa" required />
+                    <BaseCombobox
+                        v-model="model.InventoryItemType"
+                        label="Loại hàng hóa"
+                        :store="inventoryItemTypeStore"
+                        :searchable="false"
                     />
-                    <BaseInput v-model="model.Description" label="Mô tả" placeholder="Nhập mô tả hàng hóa" />
-                </div>
-
-                <div v-else-if="activeTab === 'stockNorm'" class="detail-grid">
-                    <BaseInput v-model="model.MinimumStock" type="number" label="Tồn kho tối thiểu" placeholder="0" />
-                    <BaseInput v-model="model.MaximumStock" type="number" label="Tồn kho tối đa" placeholder="0" />
-                    <BaseInput v-model="model.QuantityBalance" type="number" label="Tồn kho hiện tại" placeholder="0" />
-                    <BaseInput
-                        v-model="model.QuantityAvailable"
-                        type="number"
-                        label="Số lượng khả dụng"
-                        placeholder="0"
+                    <BaseCombobox
+                        v-model="model.UnitID"
+                        label="Đơn vị tính"
+                        :store="unitStore"
+                        clearIcon
+                        autoLoad
+                        @selected="onUnitSelected"
                     />
-                </div>
-
-                <div v-else class="detail-grid">
                     <BaseInput v-model="model.BuyPrice" type="number" label="Giá vốn" placeholder="0" />
                     <BaseInput v-model="model.SellPrice" type="number" label="Giá bán" placeholder="0" />
-                    <BaseInput
-                        v-model="model.ReleaseMethod"
-                        type="number"
-                        label="Phương pháp tính giá xuất"
-                        placeholder="0"
-                    />
-                    <BaseInput v-model="model.WarrantyTime" type="number" label="Thời gian bảo hành" placeholder="0" />
+                    <BaseInput v-model="model.Description" label="Mô tả" class="col-span-2" />
+                </div>
+
+                <!-- Tab: Định mức tồn kho -->
+                <div v-else-if="activeTab === 'stockNorm'" class="detail-grid">
+                    <BaseCombobox v-model="model.StockID" label="Kho mặc định" :store="stockStore" clearIcon autoLoad />
+                    <BaseInput v-model="model.MinimumStock" type="number" label="Tồn kho tối thiểu" placeholder="0" />
                 </div>
             </div>
         </template>
@@ -67,17 +68,57 @@ import BasePopup from "@/components/popup/BasePopup.vue";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
 import { useBaseDetail } from "@/composables/base/useBaseDetail";
 import InventoryItemModel from "@/models/dictionary/inventoryItem";
+import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls/useComboboxStore";
+import unitAPI from "@/api/modules/dictionary/unitAPI";
+import stockAPI from "@/api/modules/dictionary/stockAPI";
 
-type InventoryDetailTab = "general" | "stockNorm" | "supplier" | "defaultInfo";
+type InventoryDetailTab = "general" | "stockNorm" | "status";
 
 const tabs: Array<{ key: InventoryDetailTab; label: string }> = [
     { key: "general", label: "Thông tin chung" },
     { key: "stockNorm", label: "Định mức tồn kho" },
-    { key: "supplier", label: "Nhà cung cấp" },
-    { key: "defaultInfo", label: "Thông tin ngầm định" },
 ];
 
 const activeTab = ref<InventoryDetailTab>("general");
+
+/**
+ * Store cho combobox đơn vị tính
+ */
+const unitStore = useComboboxStore("unit_combobox", {
+    viewOrTableName: "di_unit",
+    comboboxLoadData: (pay) => loadDataRemoteCombobox(unitAPI, pay),
+    displayField: "UnitName",
+    valueField: "UnitID",
+});
+
+/**
+ * Store cho combobox kho
+ */
+const stockStore = useComboboxStore("stock_combobox", {
+    viewOrTableName: "di_stock",
+    comboboxLoadData: (pay) => loadDataRemoteCombobox(stockAPI, pay),
+    displayField: "StockName",
+    valueField: "StockID",
+    columns: [
+        { dataField: "StockCode", title: "Mã kho", width: 120 },
+        { dataField: "StockName", title: "Tên kho", width: 200 },
+        { dataField: "Address", title: "Địa chỉ", width: 250 },
+    ],
+});
+
+/**
+ * Store cho combobox loại hàng hóa.
+ */
+const inventoryItemTypeStore = useComboboxStore("inventory_item_type_combobox", {
+    viewOrTableName: "di_inventory_item_type",
+    displayField: "InventoryItemTypeName",
+    valueField: "InventoryItemType",
+    queryMode: "local",
+    data: [
+        { InventoryItemTypeName: "Hàng hóa", InventoryItemType: 0 },
+        { InventoryItemTypeName: "Dịch vụ", InventoryItemType: 1 },
+    ],
+});
 
 const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<InventoryItemModel>({
     formID: "InventoryItemDetail",
@@ -88,18 +129,28 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<InventoryItemM
 /**
  * Chuyển tab đang hiển thị trên form chi tiết hàng hóa.
  * @param tabKey Mã tab cần chuyển sang.
- * @returns Không trả về dữ liệu.
  */
 const setActiveTab = (tabKey: InventoryDetailTab): void => {
     activeTab.value = tabKey;
 };
+
+/**
+ * Xử lý khi chọn một đơn vị tính từ combobox
+ * @param item
+ */
+const onUnitSelected = (item: any): void => {
+    model.UnitName = item.UnitName;
+};
 </script>
 
 <style scoped lang="scss">
+@use "@/assets/styles/variable" as *;
+
 .inventory-item-detail {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    height: 100%;
 }
 
 .detail-tabs {
@@ -130,6 +181,10 @@ const setActiveTab = (tabKey: InventoryDetailTab): void => {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+}
+
+.col-span-2 {
+    grid-column: span 2;
 }
 
 .popup-footer {

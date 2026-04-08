@@ -334,13 +334,13 @@ export class BaseModel {
 
         switch (ruleObject.type) {
             case "NotNull":
-                return `${fieldDisplayName} không được để trống`;
+                return `${fieldDisplayName} không được để trống!`;
             case "MaxLength": {
                 const maxLength = Number(ruleObject.length ?? 0);
-                return `${fieldDisplayName} không được vượt quá ${maxLength} ký tự`;
+                return `${fieldDisplayName} không được vượt quá ${maxLength} ký tự!`;
             }
             default:
-                return `${fieldDisplayName} không hợp lệ`;
+                return `${fieldDisplayName} không hợp lệ!`;
         }
     }
 

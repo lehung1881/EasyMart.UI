@@ -15,7 +15,7 @@ export interface ComboboxStoreOptions {
     /** Data tĩnh cho local mode. Nếu có và không chỉ định queryMode thì tự chuyển sang local mode */
     data?: Array<any>;
     /** Hàm gọi API cho remote mode. Store sẽ gọi hàm này với payload đã build sẵn */
-    comboboxLoadData: ComboboxLoadData;
+    comboboxLoadData?: ComboboxLoadData;
     /** Chế độ truy vấn. Nếu không truyền thì tự suy từ data (có data thì local, không thì remote) */
     queryMode?: QueryMode;
     /** Số bản ghi mỗi trang (remote mode). Default: 20 */

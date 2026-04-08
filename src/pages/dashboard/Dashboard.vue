@@ -53,7 +53,7 @@ import { defineComponent, onMounted, ref } from "vue";
 import BaseTable from "@/components/controls/BaseTable.vue";
 import { useTableStore, loadDataRemoteTable, type TableRow } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
-import authApi from "@/api/modules/authAPI";
+import authAPI from "@/api/modules/authAPI";
 import { FormatType } from "@/constants";
 
 const tableColumns: ColumnDefinition[] = [
@@ -137,7 +137,7 @@ export default defineComponent({
 
         const remoteTableStore = useTableStore("dashboard_remote_table", {
             queryMode: "remote",
-            tableLoadData: (payload) => loadDataRemoteTable(authApi, payload),
+            tableLoadData: (payload) => loadDataRemoteTable(authAPI, payload),
             viewOrTableName: "di_inventory_item",
             columns: tableColumns,
         });

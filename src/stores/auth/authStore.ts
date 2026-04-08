@@ -1,6 +1,6 @@
 ﻿import { defineStore } from "pinia";
 import { ref } from "vue";
-import authApi from "@/api/modules/authAPI";
+import authAPI from "@/api/modules/authAPI";
 import cacheService from "@/commons/cacheService";
 import { CacheAction, CacheCode } from "@/constants/cacheConfig";
 import { StoreNameConstant } from "@/constants";
@@ -32,7 +32,7 @@ export const useAuthStore = defineStore(StoreNameConstant.Auth, () => {
      * Đăng nhập bằng email và mật khẩu.
      */
     const login = async (payload: LoginRequest) => {
-        const res = await authApi.login(payload);
+        const res = await authAPI.login(payload);
         saveSession(res.Data);
     };
 
@@ -40,7 +40,7 @@ export const useAuthStore = defineStore(StoreNameConstant.Auth, () => {
      * Đăng ký tài khoản. Hàm này không tạo phiên đăng nhập.
      */
     const register = async (payload: RegisterRequest) => {
-        await authApi.register(payload);
+        await authAPI.register(payload);
     };
 
     /**
@@ -48,7 +48,7 @@ export const useAuthStore = defineStore(StoreNameConstant.Auth, () => {
      */
     const logout = async () => {
         try {
-            await authApi.logout();
+            await authAPI.logout();
         } finally {
             clearSession();
         }
@@ -61,7 +61,7 @@ export const useAuthStore = defineStore(StoreNameConstant.Auth, () => {
         const token = cacheService.get<string>(CacheCode.AuthRefreshToken);
         if (!token) throw new Error("Không tìm thấy refresh token.");
 
-        const res = await authApi.refreshToken(token);
+        const res = await authAPI.refreshToken(token);
         saveSession(res.Data);
     };
 

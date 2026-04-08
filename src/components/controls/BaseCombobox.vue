@@ -157,6 +157,8 @@ const emit = defineEmits<{
     (e: "update:modelValue", value: any): void;
     /** Side effects khi chọn */
     (e: "change", value: any): void;
+    /** Sự kiện khi chọn một item */
+    (e: "selected", item: any): void;
     /** Mỗi lần trigger search */
     (e: "search", keyword: string): void;
 }>();
@@ -315,6 +317,7 @@ const onSelect = (item: any) => {
     props.store.setSelectedItem(item);
     emit("update:modelValue", value);
     emit("change", value);
+    emit("selected", item);
     const displayText = String(item[displayField.value] ?? "");
     confirmedDisplayText.value = displayText;
     inputText.value = displayText;
@@ -640,7 +643,7 @@ onBeforeUnmount(() => {
     z-index: 1000;
     background: #fff;
     border: 1px solid #ddd;
-    border-radius: $border-radius;
+    border-radius: $control-border-radius;
     box-shadow: 0 0 10px #0000002d;
     overflow: hidden;
 }

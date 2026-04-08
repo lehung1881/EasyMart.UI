@@ -2,7 +2,7 @@
 import type { ApiService } from "@/api/configApi";
 import type { LoginRequest, LoginResponse, RegisterRequest, UserInfo } from "@/models/auth/auth";
 
-class AuthApi extends BaseAPI {
+class AuthAPI extends BaseAPI {
     protected readonly serviceName: ApiService = "AUTH";
     protected readonly basePath = "/v1/auth";
 
@@ -54,4 +54,4 @@ class AuthApi extends BaseAPI {
     }
 }
 
-export default new AuthApi();
+export default new AuthAPI();
