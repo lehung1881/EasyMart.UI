@@ -52,11 +52,8 @@ interface Props {
     disabled?: boolean;
     readonly?: boolean;
     formatType?: FormatTypeType;
-    /** Số chữ số thập phân tối đa cho phép */
     maxDecimals?: number;
-    /** Giá trị tối thiểu */
     min?: number | null;
-    /** Giá trị tối đa */
     max?: number | null;
 }
 
@@ -69,8 +66,8 @@ const props = withDefaults(defineProps<Props>(), {
     readonly: false,
     formatType: FormatType.Quantity,
     maxDecimals: 2,
-    min: null,
-    max: null,
+    min: -999999999999999,
+    max: 999999999999999,
 });
 
 const emit = defineEmits<{
@@ -84,13 +81,16 @@ const inputRef = ref<HTMLInputElement | null>(null);
 const sizeClass = computed(() => `size-${props.size}`);
 const isFocused = ref(false);
 
+/** Không cho nhập số âm nếu min >= 0 */
+const allowNegative = computed(() => {
+    return props.min == null || props.min < 0;
+});
+
 // ============================================================
 // Các hàm tiện ích format
 // ============================================================
 
-/** Ký tự phân cách hàng nghìn (dấu chấm cho VN) */
 const THOUSANDS_SEP = ".";
-/** Ký tự phân cách thập phân (dấu phẩy cho VN) */
 const DECIMAL_SEP = ",";
 
 /**
@@ -185,8 +185,12 @@ function onKeydown(event: KeyboardEvent): void {
         return;
     }
 
-    // Cho phép dấu trừ (chỉ ở đầu)
+    // Chặn dấu trừ nếu không cho phép số âm
     if (key === "-") {
+        if (!allowNegative.value) {
+            event.preventDefault();
+            return;
+        }
         const target = event.target as HTMLInputElement;
         const raw = getRawFromFormatted(target.value);
         if (target.selectionStart !== 0 || raw.includes("-")) {
@@ -237,7 +241,7 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 // ============================================================
-// Xử lý paste: chỉ cho phép paste số
+// Xử lý paste
 // ============================================================
 
 function onPaste(event: ClipboardEvent): void {
@@ -251,12 +255,17 @@ function onPaste(event: ClipboardEvent): void {
 
     if (!cleaned) return;
 
-    // Xử lý dấu trừ
-    if (cleaned.includes("-")) {
-        cleaned = `${cleaned.startsWith("-") ? "-" : ""}${cleaned.replace(/-/g, "")}`;
+    // Xóa dấu trừ nếu không cho phép số âm
+    if (!allowNegative.value) {
+        cleaned = cleaned.replace(/-/g, "");
+    } else {
+        if (cleaned.includes("-")) {
+            cleaned = `${cleaned.startsWith("-") ? "-" : ""}${cleaned.replace(/-/g, "")}`;
+        }
     }
 
-    // Xác định dấu thập phân cuối cùng
+    if (!cleaned) return;
+
     const lastComma = cleaned.lastIndexOf(",");
     const lastDot = cleaned.lastIndexOf(".");
     const decimalPos = Math.max(lastComma, lastDot);
@@ -325,7 +334,11 @@ function onInput(event: Event): void {
     // Người dùng có thể nhập "." nhưng ta dùng "," làm decimal
     raw = raw.replace(".", DECIMAL_SEP);
 
-    // Giới hạn số chữ số thập phân
+    // Loại bỏ dấu trừ nếu không cho phép
+    if (!allowNegative.value) {
+        raw = raw.replace(/-/g, "");
+    }
+
     const decIdx = raw.indexOf(DECIMAL_SEP);
     if (decIdx !== -1 && props.maxDecimals != null) {
         const fracPart = raw.slice(decIdx + 1);
@@ -334,25 +347,19 @@ function onInput(event: Event): void {
         }
     }
 
-    // Format realtime
     const formatted = formatWhileTyping(raw);
     focusDisplayValue.value = formatted;
 
-    // Emit giá trị số
     emitNumericValue(raw);
 
-    // Khôi phục vị trí cursor chính xác
     nextTick(() => {
         if (!inputRef.value) return;
 
-        // Tính số dấu phân cách hàng nghìn trước cursor (cũ vs mới)
         const oldSepsBefore = (oldValue.slice(0, cursorPos).match(/\./g) || []).length;
         const newFormatted = inputRef.value.value;
 
-        // Tính vị trí raw cursor
         const rawCursorPos = cursorPos - oldSepsBefore;
 
-        // Tìm vị trí cursor mới trong chuỗi đã format
         let newCursorPos = 0;
         let rawCount = 0;
         for (let i = 0; i < newFormatted.length; i++) {
@@ -384,11 +391,16 @@ function onFocus(event: FocusEvent): void {
         if (Number.isNaN(num)) {
             focusDisplayValue.value = "";
         } else {
-            // Hiển thị dạng format với dấu phân cách hàng nghìn
             const raw = String(num).replace(".", DECIMAL_SEP);
             focusDisplayValue.value = formatWhileTyping(raw);
         }
     }
+
+    nextTick(() => {
+        if (inputRef.value) {
+            inputRef.value.select();
+        }
+    });
 
     emit("focus", event);
 }
@@ -396,7 +408,6 @@ function onFocus(event: FocusEvent): void {
 function onBlur(event: FocusEvent): void {
     isFocused.value = false;
 
-    // Clamp giá trị khi blur
     if (props.modelValue != null && props.modelValue !== "") {
         const num = Number(props.modelValue);
         if (!Number.isNaN(num)) {
@@ -417,7 +428,7 @@ function onChange(event: Event): void {
 }
 
 // ============================================================
-// Watch modelValue thay đổi từ bên ngoài
+// Watch modelValue
 // ============================================================
 
 watch(

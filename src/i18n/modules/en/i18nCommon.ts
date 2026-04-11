@@ -1,4 +1,4 @@
-export default {
+﻿export default {
     Brand: "EasyMart",
     Processing: "Processing...",
     Success: "Success!",
@@ -9,4 +9,7 @@ export default {
     Delete: "Delete",
     Edit: "Edit",
     Back: "Back",
+    SearchPlaceholder: "Search",
+    ActiveBusiness: "Active business",
+    InactiveBusiness: "Inactive business",
 };

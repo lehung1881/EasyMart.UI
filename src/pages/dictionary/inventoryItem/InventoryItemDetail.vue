@@ -1,6 +1,6 @@
 ﻿<template>
     <BasePopup
-        title="Thêm mới hàng hóa"
+        :title="$t('i18nInventoryItem.Detail.Title')"
         width="720px"
         :show-icon-close="true"
         @beforeOpen="beforeOpen"
@@ -10,10 +10,14 @@
         <template #content>
             <div class="inventory-item-detail flex flex-col gap-4">
                 <div class="flex gap-4 max-md:flex-col">
-                    <BaseInput v-model="model.InventoryItemCode" label="Mã hàng hóa" class="w-1/2 max-md:w-full" />
+                    <BaseInput
+                        v-model="model.InventoryItemCode"
+                        :label="$t('i18nInventoryItem.Detail.InventoryItemCode')"
+                        class="w-1/2 max-md:w-full"
+                    />
                     <BaseInput
                         v-model="model.InventoryItemName"
-                        label="Tên hàng hóa"
+                        :label="$t('i18nInventoryItem.Detail.InventoryItemName')"
                         required
                         class="w-1/2 max-md:w-full"
                     />
@@ -22,14 +26,14 @@
                 <div class="flex gap-4 max-md:flex-col">
                     <BaseCombobox
                         v-model="model.InventoryItemType"
-                        label="Loại hàng hóa"
+                        :label="$t('i18nInventoryItem.Detail.InventoryItemType')"
                         :store="inventoryItemTypeStore"
                         :searchable="false"
                         class="w-1/2 max-md:w-full"
                     />
                     <BaseCombobox
                         v-model="model.UnitID"
-                        label="Đơn vị tính"
+                        :label="$t('i18nInventoryItem.Detail.Unit')"
                         :store="unitStore"
                         clearIcon
                         autoLoad
@@ -41,7 +45,7 @@
                 <div class="flex gap-4 max-md:flex-col">
                     <BaseCombobox
                         v-model="model.StockID"
-                        label="Kho mặc định"
+                        :label="$t('i18nInventoryItem.Detail.DefaultStock')"
                         :store="stockStore"
                         clearIcon
                         autoLoad
@@ -49,7 +53,7 @@
                     />
                     <BaseInputNumber
                         v-model="model.MinimumStock"
-                        label="Tồn kho tối thiểu"
+                        :label="$t('i18nInventoryItem.Detail.MinimumStock')"
                         placeholder="0"
                         :format-type="FormatType.Quantity"
                         class="w-1/2 max-md:w-full"
@@ -59,28 +63,34 @@
                 <div class="flex gap-4 max-md:flex-col">
                     <BaseInputNumber
                         v-model="model.BuyPrice"
-                        label="Giá vốn"
+                        :label="$t('i18nInventoryItem.Detail.BuyPrice')"
                         :format-type="FormatType.Currency"
                         :min="0"
                         class="w-1/2 max-md:w-full"
                     />
                     <BaseInputNumber
                         v-model="model.SellPrice"
-                        label="Giá bán"
+                        :label="$t('i18nInventoryItem.Detail.SellPrice')"
                         :format-type="FormatType.Currency"
                         :min="0"
                         class="w-1/2 max-md:w-full"
                     />
                 </div>
 
-                <BaseTextArea v-model="model.Description" label="Mô tả" class="w-full" />
+                <BaseTextArea
+                    v-model="model.Description"
+                    :label="$t('i18nInventoryItem.Detail.Description')"
+                    class="w-full"
+                />
             </div>
         </template>
 
         <template #footer="{ close }">
             <div class="popup-footer">
-                <BaseButton size="md" @click="close">Hủy</BaseButton>
-                <BaseButton size="md" variant="primary" :disabled="saving" @click="saveAndClose(close)">Lưu</BaseButton>
+                <BaseButton size="md" @click="close">{{ $t("i18nInventoryItem.Detail.Cancel") }}</BaseButton>
+                <BaseButton size="md" variant="primary" :disabled="saving" @click="saveAndClose(close)">
+                    {{ $t("i18nInventoryItem.Detail.Save") }}
+                </BaseButton>
             </div>
         </template>
     </BasePopup>
@@ -161,3 +171,5 @@ const onUnitSelected = (item: any): void => {
     gap: 8px;
 }
 </style>
+
+

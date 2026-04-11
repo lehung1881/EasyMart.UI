@@ -1,4 +1,4 @@
-export default {
+﻿export default {
     Brand: "EasyMart",
     Processing: "Đang xử lý...",
     Success: "Thành công!",
@@ -9,4 +9,7 @@ export default {
     Delete: "Xóa",
     Edit: "Chỉnh sửa",
     Back: "Quay lại",
+    SearchPlaceholder: "Tìm kiếm",
+    ActiveBusiness: "Đang kinh doanh",
+    InactiveBusiness: "Ngừng kinh doanh",
 };

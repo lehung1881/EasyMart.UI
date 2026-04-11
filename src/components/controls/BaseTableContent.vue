@@ -293,7 +293,7 @@ $border-color: #d0d0d0;
     }
     &:last-child {
         .tb-content__cell {
-            border-bottom: unset;
+            // border-bottom: unset;
         }
     }
 }

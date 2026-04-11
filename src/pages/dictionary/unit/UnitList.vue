@@ -2,12 +2,10 @@
     <div class="list-page">
         <div class="page-header">
             <div>
-                <h1 class="page-title">{{ $t("i18nStock.List.Title") }}</h1>
+                <h1 class="page-title">{{ $t("i18nUnit.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">
-                    {{ $t("i18nStock.List.AddStock") }}
-                </BaseButton>
+                <BaseButton size="md" variant="primary" @click="createItem">{{ $t("i18nUnit.List.AddUnit") }}</BaseButton>
             </div>
         </div>
 
@@ -33,12 +31,12 @@
                     :columns="tableColumns"
                     :auto-load="false"
                     :show-selection="true"
-                    :empty-text="$t('i18nStock.List.EmptyData')"
+                    :empty-text="$t('i18nUnit.List.EmptyData')"
                     @row-action-click="onListItemAction"
                 >
                     <template #cell-Status="{ row }">
                         <span :class="`status-${row.Status === 1 ? 'active' : 'inactive'}`">
-                            {{ row.Status === 1 ? $t("i18nStock.List.Active") : $t("i18nStock.List.Inactive") }}
+                            {{ row.Status === 1 ? $t("i18nCommon.ActiveBusiness") : $t("i18nCommon.InactiveBusiness") }}
                         </span>
                     </template>
                 </BaseTable>
@@ -52,46 +50,31 @@ import { getCurrentInstance, ref } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
-import stockAPI from "@/api/modules/dictionary/stockAPI";
-import StockModel from "@/models/dictionary/stock";
+import unitAPI from "@/api/modules/dictionary/unitAPI";
+import UnitModel from "@/models/dictionary/unit";
 
 const searchKeyword = ref<string>("");
 const { proxy } = getCurrentInstance() as any;
 
 const tableColumns: ColumnDefinition[] = [
     {
-        dataField: "StockCode",
-        title: proxy.$t("i18nStock.List.StockCode"),
-        width: 150,
+        dataField: "UnitName",
+        title: proxy.$t("i18nUnit.List.UnitName"),
+        width: 300,
         align: "left",
         visible: true,
         sortOrder: 1,
     },
     {
-        dataField: "StockName",
-        title: proxy.$t("i18nStock.List.StockName"),
-        width: 250,
-        align: "left",
-        visible: true,
-        sortOrder: 2,
-    },
-    {
-        dataField: "Address",
-        title: proxy.$t("i18nStock.List.Address"),
+        dataField: "Description",
+        title: proxy.$t("i18nUnit.List.Description"),
         width: 300,
         align: "left",
         visible: true,
     },
     {
-        dataField: "Description",
-        title: proxy.$t("i18nStock.List.Description"),
-        width: 200,
-        align: "left",
-        visible: true,
-    },
-    {
         dataField: "Status",
-        title: proxy.$t("i18nStock.List.Status"),
+        title: proxy.$t("i18nUnit.List.Status"),
         width: 150,
         align: "center",
         visible: true,
@@ -103,18 +86,18 @@ const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promi
     return true;
 };
 
-const tableStore = useTableStore("stock", {
-    keyID: "StockID",
-    viewOrTableName: "di_stock",
+const tableStore = useTableStore("unit", {
+    keyID: "UnitID",
+    viewOrTableName: "di_unit",
     columns: tableColumns,
     tableLoadData: (payload) => loadListData(payload),
 });
 
-const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<StockModel>({
-    formID: "StockList",
+const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<UnitModel>({
+    formID: "UnitList",
     tableStore,
-    api: stockAPI,
-    rowKey: "StockID",
+    api: unitAPI,
+    rowKey: "UnitID",
     validateBeforeDelete,
 });
 </script>

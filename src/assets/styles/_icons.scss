@@ -78,7 +78,7 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 @include setIcon(icon-inventory, -240px, -200px, 20px, $icon-color-default, $primary-color);
 @include setIcon(icon-import, -260px, -200px, 20px, $icon-color-default, $primary-color);
 @include setIcon(icon-export, -280px, -200px, 20px, $icon-color-default, $primary-color);
-@include setIcon(icon-warehouse, -300px, -200px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-stock, -300px, -200px, 20px, $icon-color-default, $primary-color);
 
 /* Danh mục */
 @include setIcon(icon-inventory-item, -320px, -200px, 20px, $icon-color-default, $primary-color);

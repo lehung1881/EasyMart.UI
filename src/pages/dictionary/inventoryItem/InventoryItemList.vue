@@ -2,17 +2,24 @@
     <div class="list-page">
         <div class="page-header">
             <div>
-                <h1 class="page-title">Danh mục hàng hóa</h1>
+                <h1 class="page-title">{{ $t("i18nInventoryItem.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">Thêm hàng hóa</BaseButton>
+                <BaseButton size="md" variant="primary" @click="createItem">
+                    {{ $t("i18nInventoryItem.List.AddInventoryItem") }}
+                </BaseButton>
             </div>
         </div>
         <div class="page-content">
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
-                    <BaseInput v-model="searchKeyword" size="sm" placeholder="Tìm kiếm" @change="onSearch" />
+                    <BaseInput
+                        v-model="searchKeyword"
+                        size="sm"
+                        :placeholder="$t('i18nCommon.SearchPlaceholder')"
+                        @change="onSearch"
+                    />
                     <BaseButton size="sm" @click="refresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
@@ -24,12 +31,12 @@
                     :columns="tableColumns"
                     :auto-load="false"
                     :show-selection="true"
-                    empty-text="Không có dữ liệu"
+                    :empty-text="$t('i18nInventoryItem.List.EmptyData')"
                     @row-action-click="onListItemAction"
                 >
                     <template #cell-Status="{ row }">
                         <span :class="`status-${row.Status === 1 ? 'active' : 'inactive'}`">
-                            {{ row.Status === 1 ? "Đang kinh doanh" : "Ngừng kinh doanh" }}
+                            {{ row.Status === 1 ? $t("i18nCommon.ActiveBusiness") : $t("i18nCommon.InactiveBusiness") }}
                         </span>
                     </template>
                 </BaseTable>
@@ -39,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { getCurrentInstance, ref } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
@@ -48,39 +55,40 @@ import { FormatType } from "@/constants";
 import InventoryItemModel from "@/models/dictionary/inventoryItem";
 
 const searchKeyword = ref<string>("");
+const { proxy } = getCurrentInstance() as any;
 
 const tableColumns: ColumnDefinition[] = [
     {
         dataField: "InventoryItemCode",
-        title: "Mã hàng",
+        title: proxy.$t("i18nInventoryItem.List.InventoryItemCode"),
         width: 140,
         align: "left",
         visible: true,
     },
     {
         dataField: "InventoryItemName",
-        title: "Tên hàng hóa",
+        title: proxy.$t("i18nInventoryItem.List.InventoryItemName"),
         width: 260,
         align: "left",
         visible: true,
     },
     {
         dataField: "InventoryItemCategoryNameList",
-        title: "Nhóm hàng hóa",
+        title: proxy.$t("i18nInventoryItem.List.InventoryItemCategory"),
         width: 180,
         align: "left",
         visible: true,
     },
     {
         dataField: "UnitName",
-        title: "Đơn vị tính",
+        title: proxy.$t("i18nInventoryItem.List.Unit"),
         width: 120,
         align: "left",
         visible: true,
     },
     {
         dataField: "BuyPrice",
-        title: "Giá vốn",
+        title: proxy.$t("i18nInventoryItem.List.BuyPrice"),
         width: 140,
         align: "right",
         visible: true,
@@ -88,7 +96,7 @@ const tableColumns: ColumnDefinition[] = [
     },
     {
         dataField: "SellPrice",
-        title: "Giá bán",
+        title: proxy.$t("i18nInventoryItem.List.SellPrice"),
         width: 140,
         align: "right",
         visible: true,
@@ -96,7 +104,7 @@ const tableColumns: ColumnDefinition[] = [
     },
     {
         dataField: "QuantityBalance",
-        title: "Số lượng tồn",
+        title: proxy.$t("i18nInventoryItem.List.QuantityBalance"),
         width: 110,
         align: "right",
         visible: true,
@@ -104,7 +112,7 @@ const tableColumns: ColumnDefinition[] = [
     },
     {
         dataField: "MinimumStock",
-        title: "Tồn tối thiểu",
+        title: proxy.$t("i18nInventoryItem.List.MinimumStock"),
         width: 120,
         align: "right",
         visible: true,
@@ -112,7 +120,7 @@ const tableColumns: ColumnDefinition[] = [
     },
     {
         dataField: "Status",
-        title: "Trạng thái",
+        title: proxy.$t("i18nInventoryItem.List.Status"),
         width: 150,
         align: "center",
         visible: true,
@@ -155,92 +163,5 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
 </script>
 
 <style lang="scss" scoped>
-@use "@/assets/styles/variable" as *;
-
-.list-page {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px 0;
-    height: 100%;
-    min-height: 0;
-}
-
-.page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.page-content {
-    padding: 0 12px;
-    background: #ffffff;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    border-radius: 4px;
-}
-
-.table-container {
-    flex: 1;
-    min-height: 0;
-}
-
-.page-title {
-    margin: 0;
-    font-size: 20px;
-    color: $color-text-black;
-    font-weight: 700;
-}
-
-.page-subtitle {
-    margin: 6px 0 0;
-    color: #4b5563;
-}
-
-.page-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.search-bar {
-    padding: 12px 0;
-    background: #ffffff;
-}
-
-.status-active,
-.status-inactive {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 120px;
-    height: 24px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.status-active {
-    background: #d1fae5;
-    color: #00c28b;
-}
-
-.status-inactive {
-    background: #fee2e2;
-    color: #e91111;
-}
-
-@media (max-width: 768px) {
-    .page-header {
-        flex-direction: column;
-    }
-
-    .search-bar {
-        grid-template-columns: 1fr;
-    }
-}
+@use "@/assets/styles/dictionary.scss";
 </style>

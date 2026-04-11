@@ -31,6 +31,26 @@ export const formConfig: FormConfig[] = [
         DetailFormID: "StockDetail",
         Name: "Kho",
         RefType: 120,
+        ModelKeyID: "StockID",
+    },
+    {
+        FormID: "StockDetail",
+        Name: "Chi tiết kho",
+        RefType: 121,
+        ModelKeyID: "StockID",
+    },
+    {
+        FormID: "UnitList",
+        DetailFormID: "UnitDetail",
+        Name: "Đơn vị tính",
+        RefType: 130,
+        ModelKeyID: "UnitID",
+    },
+    {
+        FormID: "UnitDetail",
+        Name: "Chi tiết đơn vị tính",
+        RefType: 131,
+        ModelKeyID: "UnitID",
     },
 ];
 

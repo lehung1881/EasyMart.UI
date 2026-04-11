@@ -1,0 +1,26 @@
+﻿export default {
+    List: {
+        Title: "Danh sách kho",
+        AddStock: "Thêm kho",
+        EmptyData: "Không có dữ liệu",
+        StockCode: "Mã kho",
+        StockName: "Tên kho",
+        Address: "Địa chỉ",
+        Description: "Mô tả",
+        Status: "Trạng thái",
+        Active: "Đang sử dụng",
+        Inactive: "Ngừng sử dụng",
+    },
+    Detail: {
+        Title: "Thêm mới kho",
+        StockCode: "Mã kho",
+        StockName: "Tên kho",
+        Address: "Địa chỉ",
+        Description: "Mô tả",
+        Status: "Trạng thái",
+        Active: "Đang sử dụng",
+        Inactive: "Ngừng sử dụng",
+        Cancel: "Hủy",
+        Save: "Lưu",
+    },
+};

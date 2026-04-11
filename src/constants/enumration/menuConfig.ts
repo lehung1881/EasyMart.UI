@@ -32,7 +32,7 @@ export const MenuGroup: MenuGroup[] = [
         label: "Kho",
         items: [
             { key: "inventory", label: "Tồn kho", routeName: "inventory-balance" },
-            { key: "warehouse", label: "Quản lý kho", routeName: "stocks" },
+            { key: "stock", label: "Quản lý kho", routeName: "stocks" },
         ],
     },
     {

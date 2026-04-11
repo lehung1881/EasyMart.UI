@@ -11,6 +11,8 @@ const globalPopup: Plugin = {
             "InventoryItemDetail",
             defineAsyncComponent(() => import("@/pages/dictionary/inventoryItem/InventoryItemDetail.vue")),
         );
+        app.component("StockDetail", defineAsyncComponent(() => import("@/pages/dictionary/stock/StockDetail.vue")));
+        app.component("UnitDetail", defineAsyncComponent(() => import("@/pages/dictionary/unit/UnitDetail.vue")));
     },
 };
 
