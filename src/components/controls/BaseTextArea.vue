@@ -1,34 +1,26 @@
 <template>
-    <div class="base-input-wrapper">
-        <label v-if="label" class="base-input-label">{{ label }}</label>
-        <div class="base-input-container">
-            <input
-                :type="type"
-                class="base-input"
+    <div class="base-textarea-wrapper">
+        <label v-if="label" class="base-textarea-label">{{ label }}</label>
+        <div class="base-textarea-container">
+            <textarea
+                class="base-textarea"
                 :class="[
                     sizeClass,
                     {
                         'is-readonly': readonly,
-                        'has-left-icon': $slots['left-icon'],
-                        'has-right-icon': $slots['right-icon'],
                     },
                 ]"
                 :value="normalizedValue"
                 :placeholder="placeholder"
                 :disabled="disabled"
                 :readonly="readonly"
+                :rows="rows"
                 v-bind="$attrs"
                 @input="onInput"
                 @focus="onFocus"
                 @blur="onBlur"
                 @change="onChange"
-            />
-            <div v-if="$slots['left-icon']" class="left-icon">
-                <slot name="left-icon"></slot>
-            </div>
-            <div v-if="$slots['right-icon']" class="right-icon">
-                <slot name="right-icon"></slot>
-            </div>
+            ></textarea>
         </div>
     </div>
 </template>
@@ -36,26 +28,26 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-type InputSize = "sm" | "md" | "lg";
+type TextareaSize = "sm" | "md" | "lg";
 
 interface Props {
     modelValue?: string | number | null;
     label?: string;
-    type?: string;
-    size?: InputSize;
+    size?: TextareaSize;
     placeholder?: string;
     disabled?: boolean;
     readonly?: boolean;
+    rows?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     modelValue: "",
     label: "",
-    type: "text",
     size: "md",
     placeholder: "",
     disabled: false,
     readonly: false,
+    rows: 3,
 });
 
 const emit = defineEmits<{
@@ -69,7 +61,7 @@ const sizeClass = computed(() => `size-${props.size}`);
 const normalizedValue = computed(() => (props.modelValue ?? "").toString());
 
 function onInput(event: Event): void {
-    const target = event.target as HTMLInputElement;
+    const target = event.target as HTMLTextAreaElement;
     emit("update:modelValue", target.value);
 }
 
@@ -89,11 +81,11 @@ function onChange(event: Event): void {
 <style scoped lang="scss">
 @use "@/assets/styles/variable" as *;
 
-.base-input-wrapper {
+.base-textarea-wrapper {
     width: 100%;
 }
 
-.base-input-label {
+.base-textarea-label {
     display: block;
     margin-bottom: 10px;
     font-family: $font-family-base;
@@ -103,38 +95,27 @@ function onChange(event: Event): void {
     line-height: 1;
 }
 
-.base-input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
+.base-textarea-container {
     width: 100%;
 }
 
-.base-input {
-    flex: 1;
+.base-textarea {
     width: 100%;
-    padding: 0 12px;
+    padding: 10px 12px;
     border: $input-border;
     border-radius: $control-border-radius;
     background-color: #ffffff;
     color: $color-text-black;
     font-family: $font-family-base;
-    font-size: $input-font-size;
-    line-height: 1;
+    font-size: $font-size-base;
+    line-height: 1.4;
     outline: none;
+    resize: vertical;
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
         background-color 0.2s ease,
         color 0.2s ease;
-
-    &.has-right-icon {
-        padding-right: 30px;
-    }
-
-    &.has-left-icon {
-        padding-left: 30px;
-    }
 
     &::placeholder {
         color: #9ca3af;
@@ -174,33 +155,14 @@ function onChange(event: Event): void {
 }
 
 .size-sm {
-    height: $input-height-sm;
+    min-height: 70px;
 }
 
 .size-md {
-    height: $input-height-md;
+    min-height: 90px;
 }
 
 .size-lg {
-    height: $input-height-lg;
-}
-.right-icon {
-    position: absolute;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 32px;
-}
-
-.left-icon {
-    position: absolute;
-    left: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    width: 32px;
+    min-height: 120px;
 }
 </style>

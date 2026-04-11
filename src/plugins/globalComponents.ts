@@ -1,6 +1,8 @@
 import type { App, Plugin } from "vue";
 import BaseButton from "@/components/controls/BaseButton.vue";
 import BaseInput from "@/components/controls/BaseInput.vue";
+import BaseInputNumber from "@/components/controls/BaseInputNumber.vue";
+import BaseTextArea from "@/components/controls/BaseTextArea.vue";
 import BaseCheckbox from "@/components/controls/BaseCheckbox.vue";
 import BaseRadio from "@/components/controls/BaseRadio.vue";
 import BaseRadioGroup from "@/components/controls/BaseRadioGroup.vue";
@@ -26,6 +28,8 @@ const globalComponentsPlugin: Plugin = {
         });
         app.component("BaseButton", BaseButton);
         app.component("BaseInput", BaseInput);
+        app.component("BaseInputNumber", BaseInputNumber);
+        app.component("BaseTextArea", BaseTextArea);
         app.component("BaseCheckbox", BaseCheckbox);
         app.component("BaseRadio", BaseRadio);
         app.component("BaseRadioGroup", BaseRadioGroup);

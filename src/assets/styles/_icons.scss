@@ -54,7 +54,7 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 @include setIcon(icon-eye-open, -348px, 0px, 20px);
 
 @include setIcon(icon-close-small, -140px, -40px, 20px);
-@include setIcon(icon-chevron-small, -120px, -40px, 20px);
+@include setIcon(icon-chevron-small, -120px, -40px, 20px, $icon-color-default);
 
 /* Sidebar Icons */
 

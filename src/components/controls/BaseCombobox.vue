@@ -625,7 +625,13 @@ onBeforeUnmount(() => {
     &--toggle {
         width: 32px;
         height: 100%;
-        border-left: 1px solid rgba($border-color, 0.6);
+        // .icon-chevron-small {
+        //     border-radius: 50%;
+        //     &:hover {
+        //         background: rgba($primary-color, 0.08);
+        //     }
+        // }
+        // border-left: 1px solid rgba($border-color, 0.6);
     }
 }
 
