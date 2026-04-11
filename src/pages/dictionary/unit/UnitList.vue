@@ -5,7 +5,9 @@
                 <h1 class="page-title">{{ $t("i18nUnit.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">{{ $t("i18nUnit.List.AddUnit") }}</BaseButton>
+                <BaseButton size="md" variant="primary" @click="createItem">{{
+                    $t("i18nUnit.List.AddUnit")
+                }}</BaseButton>
             </div>
         </div>
 
@@ -60,21 +62,21 @@ const tableColumns: ColumnDefinition[] = [
     {
         dataField: "UnitName",
         title: proxy.$t("i18nUnit.List.UnitName"),
-        width: 300,
+        width: 200,
         align: "left",
         visible: true,
         sortOrder: 1,
     },
     {
         dataField: "Description",
-        title: proxy.$t("i18nUnit.List.Description"),
-        width: 300,
+        title: proxy.$t("i18nCommon.Description"),
+        // width: 600,
         align: "left",
         visible: true,
     },
     {
         dataField: "Status",
-        title: proxy.$t("i18nUnit.List.Status"),
+        title: proxy.$t("i18nCommon.Status"),
         width: 150,
         align: "center",
         visible: true,
@@ -105,3 +107,4 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
 <style lang="scss" scoped>
 @use "@/assets/styles/dictionary.scss";
 </style>
+

@@ -1,0 +1,27 @@
+﻿export default {
+    List: {
+        Title: "Supplier list",
+        AddSupplier: "Add supplier",
+        EmptyData: "No data",
+        SupplierCode: "Supplier code",
+        SupplierName: "Supplier name",
+        SupplierType: "Type",
+        PhoneNumber: "Phone number",
+        Email: "Email",
+        Address: "Address",
+        Individual: "Individual",
+        Enterprise: "Enterprise",
+    },
+    Detail: {
+        Title: "Add new supplier",
+        SupplierCode: "Supplier code",
+        SupplierName: "Supplier name",
+        SupplierType: "Type",
+        PhoneNumber: "Phone number",
+        Email: "Email",
+        TaxCode: "Tax code",
+        Address: "Address",
+        Individual: "Individual",
+        Enterprise: "Enterprise",
+    },
+};

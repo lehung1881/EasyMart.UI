@@ -16,6 +16,16 @@ const dictionaryRoutes: RouteRecordRaw[] = [
         name: "units",
         component: () => import("@/pages/dictionary/unit/UnitList.vue"),
     },
+    {
+        path: "dictionary/suppliers",
+        name: "suppliers",
+        component: () => import("@/pages/dictionary/supplier/SupplierList.vue"),
+    },
+    {
+        path: "dictionary/customers",
+        name: "customers",
+        component: () => import("@/pages/dictionary/customer/CustomerList.vue"),
+    },
 ];
 
 export default dictionaryRoutes;

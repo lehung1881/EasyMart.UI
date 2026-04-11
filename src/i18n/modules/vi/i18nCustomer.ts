@@ -1,0 +1,27 @@
+﻿export default {
+    List: {
+        Title: "Danh sách khách hàng",
+        AddCustomer: "Thêm khách hàng",
+        EmptyData: "Không có dữ liệu",
+        CustomerCode: "Mã khách hàng",
+        CustomerName: "Tên khách hàng",
+        CustomerType: "Loại",
+        PhoneNumber: "Số điện thoại",
+        Email: "Email",
+        Address: "Địa chỉ",
+        Individual: "Cá nhân",
+        Enterprise: "Doanh nghiệp",
+    },
+    Detail: {
+        Title: "Thêm mới khách hàng",
+        CustomerCode: "Mã khách hàng",
+        CustomerName: "Tên khách hàng",
+        CustomerType: "Loại",
+        PhoneNumber: "Số điện thoại",
+        Email: "Email",
+        TaxCode: "Mã số thuế",
+        Address: "Địa chỉ",
+        Individual: "Cá nhân",
+        Enterprise: "Doanh nghiệp",
+    },
+};

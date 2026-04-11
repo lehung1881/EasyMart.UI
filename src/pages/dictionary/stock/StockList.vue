@@ -38,7 +38,7 @@
                 >
                     <template #cell-Status="{ row }">
                         <span :class="`status-${row.Status === 1 ? 'active' : 'inactive'}`">
-                            {{ row.Status === 1 ? $t("i18nStock.List.Active") : $t("i18nStock.List.Inactive") }}
+                            {{ row.Status === 1 ? $t("i18nCommon.Active") : $t("i18nCommon.Inactive") }}
                         </span>
                     </template>
                 </BaseTable>
@@ -84,14 +84,14 @@ const tableColumns: ColumnDefinition[] = [
     },
     {
         dataField: "Description",
-        title: proxy.$t("i18nStock.List.Description"),
-        width: 200,
+        title: proxy.$t("i18nCommon.Description"),
+        // width: 200,
         align: "left",
         visible: true,
     },
     {
         dataField: "Status",
-        title: proxy.$t("i18nStock.List.Status"),
+        title: proxy.$t("i18nCommon.Status"),
         width: 150,
         align: "center",
         visible: true,
@@ -122,3 +122,4 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
 <style lang="scss" scoped>
 @use "@/assets/styles/dictionary.scss";
 </style>
+

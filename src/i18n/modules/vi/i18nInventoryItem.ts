@@ -11,7 +11,6 @@
         SellPrice: "Giá bán",
         QuantityBalance: "Số lượng tồn",
         MinimumStock: "Tồn tối thiểu",
-        Status: "Trạng thái",
     },
     Detail: {
         Title: "Thêm mới hàng hóa",
@@ -23,8 +22,5 @@
         MinimumStock: "Tồn kho tối thiểu",
         BuyPrice: "Giá vốn",
         SellPrice: "Giá bán",
-        Description: "Mô tả",
-        Cancel: "Hủy",
-        Save: "Lưu",
     },
 };

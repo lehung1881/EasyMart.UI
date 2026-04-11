@@ -1,0 +1,27 @@
+﻿export default {
+    List: {
+        Title: "Danh sách nhà cung cấp",
+        AddSupplier: "Thêm nhà cung cấp",
+        EmptyData: "Không có dữ liệu",
+        SupplierCode: "Mã nhà cung cấp",
+        SupplierName: "Tên nhà cung cấp",
+        SupplierType: "Loại",
+        PhoneNumber: "Số điện thoại",
+        Email: "Email",
+        Address: "Địa chỉ",
+        Individual: "Cá nhân",
+        Enterprise: "Doanh nghiệp",
+    },
+    Detail: {
+        Title: "Thêm mới nhà cung cấp",
+        SupplierCode: "Mã nhà cung cấp",
+        SupplierName: "Tên nhà cung cấp",
+        SupplierType: "Loại",
+        PhoneNumber: "Số điện thoại",
+        Email: "Email",
+        TaxCode: "Mã số thuế",
+        Address: "Địa chỉ",
+        Individual: "Cá nhân",
+        Enterprise: "Doanh nghiệp",
+    },
+};

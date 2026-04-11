@@ -23,15 +23,15 @@
 
                 <BaseInput v-model="model.Address" :label="$t('i18nStock.Detail.Address')" class="w-full" />
 
-                <BaseTextArea v-model="model.Description" :label="$t('i18nStock.Detail.Description')" class="w-full" />
+                <BaseTextArea v-model="model.Description" :label="$t('i18nCommon.Description')" class="w-full" />
             </div>
         </template>
 
         <template #footer="{ close }">
             <div class="popup-footer">
-                <BaseButton size="md" @click="close">{{ $t("i18nStock.Detail.Cancel") }}</BaseButton>
+                <BaseButton size="md" @click="close">{{ $t("i18nCommon.Cancel") }}</BaseButton>
                 <BaseButton size="md" variant="primary" :disabled="saving" @click="saveAndClose(close)">
-                    {{ $t("i18nStock.Detail.Save") }}
+                    {{ $t("i18nCommon.Save") }}
                 </BaseButton>
             </div>
         </template>
@@ -67,3 +67,4 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<StockModel>({
     gap: 8px;
 }
 </style>
+

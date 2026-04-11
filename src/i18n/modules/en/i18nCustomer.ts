@@ -1,0 +1,27 @@
+﻿export default {
+    List: {
+        Title: "Customer list",
+        AddCustomer: "Add customer",
+        EmptyData: "No data",
+        CustomerCode: "Customer code",
+        CustomerName: "Customer name",
+        CustomerType: "Type",
+        PhoneNumber: "Phone number",
+        Email: "Email",
+        Address: "Address",
+        Individual: "Individual",
+        Enterprise: "Enterprise",
+    },
+    Detail: {
+        Title: "Add new customer",
+        CustomerCode: "Customer code",
+        CustomerName: "Customer name",
+        CustomerType: "Type",
+        PhoneNumber: "Phone number",
+        Email: "Email",
+        TaxCode: "Tax code",
+        Address: "Address",
+        Individual: "Individual",
+        Enterprise: "Enterprise",
+    },
+};

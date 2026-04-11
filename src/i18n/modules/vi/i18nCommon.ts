@@ -10,6 +10,10 @@
     Edit: "Chỉnh sửa",
     Back: "Quay lại",
     SearchPlaceholder: "Tìm kiếm",
+    Description: "Mô tả",
+    Status: "Trạng thái",
+    Active: "Đang sử dụng",
+    Inactive: "Ngừng sử dụng",
     ActiveBusiness: "Đang kinh doanh",
     InactiveBusiness: "Ngừng kinh doanh",
 };

@@ -10,6 +10,10 @@
     Edit: "Edit",
     Back: "Back",
     SearchPlaceholder: "Search",
+    Description: "Description",
+    Status: "Status",
+    Active: "Active",
+    Inactive: "Inactive",
     ActiveBusiness: "Active business",
     InactiveBusiness: "Inactive business",
 };

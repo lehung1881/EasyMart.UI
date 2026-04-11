@@ -13,6 +13,8 @@ const globalPopup: Plugin = {
         );
         app.component("StockDetail", defineAsyncComponent(() => import("@/pages/dictionary/stock/StockDetail.vue")));
         app.component("UnitDetail", defineAsyncComponent(() => import("@/pages/dictionary/unit/UnitDetail.vue")));
+        app.component("SupplierDetail", defineAsyncComponent(() => import("@/pages/dictionary/supplier/SupplierDetail.vue")));
+        app.component("CustomerDetail", defineAsyncComponent(() => import("@/pages/dictionary/customer/CustomerDetail.vue")));
     },
 };
 

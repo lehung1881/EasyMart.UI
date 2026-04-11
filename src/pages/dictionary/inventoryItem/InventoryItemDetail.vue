@@ -79,7 +79,7 @@
 
                 <BaseTextArea
                     v-model="model.Description"
-                    :label="$t('i18nInventoryItem.Detail.Description')"
+                    :label="$t('i18nCommon.Description')"
                     class="w-full"
                 />
             </div>
@@ -87,9 +87,9 @@
 
         <template #footer="{ close }">
             <div class="popup-footer">
-                <BaseButton size="md" @click="close">{{ $t("i18nInventoryItem.Detail.Cancel") }}</BaseButton>
+                <BaseButton size="md" @click="close">{{ $t("i18nCommon.Cancel") }}</BaseButton>
                 <BaseButton size="md" variant="primary" :disabled="saving" @click="saveAndClose(close)">
-                    {{ $t("i18nInventoryItem.Detail.Save") }}
+                    {{ $t("i18nCommon.Save") }}
                 </BaseButton>
             </div>
         </template>
@@ -171,5 +171,6 @@ const onUnitSelected = (item: any): void => {
     gap: 8px;
 }
 </style>
+
 
 

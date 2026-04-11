@@ -11,7 +11,6 @@
         SellPrice: "Sell price",
         QuantityBalance: "Quantity balance",
         MinimumStock: "Minimum stock",
-        Status: "Status",
     },
     Detail: {
         Title: "Add new inventory item",
@@ -23,8 +22,5 @@
         MinimumStock: "Minimum stock",
         BuyPrice: "Buy price",
         SellPrice: "Sell price",
-        Description: "Description",
-        Cancel: "Cancel",
-        Save: "Save",
     },
 };

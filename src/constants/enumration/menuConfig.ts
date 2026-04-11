@@ -39,7 +39,7 @@ export const MenuGroup: MenuGroup[] = [
         label: "Danh mục",
         items: [
             { key: "inventory-item", label: "Hàng hóa", routeName: "inventory-items" },
-            { key: "units", label: "Đơn vị tính" },
+            { key: "units", label: "Đơn vị tính", routeName: "units" },
             { key: "suppliers", label: "Nhà cung cấp", routeName: "suppliers" },
         ],
     },

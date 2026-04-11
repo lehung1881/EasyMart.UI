@@ -9,15 +9,15 @@
         <template #content>
             <div class="unit-detail flex flex-col gap-4">
                 <BaseInput v-model="model.UnitName" :label="$t('i18nUnit.Detail.UnitName')" class="w-full" />
-                <BaseTextArea v-model="model.Description" :label="$t('i18nUnit.Detail.Description')" class="w-full" />
+                <BaseTextArea v-model="model.Description" :label="$t('i18nCommon.Description')" class="w-full" />
             </div>
         </template>
 
         <template #footer="{ close }">
             <div class="popup-footer">
-                <BaseButton size="md" @click="close">{{ $t("i18nUnit.Detail.Cancel") }}</BaseButton>
+                <BaseButton size="md" @click="close">{{ $t("i18nCommon.Cancel") }}</BaseButton>
                 <BaseButton size="md" variant="primary" :disabled="saving" @click="saveAndClose(close)">
-                    {{ $t("i18nUnit.Detail.Save") }}
+                    {{ $t("i18nCommon.Save") }}
                 </BaseButton>
             </div>
         </template>
@@ -51,3 +51,4 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<UnitModel>({
     gap: 8px;
 }
 </style>
+
