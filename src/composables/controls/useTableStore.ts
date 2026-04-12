@@ -305,6 +305,35 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             totalRecords.value += 1;
         };
 
+        /**
+         * Cập nhật dữ liệu một bản ghi theo key trong các collection của store.
+         * @param record Bản ghi mới cần cập nhật.
+         * @returns `true` nếu tìm thấy bản ghi và cập nhật thành công, ngược lại `false`.
+         */
+        const updateRecord = (record: TableRow): boolean => {
+            const key = resolveRowKey(record, keyID.value);
+            if (key === undefined) return false;
+
+            let hasUpdated = false;
+
+            const mapRows = (rows: Array<TableRow>): Array<TableRow> =>
+                rows.map((row) => {
+                    if (resolveRowKey(row, keyID.value) !== key) return row;
+                    hasUpdated = true;
+                    return {
+                        ...row,
+                        ...record,
+                    };
+                });
+
+            data.value = mapRows(data.value);
+            rawData.value = mapRows(rawData.value);
+            filteredData.value = mapRows(filteredData.value);
+            selectedRows.value = mapRows(selectedRows.value);
+
+            return hasUpdated;
+        };
+
         const loadData = async (query = "", page = 1): Promise<void> => {
             currentQuery.value = query;
             currentPage.value = Math.max(1, page);
@@ -449,6 +478,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             deleteRecord,
             clearData,
             insertRecord,
+            updateRecord,
             loadData,
             goToPage,
             goToFirstPage,

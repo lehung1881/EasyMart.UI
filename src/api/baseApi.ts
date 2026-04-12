@@ -178,12 +178,30 @@ abstract class BaseAPI {
     }
 
     /**
+     * Cập nhật trạng thái (active/inactive) cho một hoặc nhiều bản ghi.
+     * @param ids - Danh sách ID của bản ghi cần cập nhật trạng thái
+     * @param status - Trạng thái mới (ví dụ: 1 cho active, 2 cho inactive)
+     */
+    public updateStatus(ids: any[], status: number) {
+        return this.post<ServiceResponse>(`/update_status/${status}`, ids);
+    }
+
+    /**
      * Lây dữ liệu phân trang và tìm kiếm.
      * @param payload
      * @returns
      */
     public getPagingData(payload: PagingRequest) {
         return this.post<PagingResponse, PagingRequest>("/paging_filter", payload);
+    }
+
+    /**
+     * Lây dữ liệu phân trang và tìm kiếm.
+     * @param payload
+     * @returns
+     */
+    public getPagingCombobox(payload: PagingRequest) {
+        return this.post<PagingResponse, PagingRequest>("/paging_combobox", payload);
     }
 
     /**

@@ -6,7 +6,7 @@
         UnitName: "Tên đơn vị tính",
     },
     Detail: {
-        Title: "Thêm mới đơn vị tính",
+        Title: "Đơn vị tính",
         UnitName: "Tên đơn vị tính",
     },
 };

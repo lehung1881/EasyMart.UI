@@ -68,7 +68,7 @@ const tableColumns: ColumnDefinition[] = [
     {
         dataField: "InventoryItemName",
         title: proxy.$t("i18nInventoryItem.List.InventoryItemName"),
-        width: 260,
+        // width: 260,
         align: "left",
         visible: true,
     },
@@ -165,4 +165,3 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
 <style lang="scss" scoped>
 @use "@/assets/styles/dictionary.scss";
 </style>
-

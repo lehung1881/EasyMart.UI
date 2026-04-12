@@ -23,7 +23,6 @@
                     />
                     <BaseButton size="sm" @click="refresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
-                    <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
                 </div>
             </div>
 
@@ -107,4 +106,3 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
 <style lang="scss" scoped>
 @use "@/assets/styles/dictionary.scss";
 </style>
-

@@ -83,13 +83,6 @@ const tableColumns: ColumnDefinition[] = [
         sortOrder: 2,
     },
     {
-        dataField: "SupplierType",
-        title: proxy.$t("i18nSupplier.List.SupplierType"),
-        width: 140,
-        align: "center",
-        visible: true,
-    },
-    {
         dataField: "PhoneNumber",
         title: proxy.$t("i18nSupplier.List.PhoneNumber"),
         width: 150,
@@ -98,6 +91,13 @@ const tableColumns: ColumnDefinition[] = [
     },
     { dataField: "Email", title: proxy.$t("i18nSupplier.List.Email"), width: 220, align: "left", visible: true },
     { dataField: "Address", title: proxy.$t("i18nSupplier.List.Address"), align: "left", visible: true },
+    {
+        dataField: "SupplierType",
+        title: proxy.$t("i18nSupplier.List.SupplierType"),
+        width: 140,
+        align: "center",
+        visible: true,
+    },
     { dataField: "Status", title: proxy.$t("i18nCommon.Status"), width: 150, align: "center", visible: true },
 ];
 

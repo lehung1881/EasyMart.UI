@@ -82,13 +82,7 @@ const tableColumns: ColumnDefinition[] = [
         visible: true,
         sortOrder: 2,
     },
-    {
-        dataField: "CustomerType",
-        title: proxy.$t("i18nCustomer.List.CustomerType"),
-        width: 140,
-        align: "center",
-        visible: true,
-    },
+
     {
         dataField: "PhoneNumber",
         title: proxy.$t("i18nCustomer.List.PhoneNumber"),
@@ -98,6 +92,13 @@ const tableColumns: ColumnDefinition[] = [
     },
     { dataField: "Email", title: proxy.$t("i18nCustomer.List.Email"), width: 220, align: "left", visible: true },
     { dataField: "Address", title: proxy.$t("i18nCustomer.List.Address"), align: "left", visible: true },
+    {
+        dataField: "CustomerType",
+        title: proxy.$t("i18nCustomer.List.CustomerType"),
+        width: 140,
+        align: "left",
+        visible: true,
+    },
     { dataField: "Status", title: proxy.$t("i18nCommon.Status"), width: 150, align: "center", visible: true },
 ];
 
@@ -125,4 +126,3 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
 <style lang="scss" scoped>
 @use "@/assets/styles/dictionary.scss";
 </style>
-

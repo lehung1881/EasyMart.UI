@@ -8,7 +8,7 @@
         Address: "Địa chỉ",
     },
     Detail: {
-        Title: "Thêm mới kho",
+        Title: "Kho",
         StockCode: "Mã kho",
         StockName: "Tên kho",
         Address: "Địa chỉ",

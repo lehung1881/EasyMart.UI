@@ -110,7 +110,7 @@ const onToggleAll = (checked: boolean): void => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    height: 36px;
+    height: 32px;
     position: sticky;
     background: #f8f8f8;
     .header-title {

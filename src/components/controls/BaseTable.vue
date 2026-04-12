@@ -405,7 +405,7 @@ onBeforeUnmount(() => {
 .tb-pagination__range {
     font-size: $font-size-base;
     color: #374151;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .tb-pagination__page-size-combobox {

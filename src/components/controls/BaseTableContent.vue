@@ -321,7 +321,7 @@ $border-color: #d0d0d0;
     text-overflow: ellipsis;
     white-space: nowrap;
     color: inherit;
-    height: 36px;
+    height: 34px;
 }
 
 .tb-content__cell--selection {
@@ -353,7 +353,7 @@ $border-color: #d0d0d0;
     }
 }
 .tb-content__cell--row-action {
-    height: 36px;
+    height: 34px;
     position: sticky;
     width: 80px;
     right: 0;

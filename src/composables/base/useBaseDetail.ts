@@ -1,4 +1,4 @@
-﻿import { computed, onBeforeUnmount, onMounted, reactive, ref, getCurrentInstance } from "vue";
+﻿import { computed, onBeforeUnmount, reactive, ref, getCurrentInstance } from "vue";
 import BaseAPI from "@/api/baseAPI";
 import BaseModel from "@/models/common/baseModel";
 import { ModelState, FormState } from "@/constants/enumration/modelState";
@@ -125,9 +125,10 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
      */
     const beforeOpen = async ({ params }: any) => {
         try {
-            const { FormState, RecordData } = params || {};
+            const { FormState, RecordData, updateListCallback } = params || {};
             formState.value = FormState ?? FormState.Add;
             Object.assign(model, buildModel(RecordData));
+            proxy._updateListCallback = typeof updateListCallback === "function" ? updateListCallback : null;
             options.bindingData?.(formState.value, RecordData);
         } catch (error) {
             console.error("[ERROR] beforeOpen:", error);
@@ -211,6 +212,12 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
             saving.value = true;
             const response = await api.saveData(payload);
             model.commit();
+
+            // Nếu có callback cập nhật lại list sau khi save thành công
+            if (proxy._updateListCallback && typeof proxy._updateListCallback === "function") {
+                proxy._updateListCallback(payload);
+            }
+
             await options.onSaveSuccess?.({
                 payload,
                 response,

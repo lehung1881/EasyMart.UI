@@ -1,7 +1,7 @@
 ﻿<template>
     <BasePopup
         :title="$t('i18nUnit.Detail.Title')"
-        width="520px"
+        width="480px"
         :show-icon-close="true"
         @beforeOpen="beforeOpen"
         :params="{}"
@@ -9,7 +9,12 @@
         <template #content>
             <div class="unit-detail flex flex-col gap-4">
                 <BaseInput v-model="model.UnitName" :label="$t('i18nUnit.Detail.UnitName')" class="w-full" />
-                <BaseTextArea v-model="model.Description" :label="$t('i18nCommon.Description')" class="w-full" />
+                <BaseTextArea
+                    v-model="model.Description"
+                    :label="$t('i18nCommon.Description')"
+                    class="w-full"
+                    :rows="3"
+                />
             </div>
         </template>
 
@@ -51,4 +56,3 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<UnitModel>({
     gap: 8px;
 }
 </style>
-

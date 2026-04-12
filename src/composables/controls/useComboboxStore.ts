@@ -259,6 +259,7 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
             displayField.value = config.displayField;
             valueField.value = config.valueField;
             columns.value = config.columns ?? [];
+            dropdownWidth.value = config.dropdownWidth ?? null;
         };
 
         /**
@@ -329,6 +330,6 @@ export type ComboboxStoreInstance = ReturnType<typeof useComboboxStore>;
  * @returns Mảng data trả về từ BE, hoặc mảng rỗng nếu lỗi.
  */
 export const loadDataRemoteCombobox = async (api: BaseAPI, payload: PagingRequest) => {
-    const response = await api.getPagingData(payload);
+    const response = await api.getPagingCombobox(payload);
     return response.Data?.PageData ?? [];
 };

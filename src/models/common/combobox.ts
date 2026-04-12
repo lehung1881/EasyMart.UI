@@ -30,4 +30,6 @@ export interface ComboboxStoreOptions {
     valueField: string;
     /** Cấu hình cột cho dropdown dạng bảng. Không truyền thì dropdown render dạng list */
     columns?: ColumnDefinition[];
+    /** Độ rộng của dropdown, có thể là số (px) hoặc string (ví dụ "50%"). Nếu không truyền thì dropdown tự động điều chỉnh theo nội dung */
+    dropdownWidth?: number | null;
 }

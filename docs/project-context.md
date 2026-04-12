@@ -98,7 +98,7 @@ Mapping module nghiệp vụ với cấu trúc mã nguồn:
 
 Các quy tắc sau không được tự đoán nếu chưa có xác nhận:
 
-- Quy tắc tính giá vốn, chiết khấu, thuế, làm tròn tiền.
+- Quy tắc tính Giá mua, chiết khấu, thuế, làm tròn tiền.
 - Điều kiện chuyển trạng thái đơn/chứng từ (draft, confirmed, canceled, completed...).
 - Chính sách âm kho, khóa sổ, và sửa dữ liệu sau khi chốt.
 - Quan hệ bắt buộc giữa `sales` và `invoice` (tạo trước/sau, 1-1 hay 1-n).

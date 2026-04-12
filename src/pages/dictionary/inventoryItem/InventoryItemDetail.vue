@@ -35,8 +35,9 @@
                         v-model="model.UnitID"
                         :label="$t('i18nInventoryItem.Detail.Unit')"
                         :store="unitStore"
+                        :autoLoad="false"
                         clearIcon
-                        autoLoad
+                        :initText="model.UnitName"
                         @selected="onUnitSelected"
                         class="w-1/2 max-md:w-full"
                     />
@@ -47,8 +48,8 @@
                         v-model="model.StockID"
                         :label="$t('i18nInventoryItem.Detail.DefaultStock')"
                         :store="stockStore"
-                        clearIcon
                         autoLoad
+                        clearIcon
                         class="w-1/2 max-md:w-full"
                     />
                     <BaseInputNumber
@@ -77,11 +78,7 @@
                     />
                 </div>
 
-                <BaseTextArea
-                    v-model="model.Description"
-                    :label="$t('i18nCommon.Description')"
-                    class="w-full"
-                />
+                <BaseTextArea v-model="model.Description" :label="$t('i18nCommon.Description')" class="w-full" />
             </div>
         </template>
 
@@ -126,9 +123,10 @@ const stockStore = useComboboxStore("stock_combobox", {
     valueField: "StockID",
     columns: [
         { dataField: "StockCode", title: "Mã kho", width: 120 },
-        { dataField: "StockName", title: "Tên kho", width: 200 },
+        { dataField: "StockName", title: "Tên kho", width: 180 },
         { dataField: "Address", title: "Địa chỉ", width: 250 },
     ],
+    dropdownWidth: 600,
 });
 
 /**
@@ -171,6 +169,3 @@ const onUnitSelected = (item: any): void => {
     gap: 8px;
 }
 </style>
-
-
-

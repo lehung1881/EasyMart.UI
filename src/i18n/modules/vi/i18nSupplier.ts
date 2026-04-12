@@ -13,7 +13,7 @@
         Enterprise: "Doanh nghiệp",
     },
     Detail: {
-        Title: "Thêm mới nhà cung cấp",
+        Title: "Nhà cung cấp",
         SupplierCode: "Mã nhà cung cấp",
         SupplierName: "Tên nhà cung cấp",
         SupplierType: "Loại",

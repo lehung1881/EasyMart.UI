@@ -484,7 +484,7 @@ watch(
     background-color: #ffffff;
     color: $color-text-black;
     font-family: $font-family-base;
-    font-weight: 400;
+    font-weight: 500;
     font-size: $input-font-size;
     line-height: 1;
     text-align: right;

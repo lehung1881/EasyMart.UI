@@ -140,6 +140,25 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
     const searchDebounce = 500;
 
     /**
+     * Đồng bộ dữ liệu danh sách khi form detail lưu thành công.
+     * @param record Bản ghi vừa lưu.
+     */
+    const updateListCallback = (record: any): void => {
+        if (!record) return;
+
+        switch (record.ModelState) {
+            case ModelState.Insert:
+                tableStore.insertRecord(record);
+                break;
+            case ModelState.Update:
+                tableStore.updateRecord(record);
+                break;
+            default:
+                break;
+        }
+    };
+
+    /**
      * Proxy cho loading state từ table store.
      */
     const loading = computed<boolean>(() => tableStore.loading);
@@ -494,6 +513,7 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
         show(detailFormID, {
             FormState: FormState.Add,
             RecordData: null,
+            updateListCallback,
         });
     };
 
@@ -528,10 +548,33 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
         show(detailFormID, {
             FormState: FormState.Edit,
             RecordData: recordData,
+            updateListCallback,
         });
     };
 
+    /**
+     * Câp nhật trạng thái của một hoặc nhiều bản ghi đã chọn.
+     * @param status
+     */
+    const updateStatus = async (status: number): Promise<void> => {
+        try {
+            const lstIds = selectedRows.value
+                .map((row) => row[rowKey])
+                .filter((id): id is string => typeof id === "string");
+            const res = await api.updateStatus(lstIds, status);
+            if (res.Success && res.Data) {
+                selectedRows.value.forEach((row) => {
+                    row.Status = status;
+                });
+            }
+        } catch (error) {
+            const normalizedError = error instanceof Error ? error : new Error("Update status failed");
+            console.error(normalizedError);
+        }
+    };
+
     const baseListInstance = {
+        proxy,
         textSearch,
         tableStore,
         loading,
@@ -553,12 +596,13 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
         createItem,
         editItem,
         onListItemAction,
-        proxy,
+        updateStatus,
     };
 
     attachListDebug(baseListInstance);
 
     onBeforeUnmount(() => {
+        cleanup();
         detachListDebug();
     });
 

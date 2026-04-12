@@ -13,7 +13,7 @@
         Enterprise: "Doanh nghiệp",
     },
     Detail: {
-        Title: "Thêm mới khách hàng",
+        Title: "Khách hàng",
         CustomerCode: "Mã khách hàng",
         CustomerName: "Tên khách hàng",
         CustomerType: "Loại",
