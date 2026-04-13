@@ -94,6 +94,11 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 @include setIcon(icon-page-prev, -20px, -220px, 20px, $icon-color-default, $primary-color);
 @include setIcon(icon-page-next, -40px, -220px, 20px, $icon-color-default, $primary-color);
 @include setIcon(icon-page-last, -60px, -220px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-calendar, -80px, -220px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-nav-prev-year, -100px, -220px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-nav-prev-month, -120px, -220px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-nav-next-month, -140px, -220px, 20px, $icon-color-default, $primary-color);
+@include setIcon(icon-nav-next-year, -160px, -220px, 20px, $icon-color-default, $primary-color);
 
 /* Icons*/
 @include setIcon(icon-refresh, -21px, -41px, 18px, $icon-color-default);

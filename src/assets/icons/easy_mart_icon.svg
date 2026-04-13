@@ -1630,6 +1630,36 @@
       <line x1="14" y1="6" x2="14" y2="14" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round"/>
       <polyline points="7,6.5 11,10 7,13.5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
+
+    <g id="icon-calendar" transform="translate(80 220)">
+      <rect width="20" height="20" fill="none"/>
+      <rect x="2.5" y="3.33" width="15" height="14.17" rx="1.67" ry="1.67" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="5.83" y1="1.67" x2="5.83" y2="5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="14.17" y1="1.67" x2="14.17" y2="5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="2.5" y1="8.33" x2="17.5" y2="8.33" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+
+    <g id="icon-nav-prev-year" transform="translate(100 220)">
+      <rect width="20" height="20" fill="none"/>
+      <polyline points="13,6.5 9,10 13,13.5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="9,6.5 5,10 9,13.5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <g id="icon-nav-prev-month" transform="translate(120 220)">
+      <rect width="20" height="20" fill="none"/>
+      <polyline points="12.5,6.5 8.5,10 12.5,13.5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <g id="icon-nav-next-month" transform="translate(140 220)">
+      <rect width="20" height="20" fill="none"/>
+      <polyline points="7.5,6.5 11.5,10 7.5,13.5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <g id="icon-nav-next-year" transform="translate(160 220)">
+      <rect width="20" height="20" fill="none"/>
+      <polyline points="7,6.5 11,10 7,13.5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="11,6.5 15,10 11,13.5" fill="none" stroke="#666" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
   </g>
 </svg>
 

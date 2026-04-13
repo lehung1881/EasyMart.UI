@@ -1,6 +1,7 @@
 import type { App, Plugin } from "vue";
 import BaseButton from "@/components/controls/BaseButton.vue";
 import BaseInput from "@/components/controls/BaseInput.vue";
+import BaseDatepicker from "@/components/controls/BaseDatepicker.vue";
 import BaseInputNumber from "@/components/controls/BaseInputNumber.vue";
 import BaseTextArea from "@/components/controls/BaseTextArea.vue";
 import BaseCheckbox from "@/components/controls/BaseCheckbox.vue";
@@ -28,6 +29,7 @@ const globalComponentsPlugin: Plugin = {
         });
         app.component("BaseButton", BaseButton);
         app.component("BaseInput", BaseInput);
+        app.component("BaseDatepicker", BaseDatepicker);
         app.component("BaseInputNumber", BaseInputNumber);
         app.component("BaseTextArea", BaseTextArea);
         app.component("BaseCheckbox", BaseCheckbox);
