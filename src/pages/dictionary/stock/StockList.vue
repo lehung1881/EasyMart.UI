@@ -15,12 +15,7 @@
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
-                    <BaseInput
-                        v-model="searchKeyword"
-                        size="sm"
-                        :placeholder="$t('i18nCommon.SearchPlaceholder')"
-                        @change="onSearch"
-                    />
+                    <BaseInput size="sm" :placeholder="$t('i18nCommon.SearchPlaceholder')" @input="onSearch" />
                     <BaseButton size="sm" @click="refresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
@@ -30,7 +25,6 @@
             <div class="table-container">
                 <BaseTable
                     :store="tableStore"
-                    :columns="tableColumns"
                     :auto-load="false"
                     :show-selection="true"
                     :empty-text="$t('i18nStock.List.EmptyData')"
@@ -51,70 +45,35 @@
 import { getCurrentInstance, ref } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
-import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import stockAPI from "@/api/modules/dictionary/stockAPI";
 import StockModel from "@/models/dictionary/stock";
 
-const searchKeyword = ref<string>("");
 const { proxy } = getCurrentInstance() as any;
-
-const tableColumns: ColumnDefinition[] = [
-    {
-        dataField: "StockCode",
-        title: proxy.$t("i18nStock.List.StockCode"),
-        width: 150,
-        align: "left",
-        visible: true,
-        sortOrder: 1,
-    },
-    {
-        dataField: "StockName",
-        title: proxy.$t("i18nStock.List.StockName"),
-        width: 250,
-        align: "left",
-        visible: true,
-        sortOrder: 2,
-    },
-    {
-        dataField: "Address",
-        title: proxy.$t("i18nStock.List.Address"),
-        width: 300,
-        align: "left",
-        visible: true,
-    },
-    {
-        dataField: "Description",
-        title: proxy.$t("i18nCommon.Description"),
-        // width: 200,
-        align: "left",
-        visible: true,
-    },
-    {
-        dataField: "Status",
-        title: proxy.$t("i18nCommon.Status"),
-        width: 150,
-        align: "center",
-        visible: true,
-    },
-];
 
 const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
     if (payload.ids.length === 0) return false;
     return true;
 };
 
+/**
+ * Store quản lý trạng thái và dữ liệu của bảng kho.
+ * Cấu hình chế độ truy vấn dữ liệu từ server và hàm tải dữ liệu.
+ */
 const tableStore = useTableStore("stock", {
     keyID: "StockID",
     viewOrTableName: "di_stock",
-    columns: tableColumns,
     tableLoadData: (payload) => loadListData(payload),
 });
 
+/**
+ * Sử dụng composable useBaseList để xử lý logic chung cho các trang danh sách, bao gồm:
+ * - Tải dữ liệu với phân trang, sắp xếp, lọc.
+ * - Xử lý tìm kiếm, làm mới, xóa hàng loạt.
+ */
 const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<StockModel>({
     formID: "StockList",
     tableStore,
     api: stockAPI,
-    rowKey: "StockID",
     validateBeforeDelete,
 });
 </script>
@@ -122,4 +81,3 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
 <style lang="scss" scoped>
 @use "@/assets/styles/dictionary.scss";
 </style>
-

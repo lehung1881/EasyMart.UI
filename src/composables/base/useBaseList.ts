@@ -4,7 +4,7 @@
  * Layer này nằm trên useTableStore, xử lý logic nghiệp vụ như search, delete, refresh.
  */
 
-import { computed, ref, onBeforeMount, onBeforeUnmount, getCurrentInstance } from "vue";
+import { computed, ref, onBeforeMount, onBeforeUnmount, getCurrentInstance, reactive } from "vue";
 import type { TableRow, TableStoreInstance } from "@/composables/controls/useTableStore";
 import type BaseAPI from "@/api/baseAPI";
 import { showConfirm } from "@/commons/messageBox";
@@ -16,6 +16,8 @@ import { FormState, ModelState } from "@/constants/enumration/modelState";
 import { attachListDebug, detachListDebug } from "@/composables/base/useDebug";
 import { usePopup } from "@/composables/popup/usePopup";
 import type { BaseModel } from "@/models/common/baseModel";
+import { columnDefault } from "@/constants/columnConfig";
+import type { ColumnDefinition } from "@/models/common/columnDefinition";
 
 /**
  * Dữ liệu đầu vào cho callback validate trước khi xóa.
@@ -70,11 +72,6 @@ export interface BaseListOptions<TModel extends BaseModel> {
     searchDebounce?: number;
 
     /**
-     * Row key field name. Mặc định: "id"
-     */
-    rowKey?: string;
-
-    /**
      * Có tự động load data khi khởi tạo không. Mặc định: true
      */
     autoLoad?: boolean;
@@ -111,13 +108,22 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
         tableStore,
         api,
         validateBeforeDelete,
-        rowKey = "id",
         onLoadSuccess,
         onLoadError,
         onDeleteSuccess,
         onDeleteError,
     } = options;
     const { show } = usePopup();
+
+    /**
+     * Cấu hình mặc định ban đầu của form
+     */
+    const staticConfig = formConfigMap.get(formID) as FormConfig;
+
+    /**
+     * Trường khóa chính của bảng
+     */
+    const rowKey = staticConfig.ModelKeyID || "id";
 
     /**
      * Instance của màn danh sách
@@ -128,11 +134,6 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
      * Query text hiện tại cho search.
      */
     const textSearch = ref<string>("");
-
-    /**
-     * Cấu hình mặc định ban đầu của form
-     */
-    const staticConfig = formConfigMap.get(formID) as FormConfig;
 
     /**
      * Cấu hình thời gian search
@@ -167,6 +168,11 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
      * Proxy cho data từ table store.
      */
     const data = computed(() => tableStore.data);
+
+    /**
+     * Cấu hình column cho table
+     */
+    const columnGrids = ref<ColumnDefinition[]>([]);
 
     /**
      * Proxy cho selected rows từ table store.
@@ -424,9 +430,22 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
     };
 
     /**
+     * Khởi tạo cấu hình mặc định cho column của table dựa trên formID.
+     * Nếu cần custom column, có thể gọi lại hàm này với column config mới.
+     */
+    const initColumnConfig = (): void => {
+        const defaultColumns = columnDefault[formID as keyof typeof columnDefault] || [];
+        columnGrids.value = [...defaultColumns] as ColumnDefinition[];
+        tableStore.applyColumnsConfig(columnGrids.value);
+    };
+
+    /**
      * Auto load data khi khởi tạo.
      */
     onBeforeMount(() => {
+        // Khởi tạo cấu hình column mặc định
+        initColumnConfig();
+
         // Load dữ liệu lần đầu
         tableStore
             .loadData()
@@ -582,6 +601,7 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
         selectedRows,
         selectedCount,
         staticConfig,
+        columnGrids,
         onSearch,
         clearSearch,
         deleteItem,

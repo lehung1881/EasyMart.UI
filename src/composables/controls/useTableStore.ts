@@ -456,6 +456,14 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             keyID.value = "id";
         };
 
+        /**
+         * Apply column configuration.
+         * @param columnsConfig
+         */
+        const applyColumnsConfig = (columnsConfig: ColumnDefinition[]): void => {
+            columns.value = [...columnsConfig];
+        };
+
         return {
             data,
             loading,
@@ -488,6 +496,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             setPageSize,
             initConfigStore,
             reset,
+            applyColumnsConfig,
         };
     });
 

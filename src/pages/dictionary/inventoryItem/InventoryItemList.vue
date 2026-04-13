@@ -14,12 +14,7 @@
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
-                    <BaseInput
-                        v-model="searchKeyword"
-                        size="sm"
-                        :placeholder="$t('i18nCommon.SearchPlaceholder')"
-                        @change="onSearch"
-                    />
+                    <BaseInput size="sm" :placeholder="$t('i18nCommon.SearchPlaceholder')" @input="onSearch" />
                     <BaseButton size="sm" @click="refresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
@@ -28,7 +23,6 @@
             <div class="table-container">
                 <BaseTable
                     :store="tableStore"
-                    :columns="tableColumns"
                     :auto-load="false"
                     :show-selection="true"
                     :empty-text="$t('i18nInventoryItem.List.EmptyData')"
@@ -49,83 +43,10 @@
 import { getCurrentInstance, ref } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
-import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
-import { FormatType } from "@/constants";
 import InventoryItemModel from "@/models/dictionary/inventoryItem";
 
-const searchKeyword = ref<string>("");
 const { proxy } = getCurrentInstance() as any;
-
-const tableColumns: ColumnDefinition[] = [
-    {
-        dataField: "InventoryItemCode",
-        title: proxy.$t("i18nInventoryItem.List.InventoryItemCode"),
-        width: 140,
-        align: "left",
-        visible: true,
-    },
-    {
-        dataField: "InventoryItemName",
-        title: proxy.$t("i18nInventoryItem.List.InventoryItemName"),
-        // width: 260,
-        align: "left",
-        visible: true,
-    },
-    {
-        dataField: "InventoryItemCategoryNameList",
-        title: proxy.$t("i18nInventoryItem.List.InventoryItemCategory"),
-        width: 180,
-        align: "left",
-        visible: true,
-    },
-    {
-        dataField: "UnitName",
-        title: proxy.$t("i18nInventoryItem.List.Unit"),
-        width: 120,
-        align: "left",
-        visible: true,
-    },
-    {
-        dataField: "BuyPrice",
-        title: proxy.$t("i18nInventoryItem.List.BuyPrice"),
-        width: 140,
-        align: "right",
-        visible: true,
-        formatType: FormatType.Currency,
-    },
-    {
-        dataField: "SellPrice",
-        title: proxy.$t("i18nInventoryItem.List.SellPrice"),
-        width: 140,
-        align: "right",
-        visible: true,
-        formatType: FormatType.Currency,
-    },
-    {
-        dataField: "QuantityBalance",
-        title: proxy.$t("i18nInventoryItem.List.QuantityBalance"),
-        width: 110,
-        align: "right",
-        visible: true,
-        formatType: FormatType.Quantity,
-    },
-    {
-        dataField: "MinimumStock",
-        title: proxy.$t("i18nInventoryItem.List.MinimumStock"),
-        width: 120,
-        align: "right",
-        visible: true,
-        formatType: FormatType.Quantity,
-    },
-    {
-        dataField: "Status",
-        title: proxy.$t("i18nCommon.Status"),
-        width: 150,
-        align: "center",
-        visible: true,
-    },
-];
 
 /**
  * Validate nghiệp vụ trước khi xóa hàng hóa.
@@ -144,7 +65,6 @@ const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promi
 const tableStore = useTableStore("inventory_item", {
     keyID: "InventoryItemID",
     viewOrTableName: "di_inventory_item",
-    columns: tableColumns,
     tableLoadData: (payload) => loadListData(payload),
 });
 
@@ -157,7 +77,6 @@ const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createIte
     formID: "InventoryItemList",
     tableStore,
     api: inventoryItemApi,
-    rowKey: "InventoryItemID",
     validateBeforeDelete,
 });
 </script>

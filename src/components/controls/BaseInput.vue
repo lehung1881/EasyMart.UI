@@ -62,7 +62,8 @@ const emit = defineEmits<{
     (event: "update:modelValue", value: string): void;
     (event: "focus", value: FocusEvent): void;
     (event: "blur", value: FocusEvent): void;
-    (event: "change", value: Event): void;
+    (event: "change", value: string): void;
+    (event: "input", value: string): void;
 }>();
 
 const sizeClass = computed(() => `size-${props.size}`);
@@ -71,6 +72,7 @@ const normalizedValue = computed(() => (props.modelValue ?? "").toString());
 function onInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     emit("update:modelValue", target.value);
+    emit("input", target.value);
 }
 
 function onFocus(event: FocusEvent): void {
@@ -82,7 +84,8 @@ function onBlur(event: FocusEvent): void {
 }
 
 function onChange(event: Event): void {
-    emit("change", event);
+    const target = event.target as HTMLInputElement;
+    emit("change", target.value);
 }
 </script>
 
