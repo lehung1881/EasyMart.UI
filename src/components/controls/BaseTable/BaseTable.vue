@@ -74,8 +74,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import BaseCombobox from "@/components/controls/BaseCombobox.vue";
-import BaseTableHeader from "@/components/controls/BaseTableHeader.vue";
-import BaseTableContent from "@/components/controls/BaseTableContent.vue";
+import BaseTableHeader from "@/components/controls/BaseTable/BaseTableHeader.vue";
+import BaseTableContent from "@/components/controls/BaseTable/BaseTableContent.vue";
 import { useComboboxStore } from "@/composables/controls/useComboboxStore";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import type { TableRow, TableStoreInstance } from "@/composables/controls/useTableStore";

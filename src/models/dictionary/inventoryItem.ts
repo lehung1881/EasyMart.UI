@@ -1,4 +1,4 @@
-﻿import BaseModel, { type BaseFieldConfig } from "@/models/common/baseModel";
+import BaseModel, { type BaseFieldConfig } from "@/models/common/baseModel";
 
 /**
  * Model danh mục hàng hóa
@@ -39,6 +39,9 @@ export class InventoryItemModel extends BaseModel {
 
     /** Trạng thái (1: Đang sử dụng, 2: Ngừng sử dụng) */
     declare Status: number;
+
+    /** Danh sách đơn vị chuyển đổi */
+    declare UnitConversions: any[] | null;
 
     /** Mô tả */
     declare Description: string | null;
@@ -122,6 +125,11 @@ InventoryItemModel.prototype._fields = [
         name: "Description",
         dataType: "string",
         defaultValue: null,
+    },
+    {
+        name: "UnitConversions",
+        dataType: "array",
+        defaultValue: [],
     },
 ] as BaseFieldConfig[];
 

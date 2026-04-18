@@ -11,6 +11,9 @@ export type { FilterOperator as FilterOperatorType } from "@/constants/enumratio
 export { FormatType } from "@/constants/enumration/formatType";
 export type { FormatType as FormatTypeType } from "@/constants/enumration/formatType";
 
+export { ColumnType } from "@/constants/enumration/columnType";
+export type { ColumnType as ColumnTypeType } from "@/constants/enumration/columnType";
+
 export { MenuGroup } from "@/constants/enumration/menuConfig";
 export type { MenuGroup as MenuGroupType, MenuItem } from "@/constants/enumration/menuConfig";
 

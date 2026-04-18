@@ -259,7 +259,12 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
             displayField.value = config.displayField;
             valueField.value = config.valueField;
             columns.value = config.columns ?? [];
-            dropdownWidth.value = config.dropdownWidth ?? null;
+            dropdownWidth.value =
+                config.dropdownWidth ??
+                columns.value.reduce((max, col) => {
+                    const colWidth = typeof col.width === "number" ? col.width : 0;
+                    return Math.max(max, colWidth);
+                }, 0);
         };
 
         /**

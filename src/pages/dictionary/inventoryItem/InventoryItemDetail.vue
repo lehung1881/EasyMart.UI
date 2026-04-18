@@ -77,8 +77,22 @@
                         class="w-1/2 max-md:w-full"
                     />
                 </div>
-
                 <BaseTextArea v-model="model.Description" :label="$t('i18nCommon.Description')" class="w-full" />
+                <div class="flex flex-col gap-2 h-[250px]">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-[13px] font-semibold text-[#1f2937]"> Đơn vị chuyển đổi </span>
+                        <BaseButton size="sm" @click="addUnitConversion">Thêm dòng</BaseButton>
+                    </div>
+                    <BaseTableEditor
+                        ref="unitTableRef"
+                        v-model="model.UnitConversions"
+                        :columns="unitConversionsColumns"
+                        :show-selection="true"
+                        row-key="UnitConversionID"
+                        :defaultDataAddRow="defaultUnitConversion"
+                        :editorProps="editorProps"
+                    />
+                </div>
             </div>
         </template>
 
@@ -93,7 +107,8 @@
     </BasePopup>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent, getCurrentInstance, reactive, ref } from "vue";
 import BasePopup from "@/components/popup/BasePopup.vue";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
 import { useBaseDetail } from "@/composables/base/useBaseDetail";
@@ -101,61 +116,178 @@ import InventoryItemModel from "@/models/dictionary/inventoryItem";
 import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls/useComboboxStore";
 import unitAPI from "@/api/modules/dictionary/unitAPI";
 import stockAPI from "@/api/modules/dictionary/stockAPI";
-import { FormatType } from "@/constants";
+import { FormatType, ColumnType } from "@/constants";
+import commonFunction from "@/commons/commonFunction";
 
-/**
- * Store cho combobox đơn vị tính
- */
-const unitStore = useComboboxStore("unit_combobox", {
-    viewOrTableName: "di_unit",
-    comboboxLoadData: (pay) => loadDataRemoteCombobox(unitAPI, pay),
-    displayField: "UnitName",
-    valueField: "UnitID",
+export default defineComponent({
+    name: "InventoryItemDetail",
+
+    components: {
+        BasePopup,
+    },
+
+    setup() {
+        /**
+         * Sử dụng getCurrentInstance để lấy proxy
+         */
+        const { proxy } = getCurrentInstance() as any;
+
+        const unitTableRef = ref(null);
+
+        const defaultUnitConversion = {
+            UnitConversionID: null,
+            UnitID: null,
+            UnitName: "",
+            ConversionRate: 1,
+            Description: "",
+        };
+
+        /**
+         * Store cho combobox đơn vị tính
+         */
+        const unitStore = useComboboxStore("unit_combobox", {
+            viewOrTableName: "di_unit",
+            comboboxLoadData: (pay) => loadDataRemoteCombobox(unitAPI, pay),
+            displayField: "UnitName",
+            valueField: "UnitID",
+        });
+
+        /**
+         * Thiết lập cấu hình cho các cell edit
+         */
+        const editorProps = reactive({
+            UnitID: {
+                store: useComboboxStore("unit_combobox", {
+                    viewOrTableName: "di_unit",
+                    comboboxLoadData: (pay) => loadDataRemoteCombobox(unitAPI, pay),
+                    displayField: "UnitName",
+                    valueField: "UnitID",
+                }),
+                autoLoad: false,
+            },
+            StockID: {
+                store: useComboboxStore("stock_combobox", {
+                    viewOrTableName: "di_stock",
+                    comboboxLoadData: (pay) => loadDataRemoteCombobox(stockAPI, pay),
+                    displayField: "StockName",
+                    valueField: "StockID",
+                    columns: [
+                        { dataField: "StockCode", title: "Mã kho", width: 120 },
+                        { dataField: "StockName", title: "Tên kho", width: 180 },
+                        { dataField: "Address", title: "Địa chỉ", width: 250 },
+                    ],
+                    dropdownWidth: 600,
+                }),
+                autoLoad: false,
+            },
+        });
+
+        /**
+         * Định nghĩa cấu hình cột cho bảng đơn vị chuyển đổi
+         */
+        const unitConversionsColumns = [
+            {
+                dataField: "UnitID",
+                displayField: "UnitName",
+                title: "Đơn vị chuyển đổi",
+                width: 200,
+                columnType: ColumnType.Combobox,
+                editable: true,
+            },
+            {
+                dataField: "StockID",
+                displayField: "StockName",
+                title: "Kho",
+                width: 200,
+                columnType: ColumnType.Combobox,
+                editable: true,
+            },
+            {
+                dataField: "ConversionRate",
+                title: "Tỷ lệ chuyển đổi",
+                width: 150,
+                required: true,
+                columnType: ColumnType.InputNumber,
+                formatType: FormatType.Quantity,
+                editable: true,
+            },
+            {
+                dataField: "Description",
+                title: "Mô tả",
+                width: 150,
+                columnType: ColumnType.Input,
+                editable: true,
+            },
+        ];
+
+        /**
+         * Store cho combobox kho
+         */
+        const stockStore = useComboboxStore("stock_combobox", {
+            viewOrTableName: "di_stock",
+            comboboxLoadData: (pay) => loadDataRemoteCombobox(stockAPI, pay),
+            displayField: "StockName",
+            valueField: "StockID",
+            columns: [
+                { dataField: "StockCode", title: "Mã kho", width: 120 },
+                { dataField: "StockName", title: "Tên kho", width: 180 },
+                { dataField: "Address", title: "Địa chỉ", width: 250 },
+            ],
+            dropdownWidth: 600,
+        });
+
+        /**
+         * Store cho combobox loại hàng hóa.
+         */
+        const inventoryItemTypeStore = useComboboxStore("inventory_item_type_combobox", {
+            viewOrTableName: "di_inventory_item_type",
+            displayField: "InventoryItemTypeName",
+            valueField: "InventoryItemType",
+            queryMode: "local",
+            data: [
+                { InventoryItemTypeName: "Hàng hóa", InventoryItemType: 0 },
+                { InventoryItemTypeName: "Dịch vụ", InventoryItemType: 1 },
+            ],
+        });
+
+        /**
+         * Xử lý khi chọn một đơn vị tính từ combobox
+         * @param item
+         */
+        const onUnitSelected = (item: any): void => {
+            proxy.model.UnitName = item.UnitName;
+        };
+
+        const addUnitConversion = () => {
+            // Gọi hàm addRow của BaseTableEditor thông qua ref
+            unitTableRef.value.addRow();
+        };
+
+        /**
+         * Kế thừa logic chung cho Detail
+         */
+        const baseDetail = useBaseDetail<InventoryItemModel>({
+            formID: "InventoryItemDetail",
+            api: inventoryItemApi,
+            createDefaultData: () => new InventoryItemModel(),
+        });
+
+        return {
+            ...baseDetail,
+            proxy,
+            FormatType,
+            unitStore,
+            stockStore,
+            inventoryItemTypeStore,
+            unitConversionsColumns,
+            unitTableRef,
+            defaultUnitConversion,
+            editorProps,
+            onUnitSelected,
+            addUnitConversion,
+        };
+    },
 });
-
-/**
- * Store cho combobox kho
- */
-const stockStore = useComboboxStore("stock_combobox", {
-    viewOrTableName: "di_stock",
-    comboboxLoadData: (pay) => loadDataRemoteCombobox(stockAPI, pay),
-    displayField: "StockName",
-    valueField: "StockID",
-    columns: [
-        { dataField: "StockCode", title: "Mã kho", width: 120 },
-        { dataField: "StockName", title: "Tên kho", width: 180 },
-        { dataField: "Address", title: "Địa chỉ", width: 250 },
-    ],
-    dropdownWidth: 600,
-});
-
-/**
- * Store cho combobox loại hàng hóa.
- */
-const inventoryItemTypeStore = useComboboxStore("inventory_item_type_combobox", {
-    viewOrTableName: "di_inventory_item_type",
-    displayField: "InventoryItemTypeName",
-    valueField: "InventoryItemType",
-    queryMode: "local",
-    data: [
-        { InventoryItemTypeName: "Hàng hóa", InventoryItemType: 0 },
-        { InventoryItemTypeName: "Dịch vụ", InventoryItemType: 1 },
-    ],
-});
-
-const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<InventoryItemModel>({
-    formID: "InventoryItemDetail",
-    api: inventoryItemApi,
-    createDefaultData: () => new InventoryItemModel(),
-});
-
-/**
- * Xử lý khi chọn một đơn vị tính từ combobox
- * @param item
- */
-const onUnitSelected = (item: any): void => {
-    model.UnitName = item.UnitName;
-};
 </script>
 
 <style scoped lang="scss">

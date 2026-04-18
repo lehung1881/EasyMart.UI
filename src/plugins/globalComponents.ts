@@ -8,7 +8,8 @@ import BaseCheckbox from "@/components/controls/BaseCheckbox.vue";
 import BaseRadio from "@/components/controls/BaseRadio.vue";
 import BaseRadioGroup from "@/components/controls/BaseRadioGroup.vue";
 import BaseCombobox from "@/components/controls/BaseCombobox.vue";
-import BaseTable from "@/components/controls/BaseTable.vue";
+import BaseTable from "@/components/controls/BaseTable/BaseTable.vue";
+import BaseTableEditor from "@/components/controls/BaseTableEditor/BaseTableEditor.vue";
 
 const globalComponentsPlugin: Plugin = {
     /**
@@ -37,6 +38,7 @@ const globalComponentsPlugin: Plugin = {
         app.component("BaseRadioGroup", BaseRadioGroup);
         app.component("BaseCombobox", BaseCombobox);
         app.component("BaseTable", BaseTable);
+        app.component("BaseTableEditor", BaseTableEditor);
     },
 };
 
