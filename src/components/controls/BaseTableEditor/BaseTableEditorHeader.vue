@@ -1,6 +1,9 @@
 <template>
     <thead class="tb-header">
         <tr>
+            <th v-if="showSerial" class="tb-header__cell tb-header__cell--selection">
+                <div class="header-title">#</div>
+            </th>
             <th v-if="showSelection" class="tb-header__cell tb-header__cell--selection">
                 <div class="header-title">
                     <BaseCheckbox :model-value="allSelected" @update:model-value="onToggleAll" />
@@ -36,11 +39,13 @@ const props = withDefaults(
         showSelection?: boolean;
         showRowAction?: boolean;
         allSelected?: boolean;
+        showSerial?: boolean;
     }>(),
     {
         showSelection: true,
         showRowAction: true,
         allSelected: false,
+        showSerial: false,
     },
 );
 

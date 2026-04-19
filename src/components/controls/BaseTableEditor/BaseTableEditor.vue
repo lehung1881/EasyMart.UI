@@ -7,6 +7,7 @@
                     :show-selection="showSelection"
                     :show-row-action="showRowAction"
                     :all-selected="allCurrentPageSelected"
+                    :show-serial="showSerial"
                     @toggle-all="onToggleAllCurrentPage"
                 >
                     <template v-for="(_, name) in $slots" #[name]="slotData">
@@ -27,6 +28,7 @@
                     :list-row-action="listRowAction"
                     :editor-props="editorProps"
                     :page-size="selectedPageSize"
+                    :show-serial="showSerial"
                     @row-click="onRowClick"
                     @toggle-row="onToggleRow"
                     @row-action-click="onRowAction"
@@ -34,6 +36,7 @@
                     @blur="onEditorBlur"
                     @change="onEditorChange"
                     @input="onEditorInput"
+                    @before-selected="onEditorBeforeSelected"
                     @selected="onEditorSelected"
                     @search="onEditorSearch"
                 >
@@ -113,6 +116,7 @@ const props = withDefaults(
         editorProps: any;
         showPagination?: boolean;
         pageSizeOptions?: number[];
+        showSerial?: boolean;
     }>(),
     {
         rowKey: "id",
@@ -124,6 +128,7 @@ const props = withDefaults(
         editorProps: () => ({}),
         showPagination: true,
         pageSizeOptions: () => [10, 20, 30, 50, 100],
+        showSerial: false,
     },
 );
 
@@ -138,6 +143,7 @@ const emit = defineEmits<{
     (e: "blur", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "change", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "input", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
+    (e: "before-selected", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "selected", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "search", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "page-change", page: number): void;
@@ -161,6 +167,7 @@ const getRowKeyValue = (row: TableRow): string | number => row[props.rowKey] as 
  * @returns Page size mặc định hợp lệ.
  */
 const getDefaultPageSize = (): number => {
+    if (!props.showPagination) return 1000;
     if (props.pageSizeOptions.includes(20)) return 20;
     return props.pageSizeOptions[0] ?? 20;
 };
@@ -347,6 +354,17 @@ const onEditorInput = (row: TableRow, column: ColumnDefinition, ...args: unknown
 };
 
 /**
+ * Emit lại sự kiện before-selected từ editor ô để form cha có thể xử lý.
+ * @param row Dữ liệu dòng của ô editor.
+ * @param column Cấu hình cột của ô editor.
+ * @param args Danh sách tham số gốc từ control.
+ * @returns Không trả về giá trị.
+ */
+const onEditorBeforeSelected = (row: TableRow, column: ColumnDefinition, ...args: unknown[]): void => {
+    emit("before-selected", row, column, ...args);
+};
+
+/**
  * Emit lại sự kiện selected từ editor ô để form cha có thể xử lý.
  * @param row Dữ liệu dòng của ô editor.
  * @param column Cấu hình cột của ô editor.
@@ -453,6 +471,13 @@ const removeRow = (row: TableRow): void => {
 };
 
 /**
+ * Xóa tất cả dòng
+ */
+const removeAllRow = () => {
+    emit("update:modelValue", []);
+};
+
+/**
  * Cập nhật thông tin của một row theo rowKey.
  * @param row Dữ liệu row mới.
  * @returns Không trả về giá trị.
@@ -531,6 +556,7 @@ defineExpose({
     addRow,
     removeRow,
     updateRow,
+    removeAllRow,
     clearSelection: () => {
         localSelectedRows.value = [];
     },

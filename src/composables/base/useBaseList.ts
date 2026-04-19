@@ -554,7 +554,7 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
                 if (!detailID) {
                     throw new Error("Missing record ID for edit form");
                 }
-                const res = await api.getByID<TModel>(detailID);
+                const res = await api.getMasterDetail<TModel>(detailID);
                 if (res.Success && res.Data) {
                     recordData = res.Data;
                 }

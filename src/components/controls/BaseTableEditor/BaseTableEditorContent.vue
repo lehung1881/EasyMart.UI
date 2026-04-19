@@ -42,8 +42,12 @@
             @click="onRowClick(row, index)"
             @focusout="onRowFocusOut($event, row)"
         >
+            <td v-if="showSerial" class="tb-content__cell tb-content__cell--selection" @click.stop>{{ index + 1 }}</td>
             <td v-if="showSelection" class="tb-content__cell tb-content__cell--selection" @click.stop>
-                <BaseCheckbox :model-value="isRowChecked(row)" @update:model-value="(checked) => onRowCheckboxChange(row, checked)" />
+                <BaseCheckbox
+                    :model-value="isRowChecked(row)"
+                    @update:model-value="(checked) => onRowCheckboxChange(row, checked)"
+                />
             </td>
 
             <td
@@ -53,7 +57,7 @@
                 :style="getColumnStyle(column)"
             >
                 <slot :name="`cell-${column.dataField}`" :row="row" :column="column">
-                    <template v-if="isRowEditing(row)">
+                    <template v-if="isRowEditing(row, column)">
                         <component
                             :is="resolveEditorComponent(column)"
                             v-model="row[column.dataField]"
@@ -105,7 +109,15 @@ export interface TableRowAction {
     show: (row: TableRow) => boolean;
 }
 
-type EditorEventName = "update:modelValue" | "focus" | "blur" | "change" | "input" | "selected" | "search";
+type EditorEventName =
+    | "update:modelValue"
+    | "focus"
+    | "blur"
+    | "change"
+    | "input"
+    | "before-selected"
+    | "selected"
+    | "search";
 type EditorPropsMap = Record<string, Record<string, unknown>>;
 
 /**
@@ -142,6 +154,7 @@ const props = withDefaults(
         editingRowKey?: string | number | null;
         draftRow?: TableRow | null;
         editorProps: EditorPropsMap;
+        showSerial?: boolean;
     }>(),
     {
         rowKey: "id",
@@ -152,6 +165,7 @@ const props = withDefaults(
         editingRowKey: null,
         draftRow: null,
         editorProps: () => ({}),
+        showSerial: false,
     },
 );
 
@@ -165,6 +179,7 @@ const emit = defineEmits<{
     (e: "blur", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "change", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "input", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
+    (e: "before-selected", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "selected", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
     (e: "search", row: TableRow, column: ColumnDefinition, ...args: unknown[]): void;
 }>();
@@ -224,11 +239,7 @@ const syncActiveEditingRowKey = (value: string | number | null | undefined): voi
     activeEditingRowKey.value = value ?? null;
 };
 
-watch(
-    () => props.editingRowKey,
-    syncActiveEditingRowKey,
-    { immediate: true },
-);
+watch(() => props.editingRowKey, syncActiveEditingRowKey, { immediate: true });
 
 /**
  * Lấy danh sách action hợp lệ cần hiển thị cho từng dòng.
@@ -304,9 +315,11 @@ const isRowChecked = (row: TableRow): boolean => {
 /**
  * Kiểm tra dòng hiện tại có đang ở chế độ edit hay không.
  * @param row Dữ liệu dòng.
+ * @param column Cấu hình cột hiện tại, dùng để bỏ qua cột chỉ hiển thị.
  * @returns True nếu row đang edit.
  */
-const isRowEditing = (row: TableRow): boolean => {
+const isRowEditing = (row: TableRow, column: ColumnDefinition | null = null): boolean => {
+    if (column && column.columnType == ColumnType.DisplayOnly) return false;
     const key = row[props.rowKey];
     if (typeof key !== "string" && typeof key !== "number") return false;
     return activeEditingRowKey.value === key;
@@ -354,7 +367,7 @@ const getEditorEventNames = (column: ColumnDefinition): EditorEventName[] => {
         case ColumnType.InputNumber:
             return ["update:modelValue", "focus", "blur", "change"];
         case ColumnType.Combobox:
-            return ["update:modelValue", "change", "selected", "search"];
+            return ["update:modelValue", "change", "before-selected", "selected", "search"];
         case ColumnType.DatePicker:
             return ["update:modelValue", "focus", "blur", "change", "input"];
         case ColumnType.Checkbox:
@@ -428,6 +441,9 @@ const resolveEditorEvents = (column: ColumnDefinition, row: TableRow): Record<st
                     break;
                 case "selected":
                     emit("selected", row, column, ...args);
+                    break;
+                case "before-selected":
+                    emit("before-selected", row, column, ...args);
                     break;
                 case "search":
                     emit("search", row, column, ...args);

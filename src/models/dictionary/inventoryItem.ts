@@ -41,7 +41,7 @@ export class InventoryItemModel extends BaseModel {
     declare Status: number;
 
     /** Danh sách đơn vị chuyển đổi */
-    declare UnitConversions: any[] | null;
+    declare InventoryItemUnitConverts: any[] | null;
 
     /** Mô tả */
     declare Description: string | null;
@@ -127,7 +127,7 @@ InventoryItemModel.prototype._fields = [
         defaultValue: null,
     },
     {
-        name: "UnitConversions",
+        name: "InventoryItemUnitConverts",
         dataType: "array",
         defaultValue: [],
     },

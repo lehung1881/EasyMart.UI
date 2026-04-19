@@ -212,6 +212,15 @@ abstract class BaseAPI {
     public getByID<T>(id: string) {
         return this.get<ServiceResponse<T>>(`/get_by_id/${id}`);
     }
+
+    /**
+     * Lấy dữ liệu bản ghi theo ID.
+     * @param id
+     * @returns
+     */
+    public getMasterDetail<T>(id: string) {
+        return this.get<ServiceResponse<T>>(`/master_detail/${id}`);
+    }
 }
 
 export default BaseAPI;

@@ -39,9 +39,9 @@ export interface BaseDetailOptions<TModel extends BaseModel> {
     /** Hàm tạo dữ liệu mặc định ban đầu cho form. */
     createDefaultData: () => TModel;
     /** Callback validate/nghiệp vụ trước khi lưu. */
-    customValidateBeforeSave?: (context: BeforeSaveContext<TModel>) => boolean | Promise<boolean>;
+    customValidateBeforeSave?: () => boolean | Promise<boolean>;
     /** Callback cho phép chỉnh payload trước khi lưu. */
-    transformBeforeSave?: (context: BeforeSaveContext<TModel>) => Partial<TModel> & { ModelState?: number };
+    transformBeforeSave?: () => any;
     /** Callback sau khi lưu thành công. */
     onSaveSuccess?: (context: SaveSuccessContext<TModel>) => void | Promise<void>;
     /** Callback khi lưu thất bại. */
@@ -128,7 +128,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
             const { FormState, RecordData, updateListCallback } = params || {};
             formState.value = FormState ?? FormState.Add;
             Object.assign(model, buildModel(RecordData));
-            proxy._updateListCallback = typeof updateListCallback === "function" ? updateListCallback : null;
+            proxy.updateListCallback = typeof updateListCallback === "function" ? updateListCallback : null;
             options.bindingData?.(formState.value, RecordData);
         } catch (error) {
             console.error("[ERROR] beforeOpen:", error);
@@ -147,13 +147,8 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
      * Tạo payload gửi API lưu dữ liệu từ state hiện tại của form.
      * @returns Payload đầy đủ gồm dữ liệu model và `ModelState`.
      */
-    const getSavePayload = (): TModel & { ModelState: number } => {
-        const beforeSaveContext: BeforeSaveContext<TModel> = {
-            model,
-            formState: formState.value,
-        };
-
-        const transformedPayload = options.transformBeforeSave?.(beforeSaveContext);
+    const getSavePayload = (): any & { ModelState: number } => {
+        const transformedPayload = options.transformBeforeSave?.();
         const modelState = transformedPayload?.ModelState ?? getModelStateForSave();
 
         if (modelState === ModelState.Insert) {
@@ -164,7 +159,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
             ...model,
             ...(transformedPayload ?? {}),
             ModelState: modelState,
-        } as TModel & { ModelState: number };
+        };
     };
 
     /**
@@ -179,13 +174,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
             return false;
         }
 
-        // Thực hiện custom validate nếu có
-        const beforeSaveContext: BeforeSaveContext<TModel> = {
-            model,
-            formState: formState.value,
-        };
-
-        const customValidateResult = await options.customValidateBeforeSave?.(beforeSaveContext);
+        const customValidateResult = await options.customValidateBeforeSave?.();
         if (customValidateResult === false) {
             return false;
         }
@@ -214,8 +203,8 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
             model.commit();
 
             // Nếu có callback cập nhật lại list sau khi save thành công
-            if (proxy._updateListCallback && typeof proxy._updateListCallback === "function") {
-                proxy._updateListCallback(payload);
+            if (proxy.updateListCallback && typeof proxy.updateListCallback === "function") {
+                proxy.updateListCallback(payload);
             }
 
             await options.onSaveSuccess?.({

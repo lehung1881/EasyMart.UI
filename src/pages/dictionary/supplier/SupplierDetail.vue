@@ -66,9 +66,6 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<SupplierModel>
     formID: "SupplierDetail",
     api: supplierAPI,
     createDefaultData: () => new SupplierModel(),
-    transformBeforeSave: ({ model: currentModel }) => ({
-        Status: currentModel.Status ?? 1,
-    }),
 });
 
 const supplierTypeOptions = computed(() => [

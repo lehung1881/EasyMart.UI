@@ -159,6 +159,8 @@ const emit = defineEmits<{
     (e: "change", value: any): void;
     /** Sự kiện khi chọn một item */
     (e: "selected", item: any): void;
+    /** Sự kiện trước khi chọn một item */
+    (e: "before-selected", metaData: any): void;
     /** Mỗi lần trigger search */
     (e: "search", keyword: string): void;
 }>();
@@ -314,13 +316,24 @@ const onSelect = (item: any) => {
     const isObjectMode = typeof props.modelValue === "object" && props.modelValue !== null;
     const value = isObjectMode ? item : item[valueField.value];
 
-    props.store.setSelectedItem(item);
-    emit("update:modelValue", value);
-    emit("change", value);
-    emit("selected", item);
-    const displayText = String(item[displayField.value] ?? "");
-    confirmedDisplayText.value = displayText;
-    inputText.value = displayText;
+    const metaData = {
+        newValue: item,
+        oldValue: props.store.selectedItem,
+        allowSelect: true,
+    };
+
+    emit("before-selected", metaData);
+
+    if (metaData.allowSelect) {
+        props.store.setSelectedItem(item);
+        emit("update:modelValue", value);
+        emit("change", value);
+        emit("selected", item);
+        const displayText = String(item[displayField.value] ?? "");
+        confirmedDisplayText.value = displayText;
+        inputText.value = displayText;
+    }
+
     closeDropdown();
     inputRef.value?.blur();
 };

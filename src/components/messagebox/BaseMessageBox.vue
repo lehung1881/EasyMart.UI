@@ -111,11 +111,11 @@ const handleEsc = (e: KeyboardEvent) => {
     font-size: 18px;
     font-weight: 600;
     color: #111827;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .msgbox-message {
-    font-size: 14px;
+    font-size: 13px;
     color: #6b7280;
     line-height: 1.6;
 }
@@ -123,7 +123,7 @@ const handleEsc = (e: KeyboardEvent) => {
 .msgbox-actions {
     display: flex;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 16px;
 }
 
 /* Transitions */

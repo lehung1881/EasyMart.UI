@@ -15,7 +15,7 @@ export interface FilterCondition {
     property: string;
     value: any;
     operator: FilterOperator;
-    operand: number;
+    operand?: number;
     dataType: DataType;
 }
 

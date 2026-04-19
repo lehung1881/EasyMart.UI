@@ -39,9 +39,6 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<UnitModel>({
     formID: "UnitDetail",
     api: unitAPI,
     createDefaultData: () => new UnitModel(),
-    transformBeforeSave: ({ model: currentModel }) => ({
-        Status: currentModel.Status ?? 1,
-    }),
 });
 </script>
 

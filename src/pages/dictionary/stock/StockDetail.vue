@@ -48,9 +48,6 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<StockModel>({
     formID: "StockDetail",
     api: stockAPI,
     createDefaultData: () => new StockModel(),
-    transformBeforeSave: ({ model: currentModel }) => ({
-        Status: currentModel.Status ?? 1,
-    }),
 });
 </script>
 
@@ -67,4 +64,3 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<StockModel>({
     gap: 8px;
 }
 </style>
-

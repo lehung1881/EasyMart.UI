@@ -1,7 +1,7 @@
 ﻿<template>
     <BasePopup
         :title="$t('i18nInventoryItem.Detail.Title')"
-        width="720px"
+        width="820px"
         :show-icon-close="true"
         @beforeOpen="beforeOpen"
         :params="{}"
@@ -39,6 +39,7 @@
                         clearIcon
                         :initText="model.UnitName"
                         @selected="onUnitSelected"
+                        @change="onUnitChange"
                         class="w-1/2 max-md:w-full"
                     />
                 </div>
@@ -78,20 +79,39 @@
                     />
                 </div>
                 <BaseTextArea v-model="model.Description" :label="$t('i18nCommon.Description')" class="w-full" />
-                <div class="flex flex-col gap-2 h-[250px]">
+                <div class="flex flex-col gap-2 max-h-[220px]">
                     <div class="flex justify-between items-center">
                         <span class="font-medium text-[13px] font-semibold text-[#1f2937]"> Đơn vị chuyển đổi </span>
-                        <BaseButton size="sm" @click="addUnitConversion">Thêm dòng</BaseButton>
                     </div>
                     <BaseTableEditor
-                        ref="unitTableRef"
-                        v-model="model.UnitConversions"
+                        ref="refUnitConvert"
+                        v-model="model.InventoryItemUnitConverts"
                         :columns="unitConversionsColumns"
-                        :show-selection="true"
-                        row-key="UnitConversionID"
+                        :show-selection="false"
+                        row-key="UnitConvertID"
                         :defaultDataAddRow="defaultUnitConversion"
                         :editorProps="editorProps"
+                        showSerial
+                        @selected="onUnitConversionSelected"
+                        @before-selected="onUnitConversionBeforeSelected"
+                        :show-pagination="false"
                     />
+                    <div class="flex gap-2">
+                        <BaseButton
+                            variant="outline-primary"
+                            size="sm"
+                            @click="() => refUnitConvert?.addRow()"
+                            :disabled="model.InventoryItemUnitConverts.length >= 5"
+                            >Thêm dòng</BaseButton
+                        >
+                        <BaseButton
+                            size="sm"
+                            @click="() => refUnitConvert?.removeAllRow()"
+                            :disabled="model.InventoryItemUnitConverts?.length == 0"
+                        >
+                            Xóa hết dòng
+                        </BaseButton>
+                    </div>
                 </div>
             </div>
         </template>
@@ -116,8 +136,9 @@ import InventoryItemModel from "@/models/dictionary/inventoryItem";
 import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls/useComboboxStore";
 import unitAPI from "@/api/modules/dictionary/unitAPI";
 import stockAPI from "@/api/modules/dictionary/stockAPI";
-import { FormatType, ColumnType } from "@/constants";
-import commonFunction from "@/commons/commonFunction";
+import { FormatType, ColumnType, FilterOperator, DataType } from "@/constants";
+import { showError } from "@/commons/messageBox";
+import type { PagingRequest } from "@/models/common/paging";
 
 export default defineComponent({
     name: "InventoryItemDetail",
@@ -132,15 +153,20 @@ export default defineComponent({
          */
         const { proxy } = getCurrentInstance() as any;
 
-        const unitTableRef = ref(null);
+        const refUnitConvert = ref(null);
 
-        const defaultUnitConversion = {
+        /**
+         * Ngầm định thêm dòng
+         */
+        const defaultUnitConversion = reactive({
             UnitConversionID: null,
             UnitID: null,
             UnitName: "",
-            ConversionRate: 1,
+            ExhangeRateOperator: 1,
+            ExhangeRateOperatorText: "Phép nhân",
+            ConvertRate: 1,
             Description: "",
-        };
+        });
 
         /**
          * Store cho combobox đơn vị tính
@@ -153,32 +179,57 @@ export default defineComponent({
         });
 
         /**
+         * Xử lý load dữ liệu combobox
+         * @param payload
+         */
+        const comboboxGridUnitLoadData = async (payload: PagingRequest) => {
+            if (!proxy.model.UnitID) {
+                return [];
+            }
+
+            payload.filter = [
+                {
+                    property: "UnitID",
+                    operator: FilterOperator.NotEqual,
+                    value: proxy.model.UnitID,
+                    dataType: DataType.String,
+                },
+            ];
+
+            return await loadDataRemoteCombobox(unitAPI, payload);
+        };
+
+        /**
          * Thiết lập cấu hình cho các cell edit
          */
         const editorProps = reactive({
             UnitID: {
-                store: useComboboxStore("unit_combobox", {
+                store: useComboboxStore("unit", {
                     viewOrTableName: "di_unit",
-                    comboboxLoadData: (pay) => loadDataRemoteCombobox(unitAPI, pay),
+                    comboboxLoadData: comboboxGridUnitLoadData,
                     displayField: "UnitName",
                     valueField: "UnitID",
                 }),
                 autoLoad: false,
             },
-            StockID: {
-                store: useComboboxStore("stock_combobox", {
-                    viewOrTableName: "di_stock",
-                    comboboxLoadData: (pay) => loadDataRemoteCombobox(stockAPI, pay),
-                    displayField: "StockName",
-                    valueField: "StockID",
-                    columns: [
-                        { dataField: "StockCode", title: "Mã kho", width: 120 },
-                        { dataField: "StockName", title: "Tên kho", width: 180 },
-                        { dataField: "Address", title: "Địa chỉ", width: 250 },
+            ExhangeRateOperator: {
+                store: useComboboxStore("unit_conversion_operator", {
+                    queryMode: "local",
+                    data: [
+                        { Value: 1, Text: "Phép nhân" },
+                        { Value: 2, Text: "Phép chia" },
                     ],
-                    dropdownWidth: 600,
+                    displayField: "Text",
+                    valueField: "Value",
                 }),
-                autoLoad: false,
+                autoLoad: true,
+                searchable: false,
+            },
+            ConvertRate: {
+                min: 0.000001,
+            },
+            Description: {
+                readonly: true,
             },
         });
 
@@ -190,33 +241,34 @@ export default defineComponent({
                 dataField: "UnitID",
                 displayField: "UnitName",
                 title: "Đơn vị chuyển đổi",
-                width: 200,
+                width: 150,
                 columnType: ColumnType.Combobox,
                 editable: true,
             },
             {
-                dataField: "StockID",
-                displayField: "StockName",
-                title: "Kho",
-                width: 200,
+                dataField: "ExhangeRateOperator",
+                displayField: "ExhangeRateOperatorText",
+                title: "Phép tính",
+                width: 150,
+                required: true,
                 columnType: ColumnType.Combobox,
                 editable: true,
             },
             {
-                dataField: "ConversionRate",
+                dataField: "ConvertRate",
                 title: "Tỷ lệ chuyển đổi",
                 width: 150,
                 required: true,
                 columnType: ColumnType.InputNumber,
                 formatType: FormatType.Quantity,
+                align: "right",
                 editable: true,
             },
             {
                 dataField: "Description",
                 title: "Mô tả",
-                width: 150,
-                columnType: ColumnType.Input,
-                editable: true,
+                columnType: ColumnType.DisplayOnly,
+                editable: false,
             },
         ];
 
@@ -256,11 +308,170 @@ export default defineComponent({
          */
         const onUnitSelected = (item: any): void => {
             proxy.model.UnitName = item.UnitName;
+            syncAllUnitConversionDescriptions();
         };
 
-        const addUnitConversion = () => {
-            // Gọi hàm addRow của BaseTableEditor thông qua ref
-            unitTableRef.value.addRow();
+        /**
+         * Lấy text hiển thị của phép tính từ mã ExhangeRateOperator.
+         * @param operator Mã phép tính của dòng quy đổi.
+         * @returns Chuỗi hiển thị tương ứng.
+         */
+        const getOperatorText = (operator: number): string => {
+            switch (operator) {
+                case 2:
+                    return "Phép chia";
+                case 1:
+                default:
+                    return "Phép nhân";
+            }
+        };
+
+        /**
+         * Build text mô tả quy đổi theo format nghiệp vụ.
+         * @param row Dòng quy đổi cần build description.
+         * @returns Chuỗi mô tả quy đổi.
+         */
+        const buildUnitConversionDescription = (row: any): string => {
+            const unitName = row?.UnitName ?? "";
+            const unitMain = proxy.model?.UnitName ?? "";
+            const rate = Number(row?.ConvertRate ?? 0);
+            const normalizedRate = Number.isFinite(rate) && rate > 0 ? rate : 0;
+
+            if (!unitName || !unitMain || normalizedRate <= 0) {
+                return "";
+            }
+
+            if (row?.ExhangeRateOperator === 2) {
+                return `1 ${unitName} = 1/${normalizedRate} ${unitMain}`;
+            }
+            return `1 ${unitName} = ${normalizedRate} ${unitMain}`;
+        };
+
+        /**
+         * Đồng bộ text ExhangeRateOperator và Description cho một dòng quy đổi.
+         * @param row Dòng quy đổi cần đồng bộ.
+         * @returns Không trả về giá trị.
+         */
+        const syncUnitConversionDescription = (row: any): void => {
+            if (!row) {
+                return;
+            }
+
+            const normalizedOperator = Number(row.ExhangeRateOperator ?? 1) === 2 ? 2 : 1;
+            row.ExhangeRateOperator = normalizedOperator;
+            row.ExhangeRateOperatorText = getOperatorText(normalizedOperator);
+            row.Description = buildUnitConversionDescription(row);
+        };
+
+        /**
+         * Đồng bộ Description cho toàn bộ danh sách đơn vị chuyển đổi.
+         * @returns Không trả về giá trị.
+         */
+        const syncAllUnitConversionDescriptions = (): void => {
+            const rows = proxy.model?.InventoryItemUnitConverts ?? [];
+            rows.forEach((row: any) => {
+                syncUnitConversionDescription(row);
+            });
+        };
+
+        /**
+         * Xử lý khi chọn dữ liệu ở cell editor của bảng đơn vị chuyển đổi.
+         * @param row Dòng đang được chỉnh sửa trong bảng.
+         * @param column Cấu hình cột phát sinh sự kiện.
+         * @param selectedItem Item được chọn từ combobox trong cell.
+         * @returns Không trả về giá trị.
+         */
+        const onUnitConversionSelected = (row: any, column: any, selectedItem: any): void => {
+            if (!row || !column) {
+                return;
+            }
+
+            switch (column.dataField) {
+                case "UnitID":
+                    row.UnitName = selectedItem?.UnitName ?? "";
+                    break;
+                case "ExhangeRateOperator":
+                    row.ExhangeRateOperatorText = selectedItem?.Text ?? "";
+                    break;
+                default:
+                    break;
+            }
+
+            syncUnitConversionDescription(row);
+        };
+
+        /**
+         * Xử lý sự kiện Change
+         * @param value
+         */
+        const onUnitChange = (value: any) => {
+            if (!value) proxy.model.UnitName = null;
+            syncAllUnitConversionDescriptions();
+        };
+
+        /**
+         * Validate trước khi chọn đơn vị chuyển đổi
+         * @param row
+         * @param column
+         * @param metaData
+         */
+        const onUnitConversionBeforeSelected = (row: any, column: any, metaData: any): void => {
+            if (!row || !column) {
+                return;
+            }
+
+            const item = metaData.newValue;
+
+            switch (column.dataField) {
+                case "UnitID":
+                    if (item.UnitID === proxy.model.UnitID) {
+                        showError("Đơn vị chính không được trùng với đơn vị chuyển đổi", "Cảnh báo");
+                        metaData.allowSelect = false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        /**
+         * Kiểm tra xem UnitID chính có bị trùng trong danh sách InventoryItemUnitConverts hay không.
+         * @returns {boolean}  true  ➜ hợp lệ
+         *                     false ➜ trùng đơn vị, đã hiển thị cảnh báo
+         */
+        const customValidateBeforeSave = () => {
+            // Không có dữ liệu hoặc không có danh sách chuyển đổi ⇒ hợp lệ
+            if (!proxy.model.InventoryItemUnitConverts?.length) return true;
+
+            const isDuplicated = proxy.model.InventoryItemUnitConverts.some(
+                (item: any) => item.UnitID === proxy.model.UnitID,
+            );
+
+            if (isDuplicated) {
+                showError("Đơn vị chính không được trùng với đơn vị chuyển đổi", "Cảnh báo");
+                return false;
+            }
+
+            return true;
+        };
+
+        /**
+         * Xử lý chuyển đổi dữ liệu khi lưu
+         */
+        const transformBeforeSave = () => {
+            const lstUnitConverts = [];
+            if (proxy.model.UnitID && proxy.model.InventoryItemUnitConverts?.length > 0) {
+                lstUnitConverts.push(
+                    {
+                        UnitID: proxy.model.UnitID,
+                        InventoryItemID: proxy.model.InventoryItemID,
+                    },
+                    ...proxy.model.InventoryItemUnitConverts,
+                );
+            }
+            return {
+                InventoryItemUnitConverts: lstUnitConverts,
+            };
         };
 
         /**
@@ -270,6 +481,8 @@ export default defineComponent({
             formID: "InventoryItemDetail",
             api: inventoryItemApi,
             createDefaultData: () => new InventoryItemModel(),
+            customValidateBeforeSave: customValidateBeforeSave,
+            transformBeforeSave: transformBeforeSave,
         });
 
         return {
@@ -280,11 +493,14 @@ export default defineComponent({
             stockStore,
             inventoryItemTypeStore,
             unitConversionsColumns,
-            unitTableRef,
+            refUnitConvert,
             defaultUnitConversion,
             editorProps,
             onUnitSelected,
-            addUnitConversion,
+            onUnitConversionSelected,
+            onUnitConversionBeforeSelected,
+            onUnitChange,
+            customValidateBeforeSave,
         };
     },
 });

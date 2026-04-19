@@ -64,9 +64,6 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<CustomerModel>
     formID: "CustomerDetail",
     api: customerAPI,
     createDefaultData: () => new CustomerModel(),
-    transformBeforeSave: ({ model: currentModel }) => ({
-        Status: currentModel.Status ?? 1,
-    }),
 });
 
 const customerTypeOptions = computed(() => [
