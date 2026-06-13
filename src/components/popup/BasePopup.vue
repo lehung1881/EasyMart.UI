@@ -12,7 +12,7 @@
         overlay-transition="vfm-fade"
         @beforeOpen="beforeOpen"
     >
-        <div class="popup-content relative" :class="{ 'is-right': isRight }">
+        <div class="popup-content relative" :class="{ 'is-right': isRight }" :style="contentStyles">
             <div
                 v-if="showIconClose"
                 type="button"
@@ -89,6 +89,7 @@ const contentStyles = computed(() => {
     if (props.fullSize) {
         style.width = "100vw";
         style.height = "100vh";
+        style.borderRadius = "0";
         return style;
     }
 
@@ -114,12 +115,13 @@ const beforeOpen = (e: any): void => {
 
 <style scoped lang="scss">
 .popup-content {
-    height: 100%;
-    width: 100%;
     background: white;
     display: flex;
     flex-direction: column;
     border-radius: 8px;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
     &.is-right {
         border-top-left-radius: 8px;
         border-bottom-left-radius: 8px;
@@ -128,13 +130,14 @@ const beforeOpen = (e: any): void => {
     }
 }
 
-.modal-header,
-.modal-body {
+.modal-header {
     padding: 0 16px;
 }
 
 .modal-body {
     flex: 1;
+    min-height: 0;
+    overflow: auto;
 }
 .modal-footer {
     padding: 16px;

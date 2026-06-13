@@ -68,7 +68,7 @@ export const inventoryItemColumns: ColumnDefinition[] = [
         dataField: "Status",
         title: t("i18nCommon.Status"),
         width: 150,
-        align: "center",
+        align: "left",
         visible: true,
     },
 ];

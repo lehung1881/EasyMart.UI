@@ -5,6 +5,7 @@ import i18nStock from "./modules/en/i18nStock";
 import i18nUnit from "./modules/en/i18nUnit";
 import i18nSupplier from "./modules/en/i18nSupplier";
 import i18nCustomer from "./modules/en/i18nCustomer";
+import i18nSAOrder from "./modules/en/i18nSAOrder";
 
 export default {
     i18nCommon,
@@ -14,4 +15,5 @@ export default {
     i18nUnit,
     i18nSupplier,
     i18nCustomer,
+    i18nSAOrder,
 };

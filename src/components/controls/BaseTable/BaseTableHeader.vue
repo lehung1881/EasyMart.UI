@@ -3,7 +3,7 @@
         <tr>
             <th v-if="showSelection" class="tb-header__cell tb-header__cell--selection">
                 <div class="header-title">
-                    <BaseCheckbox :model-value="allSelected" @update:model-value="onToggleAll" />
+                    <BaseCheckbox :model-value="allSelected" @update:model-value="onToggleAll" size="sm" />
                 </div>
             </th>
             <th
@@ -112,7 +112,7 @@ const onToggleAll = (checked: boolean): void => {
     text-overflow: ellipsis;
     height: 32px;
     position: sticky;
-    background: #f8f8f8;
+    background: #fafafa;
     .header-title {
         max-width: 100%;
         padding: 0 12px;

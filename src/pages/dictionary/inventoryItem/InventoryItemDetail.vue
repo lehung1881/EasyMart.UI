@@ -444,7 +444,7 @@ export default defineComponent({
             if (!proxy.model.InventoryItemUnitConverts?.length) return true;
 
             const isDuplicated = proxy.model.InventoryItemUnitConverts.some(
-                (item: any) => item.UnitID === proxy.model.UnitID,
+                (item: any) => proxy.model.UnitID && item.UnitID === proxy.model.UnitID,
             );
 
             if (isDuplicated) {
@@ -459,18 +459,8 @@ export default defineComponent({
          * Xử lý chuyển đổi dữ liệu khi lưu
          */
         const transformBeforeSave = () => {
-            const lstUnitConverts = [];
-            if (proxy.model.UnitID && proxy.model.InventoryItemUnitConverts?.length > 0) {
-                lstUnitConverts.push(
-                    {
-                        UnitID: proxy.model.UnitID,
-                        InventoryItemID: proxy.model.InventoryItemID,
-                    },
-                    ...proxy.model.InventoryItemUnitConverts,
-                );
-            }
             return {
-                InventoryItemUnitConverts: lstUnitConverts,
+                InventoryItemUnitConverts: proxy.model.InventoryItemUnitConverts.filter((item) => item.UnitID),
             };
         };
 

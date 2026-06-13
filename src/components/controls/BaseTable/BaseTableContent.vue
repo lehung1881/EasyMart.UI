@@ -44,6 +44,7 @@
                 <BaseCheckbox
                     :model-value="isRowChecked(row)"
                     @update:model-value="(checked) => onRowCheckboxChange(row, checked)"
+                    size="sm"
                 />
             </td>
 

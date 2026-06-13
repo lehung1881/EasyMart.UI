@@ -78,6 +78,19 @@ export const formConfig: FormConfig[] = [
         RefType: 190,
         ModelKeyID: "CustomerID",
     },
+    {
+        FormID: "SAOrderList",
+        DetailFormID: "SAOrderDetail",
+        Name: "Đơn hàng",
+        RefType: 200,
+        ModelKeyID: "SAOrderID",
+    },
+    {
+        FormID: "SAOrderDetail",
+        Name: "Chi tiết đơn hàng",
+        RefType: 210,
+        ModelKeyID: "SAOrderID",
+    },
 ];
 
 /**

@@ -13,14 +13,16 @@
         <template v-else-if="columns && columns.length > 0">
             <table class="cb-dropdown__table" role="listbox">
                 <thead class="cb-dropdown__thead">
-                    <tr>
+                    <tr class="cb-dropdown__tr">
                         <th
                             v-for="col in columns"
                             :key="col.dataField"
                             :style="columnStyle(col)"
                             class="cb-dropdown__th"
                         >
-                            {{ col.title }}
+                            <div class="header-title">
+                                {{ col.title }}
+                            </div>
                         </th>
                         <th :style="'width: 30px;'" class="cb-dropdown__th"></th>
                     </tr>
@@ -367,7 +369,7 @@ $item-height: 36px;
 }
 
 .cb-dropdown__th {
-    padding: 6px 12px;
+    padding: 6px 0;
     text-align: left;
     font-weight: 600;
     color: inherit;
@@ -375,6 +377,13 @@ $item-height: 36px;
     overflow: hidden;
     text-overflow: ellipsis;
     border-bottom: $input-border;
+    .header-title {
+        max-width: 100%;
+        padding: 0 12px;
+        border-right: 1px solid #d1d5db;
+        height: 20px;
+    }
+    height: 36px;
 }
 
 .cb-dropdown__tbody {

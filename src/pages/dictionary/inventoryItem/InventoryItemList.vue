@@ -16,7 +16,7 @@
                 <div class="flex gap-2">
                     <BaseInput size="sm" :placeholder="$t('i18nCommon.SearchPlaceholder')" @input="onSearch" />
                     <BaseButton size="sm" @click="refresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
-                    <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
+                    <BaseButton size="sm" icon-left="icon-filter" @click="openFilterPopup"></BaseButton>
                     <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
                 </div>
             </div>
@@ -40,13 +40,14 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, ref } from "vue";
+import { getCurrentInstance } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
+import { usePopup } from "@/composables/popup/usePopup";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
 import InventoryItemModel from "@/models/dictionary/inventoryItem";
 
-const { proxy } = getCurrentInstance() as any;
+const { proxy } = getCurrentInstance();
 
 /**
  * Validate nghiệp vụ trước khi xóa hàng hóa.
@@ -73,12 +74,32 @@ const tableStore = useTableStore("inventory_item", {
  * - loadListData: Hàm tải dữ liệu từ API dựa trên payload của tableStore.
  * - search: Hàm thực hiện tìm kiếm với từ khóa hiện tại.
  */
-const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<InventoryItemModel>({
+const { loadListData, onSearch, refresh, onListItemAction, createItem } = useBaseList<InventoryItemModel>({
     formID: "InventoryItemList",
     tableStore,
     api: inventoryItemApi,
     validateBeforeDelete,
 });
+
+const { show } = usePopup();
+
+/**
+ * Mở popup bộ lọc cho danh sách hàng hóa.
+ * @returns Không trả về giá trị.
+ */
+const openFilterPopup = (): void => {
+    show("FilterPopup", {
+        columns: tableStore.columns,
+        onApply: (payload: {
+            rows: Array<{ field: string | number | null; operator: string | number | null; value: unknown }>;
+        }) => {
+            console.log("filter payload", payload);
+        },
+        onReset: () => {
+            onSearch("");
+        },
+    });
+};
 </script>
 
 <style lang="scss" scoped>

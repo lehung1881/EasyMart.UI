@@ -1,5 +1,6 @@
-﻿import type { RouteRecordRaw } from "vue-router";
+import type { RouteRecordRaw } from "vue-router";
 import dictionaryRoutes from "./dictionaryRouter";
+import salesRoutes from "./salesRouter";
 import reportRoutes from "./reportRouter";
 
 const appRoutes: RouteRecordRaw[] = [
@@ -17,6 +18,7 @@ const appRoutes: RouteRecordRaw[] = [
                 component: () => import("@/pages/dashboard/Dashboard.vue"),
             },
             ...dictionaryRoutes,
+            ...salesRoutes,
             ...reportRoutes,
         ],
     },
