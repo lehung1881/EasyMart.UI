@@ -5,7 +5,7 @@
     type CacheConfigItem,
     cacheConfigList,
     cacheConfigMap,
-} from "@/constants/cacheConfig";
+} from "@/constants/staticConfig/cacheConfig";
 
 type CacheValueWrapper<T> = {
     Data: T;

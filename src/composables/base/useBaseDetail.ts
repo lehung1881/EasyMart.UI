@@ -4,7 +4,7 @@ import BaseModel from "@/models/common/baseModel";
 import { ModelState, FormState } from "@/constants/enumration/modelState";
 import { attachDetailDebug, detachDetailDebug } from "@/composables/base/useDebug";
 import { showError } from "@/commons/messageBox";
-import { formConfigMap, type FormConfig } from "@/constants/formConfig";
+import { formConfigMap, type FormConfig } from "@/constants/staticConfig/FormConfig";
 
 /**
  * Payload callback trước khi lưu dữ liệu detail.

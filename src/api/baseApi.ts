@@ -5,7 +5,7 @@ import type { PagingRequest, PagingResponse } from "@/models/common/paging";
 import { API_CONFIG } from "@/api/configApi";
 import type { ApiService } from "@/api/configApi";
 import cacheService from "@/commons/cacheService";
-import { CacheCode } from "@/constants/cacheConfig";
+import { CacheCode } from "@/constants/staticConfig/cacheConfig";
 
 abstract class BaseAPI {
     protected abstract readonly serviceName: ApiService;

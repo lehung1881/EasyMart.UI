@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import authAPI from "@/api/modules/authAPI";
 import cacheService from "@/commons/cacheService";
-import { CacheAction, CacheCode } from "@/constants/cacheConfig";
+import { CacheAction, CacheCode } from "@/constants/staticConfig/cacheConfig";
 import { StoreNameConstant } from "@/constants";
 import type { LoginRequest, LoginResponse, RegisterRequest, UserInfo } from "@/models/auth/auth";
 

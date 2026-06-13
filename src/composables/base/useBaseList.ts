@@ -11,7 +11,7 @@ import { showConfirm } from "@/commons/messageBox";
 import { loadDataRemoteTable } from "@/composables/controls/useTableStore";
 import type { PagingRequest } from "@/models/common/paging";
 import { debounce } from "lodash";
-import { formConfigMap, type FormConfig } from "@/constants/formConfig";
+import { formConfigMap, type FormConfig } from "@/constants/staticConfig/FormConfig";
 import { FormState, ModelState } from "@/constants/enumration/modelState";
 import { attachListDebug, detachListDebug } from "@/composables/base/useDebug";
 import { usePopup } from "@/composables/popup/usePopup";
