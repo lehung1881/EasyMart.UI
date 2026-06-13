@@ -431,7 +431,7 @@ const onGoLast = (): void => {
 const addRow = (): void => {
     if (props.defaultDataAddRow) {
         const record = reactive({ ...props.defaultDataAddRow });
-        record[props.rowKey] = commonFunction.generateGUID();
+        record[props.rowKey] = commonFunction.generateGUIDV7();
         const metaData = {
             row: record,
             allowInsert: true,

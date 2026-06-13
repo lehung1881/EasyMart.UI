@@ -296,7 +296,7 @@ export class BaseModel {
      * Nếu khóa chính đang rỗng thì tự sinh GUID và gán vào model.
      * @returns Giá trị khóa chính sau khi xử lý, hoặc `null` nếu model không cấu hình khóa chính.
      */
-    public ensurePrimaryKeyValue(): string | null {
+    public setAutoPrimaryKey(): string | null {
         const primaryKeyField = this.getPrimaryKeyField();
         if (!primaryKeyField) {
             return null;
@@ -307,7 +307,7 @@ export class BaseModel {
             return String(currentPrimaryKeyValue);
         }
 
-        const generatedPrimaryKey = commonFunction.generateGUID();
+        const generatedPrimaryKey = commonFunction.generateGUIDV7();
         this.setValue(primaryKeyField.name, generatedPrimaryKey);
         return generatedPrimaryKey;
     }

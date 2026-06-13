@@ -178,7 +178,7 @@ export default defineComponent({
                     detail.ListPermission = existPermission.ListPermission;
                     detail.ListPermissionObject = existPermission.ListPermissionObject;
                 } else {
-                    detail.ensurePrimaryKeyValue();
+                    detail.setAutoPrimaryKey();
                     detail.ListPermission = JSON.stringify(defaultPermission.ListPermission);
                     detail.ListPermissionObject = defaultPermission.ListPermission;
                 }
@@ -193,10 +193,11 @@ export default defineComponent({
          */
         const buildNewRole = (): SysMscRole => {
             const role = new SysMscRole();
-            role.ensurePrimaryKeyValue();
+            role.setAutoPrimaryKey();
 
             role.SysMscRolePermissionMapping = Object.values(defaultSubSystem).map((defaultPermission) => {
                 const detail = new SysMscRolePermissionMapping();
+                detail.setAutoPrimaryKey();
                 detail.RoleID = role.RoleID;
                 detail.SubSystemCode = defaultPermission.SubSystemCode;
                 detail.ListPermission = JSON.stringify(defaultPermission.ListPermission);

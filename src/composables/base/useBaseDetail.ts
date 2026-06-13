@@ -152,7 +152,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
         const modelState = transformedPayload?.ModelState ?? getModelStateForSave();
 
         if (modelState === ModelState.Insert) {
-            model.ensurePrimaryKeyValue();
+            model.setAutoPrimaryKey();
         }
 
         return {

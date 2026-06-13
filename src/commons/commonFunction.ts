@@ -1,7 +1,5 @@
-// import { constant } from "@/commons/constant";
-// import i18n from "@/i18n/i18n";
-
 type DataType = "string" | "boolean" | "number";
+import { uuidv7 } from "uuidv7";
 
 class CommonFunction {
     formatNumber(number: number, decimalPlaces: number = 0): string | null {
@@ -16,12 +14,24 @@ class CommonFunction {
         return formattedInteger + formattedDecimal;
     }
 
-    generateGUID(): string {
+    /**
+     * Tạo Guid v4
+     * @returns
+     */
+    generateGUIDV4(): string {
         return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
             const r = (Math.random() * 16) | 0;
             const v = c === "x" ? r : (r & 0x3) | 0x8;
             return v.toString(16);
         });
+    }
+
+    /**
+     * Tạo Guid v7
+     * @returns
+     */
+    generateGUIDV7(): string {
+        return uuidv7();
     }
 
     /**
