@@ -18,7 +18,7 @@ src/
 │       │   ├── customerApi.ts
 │       │   └── supplierApi.ts
 │       ├── inventoryBalanceApi.ts
-│       ├── salesApi.ts
+│       ├── SAOrderAPI.ts
 │       ├── invoiceApi.ts
 │       ├── purchaseApi.ts
 │       └── reportApi.ts

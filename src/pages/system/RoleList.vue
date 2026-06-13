@@ -63,6 +63,7 @@ import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue"
 
 import { defaultSubSystem, MscSubSystem } from "@/pages/system/MscSubSystem";
 import RoleDetail from "./RoleDetail.vue";
+import SysMscRole from "@/models/system/SysMscRole.ts";
 
 interface RoleData {
     RoleID: string;

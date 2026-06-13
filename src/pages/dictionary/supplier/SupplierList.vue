@@ -46,31 +46,59 @@
     </div>
 </template>
 
-<script setup lang="ts">
-import { getCurrentInstance, ref } from "vue";
+<script lang="ts">
+import { defineComponent, getCurrentInstance } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import supplierAPI from "@/api/modules/dictionary/supplierAPI";
 import SupplierModel from "@/models/dictionary/supplier";
 
-const { proxy } = getCurrentInstance() as any;
+export default defineComponent({
+    name: "SupplierList",
 
-const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
-    if (payload.ids.length === 0) return false;
-    return true;
-};
+    setup() {
+        const { proxy } = getCurrentInstance() as any;
 
-const tableStore = useTableStore("supplier", {
-    keyID: "SupplierID",
-    viewOrTableName: "di_supplier",
-    tableLoadData: (payload) => loadListData(payload),
-});
+        /**
+         * Kiểm tra điều kiện hợp lệ trước khi thực hiện xóa
+         */
+        const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
+            if (payload.ids.length === 0) return false;
+            return true;
+        };
 
-const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<SupplierModel>({
-    formID: "SupplierList",
-    tableStore,
-    api: supplierAPI,
-    validateBeforeDelete,
+        /**
+         * Store quản lý trạng thái và dữ liệu của bảng nhà cung cấp.
+         * Cấu hình chế độ truy vấn dữ liệu từ server và hàm tải dữ liệu.
+         */
+        const tableStore = useTableStore("supplier", {
+            keyID: "SupplierID",
+            viewOrTableName: "di_supplier",
+            tableLoadData: (payload) => loadListData(payload),
+        });
+
+        /**
+         * Sử dụng composable useBaseList để xử lý logic chung cho các trang danh sách, bao gồm:
+         * - Tải dữ liệu với phân trang, sắp xếp, lọc.
+         * - Xử lý tìm kiếm, làm mới, xóa hàng loạt.
+         */
+        const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } =
+            useBaseList<SupplierModel>({
+                formID: "SupplierList",
+                tableStore,
+                api: supplierAPI,
+                validateBeforeDelete,
+            });
+
+        return {
+            tableStore,
+            onSearch,
+            refresh,
+            deleteItem,
+            onListItemAction,
+            createItem,
+        };
+    },
 });
 </script>
 

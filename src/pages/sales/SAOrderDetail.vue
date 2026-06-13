@@ -160,7 +160,7 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance, reactive, ref } from "vue";
 import BasePopup from "@/components/popup/BasePopup.vue";
-import salesAPI from "@/api/modules/salesApi";
+import SAOrderAPI from "@/api/modules/business/SAOrderAPI";
 import inventoryItemAPI from "@/api/modules/dictionary/inventoryItemAPI";
 import { useBaseDetail } from "@/composables/base/useBaseDetail";
 import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls/useComboboxStore";
@@ -417,7 +417,7 @@ const titleForm = computed(() => `${proxy.$t("i18nSAOrder.Detail.Title")} ${mode
  */
 const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<SAOrder>({
     formID: "SAOrderDetail",
-    api: salesAPI,
+    api: SAOrderAPI,
     createDefaultData: () => new SAOrder(),
     customValidateBeforeSave,
     transformBeforeSave,

@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
-import salesAPI from "@/api/modules/salesApi";
+import SAOrderAPI from "@/api/modules/business/SAOrderAPI";
 import SAOrder from "@/models/sales/SAOrder";
 
 /**
@@ -75,7 +75,7 @@ const tableStore = useTableStore("sales_order", {
 const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<SAOrder>({
     formID: "SAOrderList",
     tableStore,
-    api: salesAPI,
+    api: SAOrderAPI,
     validateBeforeDelete,
 });
 </script>

@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
     readonly VITE_AUTH_SERVICE: string;
-    readonly VITE_DI_SERVICE: string;
+    readonly VITE_BUSINESS_SERVICE: string;
 }
 
 interface ImportMeta {

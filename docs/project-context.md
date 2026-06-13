@@ -72,7 +72,7 @@ Mapping module nghiệp vụ với cấu trúc mã nguồn:
     - Page: `src/pages/purchase/`
     - Router: `src/routers/modules/purchaseRouter.ts`
 - `sales`
-    - API: `src/api/modules/salesApi.ts`
+    - API: `src/api/modules/SAOrderAPI.ts`
     - Model: `src/models/sales/`
     - Store: `src/stores/sales/`
     - Page: `src/pages/sales/`
