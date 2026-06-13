@@ -105,7 +105,7 @@
 import { computed, defineComponent, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { debounce } from "lodash";
-import { defaultSubSystem } from "@/pages/system/MscSubSystem";
+import { defaultSubSystem } from "@/constants/staticConfig/MscSubSystem";
 import { useTableStore, loadDataRemoteTable } from "@/composables/controls/useTableStore";
 import RoleAPI from "@/api/modules/system/RoleAPI.ts";
 import SysMscRole from "@/models/system/SysMscRole.ts";
