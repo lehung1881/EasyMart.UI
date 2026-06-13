@@ -6,6 +6,7 @@ import i18nUnit from "./modules/vi/i18nUnit";
 import i18nSupplier from "./modules/vi/i18nSupplier";
 import i18nCustomer from "./modules/vi/i18nCustomer";
 import i18nSAOrder from "./modules/vi/i18nSAOrder";
+import i18nSystem from "./modules/vi/i18nSystem";
 
 export default {
     i18nCommon,
@@ -16,4 +17,5 @@ export default {
     i18nSupplier,
     i18nCustomer,
     i18nSAOrder,
+    i18nSystem,
 };

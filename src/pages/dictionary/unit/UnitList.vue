@@ -30,9 +30,7 @@
                     @row-action-click="onListItemAction"
                 >
                     <template #cell-Status="{ row }">
-                        <span :class="`status-${row.Status === 1 ? 'active' : 'inactive'}`">
-                            {{ row.Status === 1 ? $t("i18nCommon.ActiveBusiness") : $t("i18nCommon.InactiveBusiness") }}
-                        </span>
+                        <StatusTag :status="row.Status" status-default="Inactive" />
                     </template>
                 </BaseTable>
             </div>

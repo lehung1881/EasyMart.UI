@@ -10,6 +10,7 @@ import BaseRadioGroup from "@/components/controls/BaseRadioGroup.vue";
 import BaseCombobox from "@/components/controls/BaseCombobox.vue";
 import BaseTable from "@/components/controls/BaseTable/BaseTable.vue";
 import BaseTableEditor from "@/components/controls/BaseTableEditor/BaseTableEditor.vue";
+import StatusTag from "@/components/common/StatusTag.vue";
 
 const globalComponentsPlugin: Plugin = {
     /**
@@ -39,6 +40,7 @@ const globalComponentsPlugin: Plugin = {
         app.component("BaseCombobox", BaseCombobox);
         app.component("BaseTable", BaseTable);
         app.component("BaseTableEditor", BaseTableEditor);
+        app.component("StatusTag", StatusTag);
     },
 };
 

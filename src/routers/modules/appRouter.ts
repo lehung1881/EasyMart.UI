@@ -17,6 +17,11 @@ const appRoutes: RouteRecordRaw[] = [
                 name: "dashboard",
                 component: () => import("@/pages/dashboard/Dashboard.vue"),
             },
+            {
+                path: "role",
+                name: "role",
+                component: () => import("@/pages/system/RoleList.vue"),
+            },
             ...dictionaryRoutes,
             ...salesRoutes,
             ...reportRoutes,

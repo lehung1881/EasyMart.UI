@@ -36,5 +36,5 @@ export const customerColumns: ColumnDefinition[] = [
         align: "left",
         visible: true,
     },
-    { dataField: "Status", title: t("i18nCommon.Status"), width: 150, align: "center", visible: true },
+    { dataField: "Status", title: t("i18nCommon.Status"), width: 200, align: "center", visible: true },
 ];
