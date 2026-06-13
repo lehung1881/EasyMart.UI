@@ -1,6 +1,6 @@
 ﻿import commonFunction from "@/commons/commonFunction";
 
-export type BaseFieldDataType = "string" | "number" | "boolean" | "object" | "array" | "date" | "any";
+export type BaseFieldDataType = "string" | "number" | "boolean" | "bool" | "object" | "array" | "date" | "any";
 
 export type BaseValidateRuleName = "NotNull" | "MaxLength";
 
@@ -237,6 +237,7 @@ export class BaseModel {
                 const numericValue = Number(value);
                 return Number.isNaN(numericValue) ? 0 : numericValue;
             }
+            case "bool":
             case "boolean":
                 return Boolean(value);
             case "array":
@@ -512,7 +513,7 @@ export class BaseModel {
             }
         });
 
-        return changedFields;
+        return Object.keys(changedFields).length === 0 ? null : changedFields;
     }
 
     /**

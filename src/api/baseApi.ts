@@ -219,7 +219,7 @@ abstract class BaseAPI {
      * @returns
      */
     public getMasterDetail<T>(id: string) {
-        return this.get<ServiceResponse<T>>(`/master_detail/${id}`);
+        return this.get<T>(`/master_detail/${id}`);
     }
 }
 

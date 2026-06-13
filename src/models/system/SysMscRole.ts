@@ -20,7 +20,7 @@ export class SysMscRole extends BaseModel {
     declare Description: string | null;
 
     /** Loại vai trò. 1: Vai trò hệ thống, 0: Vai trò tự tạo. */
-    declare IsSystem: number;
+    declare IsSystem: boolean;
 
     /** Người tạo. */
     declare CreatedBy: string | null;
@@ -47,7 +47,7 @@ SysMscRole.prototype._fields = [
     { name: "RoleCode", dataType: "string", defaultValue: null },
     { name: "RoleName", dataType: "string", defaultValue: null },
     { name: "Description", dataType: "string", defaultValue: null },
-    { name: "IsSystem", dataType: "number", defaultValue: 0, validateRules: [{ type: "NotNull" }] },
+    { name: "IsSystem", dataType: "bool", defaultValue: 0, validateRules: [{ type: "NotNull" }] },
     { name: "CreatedBy", dataType: "string", defaultValue: null },
     { name: "CreatedDate", dataType: "string", defaultValue: null },
     { name: "ModifiedBy", dataType: "string", defaultValue: null },
