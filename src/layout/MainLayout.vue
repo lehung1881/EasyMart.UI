@@ -28,8 +28,9 @@ import Content from "@/layout/Content.vue";
         height: calc(100% - $header-height);
         max-height: calc(100% - $header-height);
         display: flex;
-        background-color: rgba($primary-color, 0.05);
+        background-color: rgba($primary-color, 0.1);
         padding: 12px 12px 0;
+        gap: 12px;
     }
 }
 </style>

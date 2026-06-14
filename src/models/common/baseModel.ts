@@ -1,4 +1,5 @@
 ﻿import commonFunction from "@/commons/commonFunction";
+import { ModelState } from "@/constants/enumration/modelState";
 
 export type BaseFieldDataType = "string" | "number" | "boolean" | "bool" | "object" | "array" | "date" | "any";
 
@@ -118,6 +119,11 @@ export class BaseModel {
     protected _$data: Record<string, unknown> = {};
 
     private _original: Record<string, unknown> = {};
+
+    /**
+     * Trạng thái của model (Add, Edit, Delete, None).
+     */
+    public ModelState: ModelState = ModelState.None;
 
     /**
      * Khởi tạo model từ dữ liệu đầu vào.
@@ -335,13 +341,13 @@ export class BaseModel {
 
         switch (ruleObject.type) {
             case "NotNull":
-                return `${fieldDisplayName} không được để trống!`;
+                return `${fieldDisplayName} không được để trống.`;
             case "MaxLength": {
                 const maxLength = Number(ruleObject.length ?? 0);
-                return `${fieldDisplayName} không được vượt quá ${maxLength} ký tự!`;
+                return `${fieldDisplayName} không được vượt quá ${maxLength} ký tự.`;
             }
             default:
-                return `${fieldDisplayName} không hợp lệ!`;
+                return `${fieldDisplayName} không hợp lệ.`;
         }
     }
 
@@ -495,7 +501,7 @@ export class BaseModel {
      * Lấy danh sách field thay đổi so với snapshot gốc.
      * @returns Object các field thay đổi theo dạng `{ fieldName: { oldValue, newValue } }`.
      */
-    public getChange(): BaseChangeResult {
+    public getChange(): BaseChangeResult | null {
         const currentData = this.getComparableData();
         const originalData = this._original;
         const changedFields: BaseChangeResult = {};

@@ -10,7 +10,6 @@
 @use "@/assets/styles/variable" as *;
 .app-content {
     height: 100%;
-    padding: 0 12px;
     flex: 1;
     overflow: hidden;
 }

@@ -17,7 +17,7 @@
 import { computed, useSlots, type VNode } from "vue";
 
 type ButtonSize = "sm" | "md" | "lg" | "xl" | "xxl";
-type ButtonVariant = "normal" | "primary" | "outline-primary";
+type ButtonVariant = "normal" | "primary" | "outline-primary" | "dash-primary" | "dash-normal";
 
 interface Props {
     size?: ButtonSize;
@@ -224,6 +224,26 @@ $icon-only-width-offset: 2px;
 
     &:hover:not(:disabled) {
         background-color: rgba($primary-color, 0.08);
+    }
+}
+
+.variant-dash-primary {
+    background-color: #ffffff;
+    border: 1px dashed $primary-color;
+    color: $primary-color;
+
+    &:hover:not(:disabled) {
+        background-color: rgba($primary-color, 0.08);
+    }
+}
+
+.variant-dash-normal {
+    background-color: #ffffff;
+    border: 1px dashed #e0e0e0;
+    color: $color-text-black;
+
+    &:hover:not(:disabled) {
+        background-color: #f9fafb;
     }
 }
 </style>

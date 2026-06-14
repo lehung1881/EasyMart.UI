@@ -20,7 +20,7 @@ const appRoutes: RouteRecordRaw[] = [
             {
                 path: "role",
                 name: "role",
-                component: () => import("@/pages/system/RoleList.vue"),
+                component: () => import("@/pages/system/RoleListDetail.vue"),
             },
             ...dictionaryRoutes,
             ...salesRoutes,

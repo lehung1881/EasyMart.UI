@@ -1,4 +1,5 @@
 export const ModelState = {
+    None: 99,
     Insert: 0,
     Update: 1,
     Delete: 2,

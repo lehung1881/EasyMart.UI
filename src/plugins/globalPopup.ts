@@ -11,12 +11,34 @@ const globalPopup: Plugin = {
             "InventoryItemDetail",
             defineAsyncComponent(() => import("@/pages/dictionary/inventoryItem/InventoryItemDetail.vue")),
         );
-        app.component("StockDetail", defineAsyncComponent(() => import("@/pages/dictionary/stock/StockDetail.vue")));
-        app.component("UnitDetail", defineAsyncComponent(() => import("@/pages/dictionary/unit/UnitDetail.vue")));
-        app.component("SupplierDetail", defineAsyncComponent(() => import("@/pages/dictionary/supplier/SupplierDetail.vue")));
-        app.component("CustomerDetail", defineAsyncComponent(() => import("@/pages/dictionary/customer/CustomerDetail.vue")));
-        app.component("SAOrderDetail", defineAsyncComponent(() => import("@/pages/sales/SAOrderDetail.vue")));
-        app.component("FilterPopup", defineAsyncComponent(() => import("@/pages/common/FilterPopup.vue")));
+        app.component(
+            "StockDetail",
+            defineAsyncComponent(() => import("@/pages/dictionary/stock/StockDetail.vue")),
+        );
+        app.component(
+            "UnitDetail",
+            defineAsyncComponent(() => import("@/pages/dictionary/unit/UnitDetail.vue")),
+        );
+        app.component(
+            "SupplierDetail",
+            defineAsyncComponent(() => import("@/pages/dictionary/supplier/SupplierDetail.vue")),
+        );
+        app.component(
+            "CustomerDetail",
+            defineAsyncComponent(() => import("@/pages/dictionary/customer/CustomerDetail.vue")),
+        );
+        app.component(
+            "SAOrderDetail",
+            defineAsyncComponent(() => import("@/pages/sales/SAOrderDetail.vue")),
+        );
+        app.component(
+            "FilterPopup",
+            defineAsyncComponent(() => import("@/pages/common/FilterPopup.vue")),
+        );
+        app.component(
+            "RoleAddNewPopup",
+            defineAsyncComponent(() => import("@/pages/system/RoleAddNewPopup.vue")),
+        );
     },
 };
 

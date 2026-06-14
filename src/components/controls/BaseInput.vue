@@ -1,6 +1,9 @@
 <template>
     <div class="base-input-wrapper">
-        <label v-if="label" class="base-input-label">{{ label }}</label>
+        <label v-if="label" class="base-input-label">
+            {{ label }}
+            <span v-if="required" class="base-input-required">*</span>
+        </label>
         <div class="base-input-container">
             <input
                 :type="type"
@@ -46,6 +49,7 @@ interface Props {
     placeholder?: string;
     disabled?: boolean;
     readonly?: boolean;
+    required: false;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -94,6 +98,11 @@ function onChange(event: Event): void {
 
 .base-input-wrapper {
     width: 100%;
+}
+
+.base-input-required {
+    color: #ef4444;
+    margin-left: 2px;
 }
 
 .base-input-label {

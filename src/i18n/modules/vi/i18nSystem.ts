@@ -1,4 +1,9 @@
 ﻿export default {
+    AddNew: {
+        Title: "Thêm vai trò mới",
+        RoleCode: "Mã vai trò",
+        RoleName: "Tên vai trò",
+    },
     SAOrder: {
         Title: "Quản lý đơn hàng",
         View: "Xem",
@@ -6,6 +11,7 @@
         Edit: "Sửa",
         Delete: "Xóa",
         ApproveDiscount: "Duyệt CK",
+        Export: "Xuất khẩu",
     },
 
     DIInventoryItem: {

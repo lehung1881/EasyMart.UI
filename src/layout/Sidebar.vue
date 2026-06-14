@@ -61,15 +61,15 @@ const { isCollapsed, activeKey, menuGroups, toggleCollapse, setActive } = useSid
     height: calc(100% - 12px);
     display: flex;
     flex-direction: column;
-    padding: 12px 8px;
+    padding: 12px;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: #ffffff;
-    border-radius: 4px;
+    border-radius: 8px;
     transition: width 0.25s ease;
 
     &.collapsed {
-        width: 56px;
+        width: 64px;
 
         .menu-group-label {
             display: none;

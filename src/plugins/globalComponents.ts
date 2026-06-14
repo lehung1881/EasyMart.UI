@@ -5,6 +5,7 @@ import BaseDatepicker from "@/components/controls/BaseDatepicker.vue";
 import BaseInputNumber from "@/components/controls/BaseInputNumber.vue";
 import BaseTextArea from "@/components/controls/BaseTextArea.vue";
 import BaseCheckbox from "@/components/controls/BaseCheckbox.vue";
+import BaseSwitch from "@/components/controls/BaseSwitch.vue";
 import BaseRadio from "@/components/controls/BaseRadio.vue";
 import BaseRadioGroup from "@/components/controls/BaseRadioGroup.vue";
 import BaseCombobox from "@/components/controls/BaseCombobox.vue";
@@ -36,6 +37,7 @@ const globalComponentsPlugin: Plugin = {
         app.component("BaseTextArea", BaseTextArea);
         app.component("BaseCheckbox", BaseCheckbox);
         app.component("BaseRadio", BaseRadio);
+        app.component("BaseSwitch", BaseSwitch);
         app.component("BaseRadioGroup", BaseRadioGroup);
         app.component("BaseCombobox", BaseCombobox);
         app.component("BaseTable", BaseTable);

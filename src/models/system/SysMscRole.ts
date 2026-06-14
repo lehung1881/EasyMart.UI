@@ -44,8 +44,8 @@ export class SysMscRole extends BaseModel {
 
 SysMscRole.prototype._fields = [
     { name: "RoleID", dataType: "string", defaultValue: null, isPrimaryKey: true },
-    { name: "RoleCode", dataType: "string", defaultValue: null },
-    { name: "RoleName", dataType: "string", defaultValue: null },
+    { name: "RoleCode", dataType: "string", validateRules: [{ type: "NotNull" }] },
+    { name: "RoleName", dataType: "string", validateRules: [{ type: "NotNull" }] },
     { name: "Description", dataType: "string", defaultValue: null },
     { name: "IsSystem", dataType: "bool", defaultValue: 0, validateRules: [{ type: "NotNull" }] },
     { name: "CreatedBy", dataType: "string", defaultValue: null },

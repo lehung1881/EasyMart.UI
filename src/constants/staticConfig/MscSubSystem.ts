@@ -11,6 +11,7 @@ export const defaultSubSystem: Record<string, MscSubSystem> = {
             Add: false,
             Edit: false,
             Delete: false,
+            Export: false,
         },
     },
     DIInventoryItem: {
@@ -46,7 +47,7 @@ export const defaultSubSystem: Record<string, MscSubSystem> = {
     DISupplier: {
         SubSystemCode: "DISupplier",
         ListPermission: {
-            View: true,
+            View: false,
             Add: false,
             Edit: false,
             Delete: false,
