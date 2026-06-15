@@ -63,6 +63,13 @@
                 background-color: rgba(81, 64, 234, 0.1);
             }
 
+            .icon-row-delete {
+                // display: none;
+            }
+
+            &:hover .icon-row-delete {
+                display: block;
+            }
             .role-item-content {
                 display: flex;
                 justify-content: space-between;

@@ -4,6 +4,7 @@
     Success: "Thành công!",
     Error: "Có lỗi xảy ra, vui lòng thử lại.",
     Cancel: "Hủy",
+    CancelNotSave: "Hủy, không lưu",
     Confirm: "Xác nhận",
     Save: "Lưu",
     Delete: "Xóa",
@@ -16,4 +17,5 @@
     Inactive: "Ngừng sử dụng",
     ActiveBusiness: "Đang kinh doanh",
     InactiveBusiness: "Ngừng kinh doanh",
+    TitleChange: "Dữ liệu thay đổi",
 };

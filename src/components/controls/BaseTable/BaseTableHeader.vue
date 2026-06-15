@@ -11,6 +11,7 @@
                 :key="column.dataField"
                 class="tb-header__cell"
                 :style="getColumnStyle(column)"
+                :field="column.dataField"
             >
                 <slot :name="`header-${column.dataField}`" :column="column">
                     <div class="header-title">

@@ -1,6 +1,6 @@
 ﻿import { defineStore } from "pinia";
 import { ref } from "vue";
-import authAPI from "@/api/modules/authAPI";
+import authAPI from "@/api/modules/auth/authAPI";
 import cacheService from "@/commons/cacheService";
 import { CacheAction, CacheCode } from "@/constants/staticConfig/cacheConfig";
 import { StoreNameConstant } from "@/constants";

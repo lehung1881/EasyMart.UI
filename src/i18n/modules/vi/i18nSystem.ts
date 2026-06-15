@@ -4,6 +4,21 @@
         RoleCode: "Mã vai trò",
         RoleName: "Tên vai trò",
     },
+    RoleList: {
+        Title: "Vai trò",
+        AddNew: "Thêm mới",
+        Edit: "Sửa",
+        AllPermission: "Toàn quyền trên phần mềm",
+        GroupAllPermission: "Toàn quyền",
+        EmptyPermission: "Không tìm thấy kết quả nào.",
+        DefaultRoleName: "Vai trò mới",
+        DefaultRoleDesc: "Mô tả vai trò mới",
+    },
+    Confirm: {
+        SaveBeforeLeave: "Dữ liệu đã thay đổi, bạn có muốn lưu lại trước khi rời đi không?",
+        SaveChange: "Dữ liệu đã thay đổi, bạn có muốn lưu lại không?",
+        DeleteRole: "Bạn có thực sự muốn xóa vai trò <{0}> không?",
+    },
     SAOrder: {
         Title: "Quản lý đơn hàng",
         View: "Xem",
@@ -62,5 +77,15 @@
         Edit: "Sửa",
         ConfigPayment: "Cấu hình TT",
         PermissionChange: "Phân quyền",
+    },
+
+    User: {
+        Title: "Người dùng",
+        List: "Danh sách người dùng",
+        FullName: "Tên người dùng",
+        PhoneNumber: "Số điện thoại",
+        Email: "Email",
+        Gender: "Giới tính",
+        Role: "Vai trò",
     },
 };

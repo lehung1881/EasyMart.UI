@@ -91,6 +91,13 @@ export const formConfig: FormConfig[] = [
         RefType: 210,
         ModelKeyID: "SAOrderID",
     },
+    {
+        FormID: "UserList",
+        // DetailFormID: "UnitDetail",
+        Name: "Người dùng",
+        RefType: 220,
+        ModelKeyID: "UserID",
+    },
 ];
 
 /**

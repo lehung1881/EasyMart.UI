@@ -10,7 +10,9 @@ export class SysMscUser extends BaseModel {
     declare UserID: string;
 
     /** Trạng thái hoạt động. 1: Ngừng hoạt động, 0: Hoạt động. */
-    declare Inactive: number;
+    declare Status: number;
+
+    declare Gender: number;
 
     /** Tên đầy đủ người dùng. */
     declare FullName: string | null;
@@ -20,6 +22,17 @@ export class SysMscUser extends BaseModel {
 
     /** Số điện thoại người dùng. */
     declare MobilePhone: string | null;
+
+    /** ID vai trò. */
+    declare RoleID: string | null;
+
+    /** Mã vai trò. */
+    declare RoleCode: string | null;
+
+    /** Tên vai trò. */
+    declare RoleName: string | null;
+
+    declare IsSystem: boolean;
 
     /** Người tạo. */
     declare CreatedBy: string | null;
@@ -40,10 +53,15 @@ export class SysMscUser extends BaseModel {
 
 SysMscUser.prototype._fields = [
     { name: "UserID", dataType: "string", defaultValue: null, isPrimaryKey: true },
-    { name: "Inactive", dataType: "number", defaultValue: 0, validateRules: [{ type: "NotNull" }] },
+    { name: "Status", dataType: "number", defaultValue: 0 },
+    { name: "Gender", dataType: "number", defaultValue: 0 },
     { name: "FullName", dataType: "string", defaultValue: null },
     { name: "Email", dataType: "string", defaultValue: null },
     { name: "MobilePhone", dataType: "string", defaultValue: null },
+    { name: "RoleID", dataType: "string", defaultValue: null },
+    { name: "RoleCode", dataType: "string" },
+    { name: "RoleName", dataType: "string" },
+    { name: "IsSystem", dataType: "bool", defaultValue: 0 },
     { name: "CreatedBy", dataType: "string", defaultValue: null },
     { name: "CreatedDate", dataType: "string", defaultValue: null },
     { name: "ModifiedBy", dataType: "string", defaultValue: null },

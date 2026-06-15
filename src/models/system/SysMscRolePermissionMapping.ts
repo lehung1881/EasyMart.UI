@@ -44,10 +44,10 @@ SysMscRolePermissionMapping.prototype._fields = [
     { name: "SubSystemCode", dataType: "string", defaultValue: null },
     { name: "ListPermission", dataType: "string", defaultValue: null },
     { name: "ListPermissionObject", dataType: "object", defaultValue: null },
-    { name: "CreatedBy", dataType: "string", defaultValue: null },
-    { name: "CreatedDate", dataType: "string", defaultValue: null },
-    { name: "ModifiedBy", dataType: "string", defaultValue: null },
-    { name: "ModifiedDate", dataType: "string", defaultValue: null },
+    { name: "CreatedBy", dataType: "string", defaultValue: null, ignoreCheckChange: true },
+    { name: "CreatedDate", dataType: "date", defaultValue: null, ignoreCheckChange: true },
+    { name: "ModifiedBy", dataType: "string", defaultValue: null, ignoreCheckChange: true },
+    { name: "ModifiedDate", dataType: "date", defaultValue: null, ignoreCheckChange: true },
 ] as BaseFieldConfig[];
 
 export default SysMscRolePermissionMapping;

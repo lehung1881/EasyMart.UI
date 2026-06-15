@@ -48,11 +48,17 @@ SysMscRole.prototype._fields = [
     { name: "RoleName", dataType: "string", validateRules: [{ type: "NotNull" }] },
     { name: "Description", dataType: "string", defaultValue: null },
     { name: "IsSystem", dataType: "bool", defaultValue: 0, validateRules: [{ type: "NotNull" }] },
-    { name: "CreatedBy", dataType: "string", defaultValue: null },
-    { name: "CreatedDate", dataType: "string", defaultValue: null },
-    { name: "ModifiedBy", dataType: "string", defaultValue: null },
-    { name: "ModifiedDate", dataType: "string", defaultValue: null },
-    { name: "SysMscRolePermissionMapping", dataType: "array", defaultValue: [] },
+    { name: "CreatedBy", dataType: "string", defaultValue: null, ignoreCheckChange: true },
+    { name: "CreatedDate", dataType: "date", defaultValue: null, ignoreCheckChange: true },
+    { name: "ModifiedBy", dataType: "string", defaultValue: null, ignoreCheckChange: true },
+    { name: "ModifiedDate", dataType: "date", defaultValue: null, ignoreCheckChange: true },
+    {
+        name: "SysMscRolePermissionMapping",
+        dataType: "array",
+        defaultValue: [],
+        isDetail: true,
+        detailModel: SysMscRolePermissionMapping,
+    },
 ] as BaseFieldConfig[];
 
 export default SysMscRole;

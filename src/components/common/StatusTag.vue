@@ -1,6 +1,6 @@
 <template>
     <span class="status-tag" :style="tagStyle">
-        <span class="status-dot" :style="{ backgroundColor: currentVariant.dotColor }" />
+        <span v-if="hasDot" class="status-dot" :style="{ backgroundColor: currentVariant.dotColor }" />
 
         {{ currentStatus?.text ?? defaultText }}
     </span>
@@ -117,6 +117,10 @@ export default defineComponent({
     name: "StatusTag",
 
     props: {
+        hasDot: {
+            type: Boolean,
+            default: true,
+        },
         /**
          * Giá trị trạng thái hiện tại.
          */

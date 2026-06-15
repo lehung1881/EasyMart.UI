@@ -5,6 +5,8 @@ export type BaseFieldDataType = "string" | "number" | "boolean" | "bool" | "obje
 
 export type BaseValidateRuleName = "NotNull" | "MaxLength";
 
+const PRIMITIVE_DATA_TYPES: BaseFieldDataType[] = ["string", "number", "boolean", "bool", "date"];
+
 export interface BaseValidateRuleObject {
     type: BaseValidateRuleName;
     message?: string;
@@ -17,6 +19,9 @@ export interface BaseFieldConfig {
     dataType: BaseFieldDataType;
     defaultValue?: unknown;
     isPrimaryKey?: boolean;
+    isDetail?: boolean;
+    ignoreCheckChange?: boolean;
+    detailModel?: new (data?: Record<string, unknown>) => BaseModel;
     validateRules?: BaseValidateRuleObject[];
 }
 
@@ -32,6 +37,19 @@ export interface BaseChangedField {
 }
 
 export type BaseChangeResult = Record<string, BaseChangedField>;
+
+export interface BaseDetailItemChangeResult {
+    index: number;
+    modelID: unknown;
+    modelState: ModelState;
+    change: BaseChangeResult | null;
+    detailChanges: Record<string, BaseDetailItemChangeResult[]> | null;
+}
+
+export interface BaseMasterDetailChangeResult {
+    selfChange: BaseChangeResult | null;
+    detailChanges: Record<string, BaseDetailItemChangeResult[]>;
+}
 
 /**
  * Clone dữ liệu để lưu snapshot object cho model.
@@ -121,7 +139,7 @@ export class BaseModel {
     private _original: Record<string, unknown> = {};
 
     /**
-     * Trạng thái của model (Add, Edit, Delete, None).
+     * Trạng thái của model (Insert, Update, Delete, None).
      */
     public ModelState: ModelState = ModelState.None;
 
@@ -186,7 +204,7 @@ export class BaseModel {
 
                 currentModel._$data[fieldConfig.name] =
                     predefinedValue !== undefined
-                        ? currentModel.normalizeValue(predefinedValue, fieldConfig.dataType)
+                        ? currentModel.normalizeValue(predefinedValue, fieldConfig.dataType, fieldConfig)
                         : cloneValue(currentModel.getDefaultValue(fieldConfig));
                 return;
             }
@@ -229,9 +247,10 @@ export class BaseModel {
      * Chuyển đổi dữ liệu đầu vào theo kiểu dataType đã cấu hình.
      * @param value Giá trị cần chuẩn hóa.
      * @param dataType Kiểu dữ liệu mong muốn.
+     * @param fieldConfig Cấu hình field hiện tại, dùng để khởi tạo detail model nếu có.
      * @returns Giá trị đã được chuẩn hóa.
      */
-    protected normalizeValue(value: unknown, dataType: BaseFieldDataType): unknown {
+    protected normalizeValue(value: unknown, dataType: BaseFieldDataType, fieldConfig?: BaseFieldConfig): unknown {
         if (value === null || value === undefined) {
             return value;
         }
@@ -246,8 +265,18 @@ export class BaseModel {
             case "bool":
             case "boolean":
                 return Boolean(value);
-            case "array":
-                return Array.isArray(value) ? value : [];
+            case "array": {
+                if (!Array.isArray(value)) return [];
+
+                if (fieldConfig?.isDetail && fieldConfig?.detailModel) {
+                    return value.map((item) => {
+                        if (item instanceof BaseModel) return item;
+                        return new fieldConfig.detailModel!(item as Record<string, unknown>);
+                    });
+                }
+
+                return value;
+            }
             case "object":
                 return typeof value === "object" ? value : {};
             case "date":
@@ -265,7 +294,8 @@ export class BaseModel {
      * @returns Không trả về dữ liệu.
      */
     public set(fieldName: string, value: unknown, dataType: BaseFieldDataType = "any"): void {
-        this._$data[fieldName] = this.normalizeValue(value, dataType);
+        const fieldConfig = this.getFieldConfigs().find((f) => f.name === fieldName);
+        this._$data[fieldName] = this.normalizeValue(value, dataType, fieldConfig);
     }
 
     /**
@@ -293,7 +323,7 @@ export class BaseModel {
      * Lấy cấu hình field khóa chính của model.
      * @returns Field khóa chính nếu có, ngược lại `undefined`.
      */
-    protected getPrimaryKeyField(): BaseFieldConfig | undefined {
+    public getPrimaryKeyField(): BaseFieldConfig | undefined {
         return this.getFieldConfigs().find((fieldConfig) => fieldConfig.isPrimaryKey);
     }
 
@@ -490,6 +520,56 @@ export class BaseModel {
     }
 
     /**
+     * Rollback toàn bộ thay đổi của master và các item trong detail field về trạng thái ban đầu.
+     * Xử lý đệ quy để hỗ trợ detail lồng detail.
+     * @returns Không trả về dữ liệu.
+     */
+    public rollbackChange(): void {
+        const originalData = cloneValue(this._original);
+
+        this.getFieldConfigs()
+            .filter((f) => !f.isDetail)
+            .forEach((f) => {
+                const originalValue = originalData[f.name];
+                const currentValue = this._$data[f.name];
+
+                if (
+                    f.dataType === "object" &&
+                    currentValue &&
+                    typeof currentValue === "object" &&
+                    !Array.isArray(currentValue) &&
+                    originalValue &&
+                    typeof originalValue === "object"
+                ) {
+                    // Patch từng key để giữ reactive proxy
+                    const current = currentValue as Record<string, unknown>;
+                    const original = originalValue as Record<string, unknown>;
+
+                    // Xóa key thừa
+                    Object.keys(current).forEach((key) => {
+                        if (!(key in original)) {
+                            delete current[key];
+                        }
+                    });
+
+                    // Gán lại từng key
+                    Object.keys(original).forEach((key) => {
+                        current[key] = original[key];
+                    });
+                } else {
+                    this.setValue(f.name, originalValue);
+                }
+            });
+
+        this.ModelState = ModelState.None;
+
+        this.getFieldDetailConfigs().forEach((f) => {
+            const items = (this._$data[f.name] ?? []) as BaseModel[];
+            items.forEach((item) => item.rollbackChange());
+        });
+    }
+
+    /**
      * Kiểm tra model hiện tại có thay đổi so với snapshot ban đầu không.
      * @returns `true` nếu có thay đổi, ngược lại `false`.
      */
@@ -499,14 +579,14 @@ export class BaseModel {
 
     /**
      * Lấy danh sách field thay đổi so với snapshot gốc.
-     * @returns Object các field thay đổi theo dạng `{ fieldName: { oldValue, newValue } }`.
+     * @returns Object các field thay đổi theo dạng `{ fieldName: { oldValue, newValue } }`, hoặc `null` nếu không có thay đổi.
      */
     public getChange(): BaseChangeResult | null {
         const currentData = this.getComparableData();
         const originalData = this._original;
         const changedFields: BaseChangeResult = {};
 
-        this.getFieldConfigs().forEach((fieldConfig) => {
+        this.getFieldCheckChangeConfigs().forEach((fieldConfig) => {
             const fieldName = fieldConfig.name;
             const oldValue = originalData[fieldName];
             const newValue = currentData[fieldName];
@@ -523,12 +603,133 @@ export class BaseModel {
     }
 
     /**
+     * Tổng hợp thay đổi của master và toàn bộ từng item trong các detail field.
+     * Xử lý đệ quy để hỗ trợ detail lồng detail.
+     * @returns Object chứa selfChange và detailChanges, hoặc null nếu không có thay đổi nào.
+     */
+    public getAllChange(): BaseMasterDetailChangeResult | null {
+        const selfChange = this.getChange();
+        const detailChanges: Record<string, BaseDetailItemChangeResult[]> = {};
+
+        this.getFieldDetailConfigs().forEach((f) => {
+            const items = (this._$data[f.name] ?? []) as BaseModel[];
+            const itemChanges: BaseDetailItemChangeResult[] = [];
+
+            items.forEach((item, index) => {
+                const nestedResult = item.getAllChange();
+                const hasChange = nestedResult !== null;
+
+                if (!hasChange) return;
+
+                const primaryKeyField = item.getPrimaryKeyField();
+                const modelID = primaryKeyField ? item._$data[primaryKeyField.name] : null;
+
+                itemChanges.push({
+                    index,
+                    modelID,
+                    modelState: item.ModelState,
+                    change: nestedResult?.selfChange ?? null,
+                    detailChanges: nestedResult?.detailChanges ?? null,
+                });
+            });
+
+            if (itemChanges.length > 0) {
+                detailChanges[f.name] = itemChanges;
+            }
+        });
+
+        if (selfChange === null && Object.keys(detailChanges).length === 0) return null;
+
+        return { selfChange, detailChanges };
+    }
+
+    /**
+     * Commit toàn bộ thay đổi của master và các item trong detail field.
+     * Xử lý đệ quy để hỗ trợ detail lồng detail.
+     * @returns Không trả về dữ liệu.
+     */
+    public commitChange(): void {
+        this.commit();
+        this.ModelState = ModelState.None;
+        this.getFieldDetailConfigs().forEach((f) => {
+            const items = (this._$data[f.name] ?? []) as BaseModel[];
+            items.forEach((item) => item.commitChange());
+        });
+    }
+
+    /**
+     * Chuẩn bị ModelState cho master và toàn bộ item detail trước khi lưu.
+     * Xử lý đệ quy để hỗ trợ detail lồng detail.
+     * @returns Không trả về dữ liệu.
+     */
+    public prepareModelState(): void {
+        if (this.ModelState === ModelState.None && this.getChange() !== null) {
+            this.ModelState = ModelState.Update;
+        }
+
+        this.getFieldDetailConfigs().forEach((f) => {
+            const items = (this._$data[f.name] ?? []) as BaseModel[];
+            items.forEach((item) => {
+                item.prepareModelState();
+            });
+        });
+    }
+
+    /**
+     * Serialize model thành plain object chỉ chứa thuộc tính, không có method.
+     * Detail field được map thành array of plain object đệ quy.
+     * @returns Plain object sẵn sàng gửi BE.
+     */
+    public getSaveData(): Record<string, unknown> {
+        this.prepareModelState();
+
+        const detailFieldNames = new Set(this.getFieldDetailConfigs().map((f) => f.name));
+
+        const result: Record<string, unknown> = {
+            ModelState: this.ModelState,
+        };
+
+        this.getFieldConfigs().forEach((fieldConfig) => {
+            if (detailFieldNames.has(fieldConfig.name)) {
+                const items = (this._$data[fieldConfig.name] ?? []) as BaseModel[];
+                result[fieldConfig.name] = items.map((item) => item.getSaveData());
+            } else {
+                result[fieldConfig.name] = this._$data[fieldConfig.name];
+            }
+        });
+
+        return result;
+    }
+
+    /**
      * Lấy danh sách field config từ model hiện tại.
      * @returns Danh sách field đã cấu hình hoặc mảng rỗng.
      */
     protected getFieldConfigs(): BaseFieldConfig[] {
         const configuredFields = (this as unknown as { _fields?: BaseFieldConfig[] })._fields;
         return Array.isArray(configuredFields) ? configuredFields : [];
+    }
+
+    /**
+     * Lấy danh sách field config được dùng để check change.
+     * Loại bỏ các field isDetail, ignoreCheckChange và không phải kiểu nguyên thủy.
+     * @returns Danh sách field config hợp lệ để so sánh thay đổi.
+     */
+    protected getFieldCheckChangeConfigs(): BaseFieldConfig[] {
+        return this.getFieldConfigs().filter(
+            (fieldConfig) =>
+                !fieldConfig.isDetail &&
+                !fieldConfig.ignoreCheckChange &&
+                PRIMITIVE_DATA_TYPES.includes(fieldConfig.dataType),
+        );
+    }
+
+    /**
+     * Lấy danh sách field config được cấu hình là detail.
+     * @returns Danh sách field config có isDetail = true.
+     */
+    protected getFieldDetailConfigs(): BaseFieldConfig[] {
+        return this.getFieldConfigs().filter((fieldConfig) => fieldConfig.isDetail);
     }
 }
 

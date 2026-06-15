@@ -108,6 +108,10 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 @include setIcon(icon-row-delete, -60px, -20px, 20px);
 
 @include setIcon(icon-close-24, -144px, -108px, 24px);
+@include setIcon(icon-tick, -216px, -108px, 24px);
+@include setIcon(icon-circle-tick, -194px, -62px, 20px);
+@include setIcon(icon-circle-close, -170px, -62px, 20px);
+// @include setIcon(icon-cl, -216px, -108px, 24px);
 
 
 

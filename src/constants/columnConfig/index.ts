@@ -3,6 +3,7 @@ import { stockColumns } from "./stockColumn";
 import { customerColumns } from "./customerColumn";
 import { supplierColumns } from "./supplierColumn";
 import { unitColumns } from "./unitColumn";
+import { userColumns } from "./userColumn";
 
 export const columnDefault = {
     InventoryItemList: inventoryItemColumns,
@@ -10,4 +11,5 @@ export const columnDefault = {
     CustomerList: customerColumns,
     SupplierList: supplierColumns,
     UnitList: unitColumns,
+    UserList: userColumns,
 };
