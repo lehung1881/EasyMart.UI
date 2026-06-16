@@ -10,7 +10,7 @@ import commonFunction from "@/commons/commonFunction";
 import { DataType, FilterOperator } from "@/constants";
 import type { FilterCondition, PagingRequest } from "@/models/common/paging";
 import type BaseAPI from "@/api/baseAPI";
-import type { ComboboxLoadData, ComboboxStoreOptions, QueryMode } from "@/models/common/combobox";
+import type { ComboboxLoadData, ComboboxStoreOptions, QueryMode, ModelConstructor } from "@/models/common/combobox";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 
 const STORE_NAME_TEMPLATE = "store_combobox_{0}_{1}";
@@ -88,7 +88,16 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
         /** View/Table name gửi BE */
         const viewName = ref<string>("");
 
+        const modelClass = ref<ModelConstructor | null>(null);
+
         // Private helpers
+        /**
+         * Map raw rows thành model instances nếu modelClass được cấu hình.
+         */
+        const mapToModel = (rows: Array<any>): Array<any> => {
+            if (!modelClass.value) return rows;
+            return modelClass.value.fromList(rows) as unknown as Array<any>;
+        };
 
         /**
          * Tạo filter text search từ keyword, searchField và displayField.
@@ -197,7 +206,7 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
                 const result = await loadFn.value(buildPayload(1));
 
                 // Replace data
-                data.value = result;
+                data.value = mapToModel(result);
 
                 // Update hasMore
                 updateHasMore(result);
@@ -222,7 +231,7 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
                 const result = await loadFn.value(buildPayload(nextPage));
 
                 // Append data
-                data.value = [...data.value, ...result];
+                data.value = [...data.value, ...mapToModel(result)];
 
                 // Update page
                 currentPage.value = nextPage;
@@ -251,9 +260,10 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
             });
             configuredSearchFields.value = Array.from(uniqueFields);
 
+            modelClass.value = config.modelClass ?? null;
             if (config.data !== rawData.value) {
-                rawData.value = config.data ? [...config.data] : [];
-                data.value = config.data ? [...config.data] : [];
+                rawData.value = config.data ? mapToModel([...config.data]) : [];
+                data.value = config.data ? mapToModel([...config.data]) : [];
             }
 
             displayField.value = config.displayField;

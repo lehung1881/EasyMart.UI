@@ -154,7 +154,7 @@ export class BaseModel {
         if (data) {
             this.applyData(data);
         }
-        this.commit();
+        this.commitChange();
     }
 
     /**
@@ -730,6 +730,16 @@ export class BaseModel {
      */
     protected getFieldDetailConfigs(): BaseFieldConfig[] {
         return this.getFieldConfigs().filter((fieldConfig) => fieldConfig.isDetail);
+    }
+
+    /**
+     * Tạo danh sách instance từ raw data array trả về từ API.
+     */
+    static fromList<T extends BaseModel>(
+        this: new (data?: Record<string, unknown>) => T,
+        items: Record<string, unknown>[],
+    ): T[] {
+        return items.map((item) => new this(item));
     }
 }
 

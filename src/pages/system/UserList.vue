@@ -80,7 +80,7 @@
                                     />
                                 </div>
                                 <div class="flex gap-2">
-                                    <div class="icon-circle-close"></div>
+                                    <div class="icon-circle-close" @click="cancelSave(row)"></div>
                                     <div class="icon-circle-tick" @click="saveUserRole(row)"></div>
                                 </div>
                             </div>
@@ -100,6 +100,7 @@ import UserAPI from "@/api/modules/system/UserAPI";
 import SysMscUser from "@/models/system/SysMscUser";
 import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls/useComboboxStore";
 import { ModelState } from "@/constants";
+import SysMscRole from "@/models/system/SysMscRole";
 
 export default defineComponent({
     name: "UserList",
@@ -147,6 +148,7 @@ export default defineComponent({
             keyID: "UserID",
             viewOrTableName: "sys_msc_user",
             tableLoadData: (payload) => loadListData(payload),
+            modelClass: SysMscUser,
             sorts: [
                 {
                     property: "IsSystem",
@@ -164,6 +166,7 @@ export default defineComponent({
          */
         const roleStore = useComboboxStore("role_combobox", {
             viewOrTableName: "sys_msc_role",
+            modelClass: SysMscRole,
             comboboxLoadData: (pay) => {
                 pay.sort = [
                     {
@@ -231,6 +234,16 @@ export default defineComponent({
         };
 
         /**
+         * Hủy cập nhật
+         * @param row
+         */
+        const cancelSave = (row: any) => {
+            row.edited = false;
+            if (!(row instanceof SysMscUser)) return;
+            row.rollbackChange();
+        };
+
+        /**
          * Xử lý chọn vai trò
          * @param item
          * @param row
@@ -270,7 +283,7 @@ export default defineComponent({
          * @param row Bản ghi tương ứng với action.
          * @returns Không trả về giá trị.
          */
-        const onItemAction = (rowAction: any, rowData: TableRow): void => {
+        const onItemAction = (rowAction: any, rowData: any): void => {
             switch (rowAction.actionName) {
                 case "Edit":
                     rowData.edited = true;
@@ -317,6 +330,7 @@ export default defineComponent({
             roleSelected,
             roleChange,
             saveUserRole,
+            cancelSave,
         };
     },
 });

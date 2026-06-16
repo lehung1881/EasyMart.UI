@@ -10,6 +10,7 @@ import type { QueryMode } from "@/models/common/combobox";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import type { PagingRequest, SortCondition } from "@/models/common/paging";
 import type BaseAPI from "@/api/baseAPI";
+import type BaseModel from "@/models/common/baseModel";
 
 const STORE_NAME_TEMPLATE = "store_table_{0}_{1}";
 
@@ -31,6 +32,11 @@ export interface TableLoadDataResult {
  */
 export type TableLoadData = (payload: PagingRequest) => Promise<TableLoadDataResult | Array<TableRow>>;
 
+type ModelConstructor = {
+    new (data?: Record<string, unknown>): BaseModel;
+    fromList(items: Record<string, unknown>[]): BaseModel[];
+};
+
 /**
  * Store options used for table initialization.
  */
@@ -43,6 +49,7 @@ export interface TableStoreOptions {
     columns?: ColumnDefinition[];
     keyID?: string;
     sorts?: SortCondition[];
+    modelClass?: ModelConstructor;
 }
 
 /**
@@ -73,6 +80,15 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
         const viewName = ref<string>("");
         const keyID = ref<string>("id");
 
+        const modelClass = ref<ModelConstructor | null>(null);
+
+        /**
+         * Map raw rows thành model instances nếu modelClass được cấu hình.
+         */
+        const mapToModel = (rows: Array<TableRow>): Array<TableRow> => {
+            if (!modelClass.value) return rows;
+            return modelClass.value.fromList(rows) as unknown as Array<TableRow>;
+        };
         /**
          * Check if store is running in remote mode.
          * @returns True when mode is remote.
@@ -341,7 +357,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             if (!isRemoteMode()) {
                 filteredData.value = filterLocalData(query);
                 totalRecords.value = filteredData.value.length;
-                data.value = sliceLocalPage();
+                data.value = mapToModel(sliceLocalPage());
                 return;
             }
 
@@ -354,7 +370,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             loading.value = true;
             try {
                 const result = normalizeLoadResult(await loadFn.value(buildPayload(currentPage.value)));
-                data.value = result.rows;
+                data.value = mapToModel(result.rows);
                 totalRecords.value =
                     typeof result.total === "number"
                         ? result.total
@@ -434,6 +450,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             viewName.value = config.viewOrTableName ?? "";
             columns.value = config.columns ?? [];
             keyID.value = config.keyID ?? "id";
+            modelClass.value = config.modelClass ?? null;
             rawData.value = config.data ? [...config.data] : [];
             filteredData.value = config.data ? [...config.data] : [];
             totalRecords.value = filteredData.value.length;
@@ -479,6 +496,7 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
             endRow,
             canGoPrev,
             canGoNext,
+            modelClass,
             isRowSelected,
             toggleRowSelection,
             setSelectedRows,

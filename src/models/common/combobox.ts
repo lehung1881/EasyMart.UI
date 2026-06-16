@@ -1,11 +1,17 @@
 ﻿import type { PagingRequest } from "./paging";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
+import type BaseModel from "@/models/common/baseModel";
 
 /** Chế độ truy vấn dữ liệu: local (filter trên client) hoặc remote (gọi API) */
 export type QueryMode = "local" | "remote";
 
 /** Hàm gọi API lấy data cho combobox, nhận payload phân trang và trả về mảng kết quả */
 export type ComboboxLoadData = (payload: PagingRequest) => Promise<Array<any>>;
+
+export type ModelConstructor = {
+    new (data?: Record<string, unknown>): BaseModel;
+    fromList(items: Record<string, unknown>[]): BaseModel[];
+};
 
 /**
  * Cấu hình khởi tạo cho combobox store.
@@ -32,4 +38,6 @@ export interface ComboboxStoreOptions {
     columns?: ColumnDefinition[];
     /** Độ rộng của dropdown, có thể là số (px) hoặc string (ví dụ "50%"). Nếu không truyền thì dropdown tự động điều chỉnh theo nội dung */
     dropdownWidth?: number | null;
+    /** Model của dòng dữ liệu */
+    modelClass?: ModelConstructor;
 }

@@ -35,10 +35,6 @@ const globalPopup: Plugin = {
             "FilterPopup",
             defineAsyncComponent(() => import("@/pages/common/FilterPopup.vue")),
         );
-        app.component(
-            "RoleAddNewPopup",
-            defineAsyncComponent(() => import("@/pages/system/RoleAddNewPopup.vue")),
-        );
     },
 };
 
