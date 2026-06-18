@@ -12,7 +12,7 @@ export interface UserInfo {
     /** Số điện thoại */
     PhoneNumber: string | null;
     /** Khóa chính */
-    TenantID: string;
+    EasyMartID: string;
     /** Mã định danh khách hàng, ví dụ: CUST_001 */
     TenantCode: string;
     /** Tên khách hàng */

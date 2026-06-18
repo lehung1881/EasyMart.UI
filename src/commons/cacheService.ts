@@ -150,7 +150,7 @@ class CacheService {
     }
 
     /**
-     * Validate KeyFormat theo chuẩn placeholder tên: {a}, {tenantId}.
+     * Validate KeyFormat theo chuẩn placeholder tên: {a}, {EasyMartID}.
      */
     private validateFormatPattern(format: string): void {
         for (const match of format.matchAll(ANY_PLACEHOLDER_REGEX)) {
@@ -158,7 +158,7 @@ class CacheService {
             if (!name || !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
                 throw new Error(
                     `[CacheService] Placeholder '${name ?? ""}' trong định dạng '${format}' không hợp lệ. ` +
-                        "Chỉ hỗ trợ placeholder theo tên như {a} hoặc {tenantId}.",
+                        "Chỉ hỗ trợ placeholder theo tên như {a} hoặc {EasyMartID}.",
                 );
             }
         }

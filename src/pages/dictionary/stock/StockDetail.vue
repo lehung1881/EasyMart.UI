@@ -38,16 +38,31 @@
     </BasePopup>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from "vue";
 import BasePopup from "@/components/popup/BasePopup.vue";
 import stockAPI from "@/api/modules/dictionary/stockAPI";
 import { useBaseDetail } from "@/composables/base/useBaseDetail";
 import StockModel from "@/models/dictionary/stock";
 
-const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<StockModel>({
-    formID: "StockDetail",
-    api: stockAPI,
-    createDefaultData: () => new StockModel(),
+export default defineComponent({
+    name: "StockDetail",
+
+    components: {
+        BasePopup
+    },
+
+    setup() {
+        const base = useBaseDetail<StockModel>({
+            formID: "StockDetail",
+            api: stockAPI,
+            createDefaultData: () => new StockModel(),
+        });
+
+        return {
+            ...base,
+        };
+    },
 });
 </script>
 

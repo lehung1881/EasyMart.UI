@@ -14,8 +14,8 @@ abstract class BaseAPI {
     private _instance: AxiosInstance | null = null;
 
     /**
-     * Kh?i t?o axios instance theo t?ng service (lazy init).
-     * Instance ch? du?c t?o m?t l?n khi l?n d?u tiên g?i API.
+     * Khởi tạo axios instance theo từng service (lazy init).
+     * Instance chỉ được tạo một lần khi lần đầu tiên gọi API.
      */
     protected get instance(): AxiosInstance {
         if (!this._instance) {
@@ -29,23 +29,22 @@ abstract class BaseAPI {
     }
 
     /**
-     * Ghép basePath và url thành du?ng d?n d?y d?.
-     * @param url - Path c?a endpoint, ví d?: /login
-     * @returns Ðu?ng d?n d?y d?, ví d?: /v1/auth/login
+     * Ghép basePath và url thành đường dẫn đầy đủ.
+     * @param url - Path của endpoint, ví dụ: /login
+     * @returns Đường dẫn đầy đủ, ví dụ: /v1/auth/login
      */
     private buildUrl(url: string): string {
         return `${this.basePath}${url}`;
     }
 
     /**
-     * Interceptor x? lý request tru?c khi g?i lên server.
-     * Ð?c Access Token t? localStorage và g?n vào Authorization header.
-     * Ðính kèm các thông tin d?nh danh ngu?i dùng vào header n?u có:
+     * Interceptor xử lý request trước khi gửi lên server.
+     * Đọc Access Token từ localStorage và gắn vào Authorization header.
+     * Đính kèm các thông tin định danh người dùng vào header nếu có:
      * - Authorization: Bearer token
-     * - X-UserID: ID ngu?i dùng
-     * - X-DatabaseID: ID database c?a tenant
-     * - X-TenantID: ID tenant
-     * - X-FullName: H? tên ngu?i dùng (encoded UTF-8)
+     * - X-UserID: ID người dùng
+     * - X-EasyMartID: ID tenant
+     * - X-FullName: Họ tên người dùng (encoded UTF-8)
      */
     private initRequestInterceptor() {
         this._instance!.interceptors.request.use(
@@ -57,8 +56,7 @@ abstract class BaseAPI {
                 if (token) config.headers.set("Authorization", `Bearer ${token}`);
                 if (userInfo) {
                     config.headers.set("X-UserID", userInfo.UserID);
-                    config.headers.set("X-DatabaseID", userInfo.DatabaseID);
-                    config.headers.set("X-TenantID", userInfo.TenantID);
+                    config.headers.set("X-EasyMartID", userInfo.EasyMartID);
                     config.headers.set("X-FullName", encodeURIComponent(userInfo.FullName));
                 }
 
@@ -69,11 +67,11 @@ abstract class BaseAPI {
     }
 
     /**
-     * Interceptor x? lý response tr? v? t? server.
-     * - T? d?ng reject n?u Success === false.
-     * - Khi nh?n 401 (Access Token h?t h?n), t? d?ng g?i /refresh_token m?t l?n.
-     *   N?u refresh thành công, luu token m?i vào localStorage và retry request g?c.
-     *   N?u refresh th?t b?i, xóa token và thông tin ngu?i dùng r?i chuy?n v? trang login.
+     * Interceptor xử lý response trả về từ server.
+     * - Tự động reject nếu Success === false.
+     * - Khi nhận 401 (Access Token hết hạn), tự động gọi /refresh_token một lần.
+     * Nếu refresh thành công, lưu token mới vào localStorage và retry request gốc.
+     * Nếu refresh thất bại, xóa token và thông tin người dùng rồi chuyển về trang login.
      */
     private initResponseInterceptor() {
         this._instance!.interceptors.response.use(
@@ -92,17 +90,17 @@ abstract class BaseAPI {
                 if (status === 401 && config && !config._retry) {
                     config._retry = true;
                     try {
-                        // G?i refresh token — luu token m?i vào localStorage
+                        // Gọi refresh token — lưu token mới vào localStorage
                         const { useAuthStore } = await import("@/stores/auth/authStore");
                         await useAuthStore().refreshToken();
 
-                        // G?n l?i Access Token m?i vào header r?i retry request g?c
+                        // Gắn lại Access Token mới vào header rồi retry request gốc
                         const newToken = cacheService.get<string>(CacheCode.AuthAccessToken);
                         if (newToken) config.headers.set("Authorization", `Bearer ${newToken}`);
 
                         return this.instance(config);
                     } catch {
-                        // Refresh th?t b?i ? phiên h?t h?n hoàn toàn, v? trang login
+                        // Refresh thất bại hoặc phiên hết hạn hoàn toàn, về trang login
                         const { useAuthStore } = await import("@/stores/auth/authStore");
                         await useAuthStore().logout();
                         window.location.href = "/login";
@@ -115,62 +113,62 @@ abstract class BaseAPI {
     }
 
     /**
-     * L?y ra URL d?y d? c?a service hi?n t?i.
-     * @returns URL d?y d?, ví d?: http://localhost:3001/v1/auth
+     * Lấy ra URL đầy đủ của service hiện tại.
+     * @returns URL đầy đủ, ví dụ: http://localhost:3001/v1/auth
      */
     public getServiceUrl(): string {
         return `${API_CONFIG[this.serviceName]}${this.basePath}`;
     }
 
     /**
-     * G?i HTTP GET request.
-     * @param url - Path c?a endpoint, ví d?: /profile
-     * @param config - C?u hình axios tùy ch?n
+     * Gửi HTTP GET request.
+     * @param url - Path của endpoint, ví dụ: /profile
+     * @param config - Cấu hình axios tùy chọn
      */
     public get<T>(url: string, config?: AxiosRequestConfig) {
         return this.instance.get<T, ServiceResponse<T>>(this.buildUrl(url), config);
     }
 
     /**
-     * G?i HTTP POST request.
-     * @param url - Path c?a endpoint, ví d?: /login
-     * @param payload - D? li?u g?i lên server
-     * @param config - C?u hình axios tùy ch?n
+     * Gửi HTTP POST request.
+     * @param url - Path của endpoint, ví dụ: /login
+     * @param payload - Dữ liệu gửi lên server
+     * @param config - Cấu hình axios tùy chọn
      */
     public post<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.post<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
     /**
-     * G?i HTTP PUT request.
-     * @param url - Path c?a endpoint, ví d?: /profile
-     * @param payload - D? li?u c?p nh?t
-     * @param config - C?u hình axios tùy ch?n
+     * Gửi HTTP PUT request.
+     * @param url - Path của endpoint, ví dụ: /profile
+     * @param payload - Dữ liệu cập nhật
+     * @param config - Cấu hình axios tùy chọn
      */
     public put<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.put<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
     /**
-     * G?i HTTP PATCH request.
-     * @param url - Path c?a endpoint, ví d?: /profile/avatar
-     * @param payload - D? li?u c?p nh?t m?t ph?n
-     * @param config - C?u hình axios tùy ch?n
+     * Gửi HTTP PATCH request.
+     * @param url - Path của endpoint, ví dụ: /profile/avatar
+     * @param payload - Dữ liệu cập nhật một phần
+     * @param config - Cấu hình axios tùy chọn
      */
     public patch<T, P = unknown>(url: string, payload?: P, config?: AxiosRequestConfig) {
         return this.instance.patch<T, ServiceResponse<T>>(this.buildUrl(url), payload, config);
     }
 
     /**
-     * Thêm/s?a/xóa b?n ghi.
-     * @param payload - D? li?u c?a b?n ghi c?n thêm/s?a/xóa
+     * Thêm/sửa/xóa bản ghi.
+     * @param payload - Dữ liệu của bản ghi cần thêm/sửa/xóa
      */
     public saveData<T>(payload: T) {
         return this.post<T>("/save_data_async", payload);
     }
 
     /**
-     * Thêm/sửa/xóa nhiều bản ghi
+     * Thêm/sửa/xóa nhiều bản ghi.
      * @param items - Danh sách bản ghi cần xử lý
      */
     public saveListData<T>(items: T[]) {
@@ -187,18 +185,16 @@ abstract class BaseAPI {
     }
 
     /**
-     * Lây dữ liệu phân trang và tìm kiếm.
+     * Lấy dữ liệu phân trang và tìm kiếm.
      * @param payload
-     * @returns
      */
     public getPagingData(payload: PagingRequest) {
         return this.post<PagingResponse, PagingRequest>("/paging_filter", payload);
     }
 
     /**
-     * Lây dữ liệu phân trang và tìm kiếm.
+     * Lấy dữ liệu phân trang và tìm kiếm cho combobox.
      * @param payload
-     * @returns
      */
     public getPagingCombobox(payload: PagingRequest) {
         return this.post<PagingResponse, PagingRequest>("/paging_combobox", payload);
@@ -207,16 +203,14 @@ abstract class BaseAPI {
     /**
      * Lấy dữ liệu bản ghi theo ID.
      * @param id
-     * @returns
      */
     public getByID<T>(id: string) {
         return this.get<ServiceResponse<T>>(`/get_by_id/${id}`);
     }
 
     /**
-     * Lấy dữ liệu bản ghi theo ID.
+     * Lấy dữ liệu danh sách chi tiết (Master-Detail) theo ID.
      * @param id
-     * @returns
      */
     public getMasterDetail<T>(id: string) {
         return this.get<T>(`/master_detail/${id}`);

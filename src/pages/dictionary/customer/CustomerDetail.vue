@@ -51,25 +51,40 @@
     </BasePopup>
 </template>
 
-<script setup lang="ts">
-import { computed, getCurrentInstance } from "vue";
+<script lang="ts">
+import { defineComponent, computed, getCurrentInstance } from "vue";
 import BasePopup from "@/components/popup/BasePopup.vue";
 import customerAPI from "@/api/modules/dictionary/customerAPI";
 import { useBaseDetail } from "@/composables/base/useBaseDetail";
 import CustomerModel from "@/models/dictionary/customer";
 
-const { proxy } = getCurrentInstance() as any;
+export default defineComponent({
+    name: "CustomerDetail",
+    
+    components: {
+        BasePopup
+    },
 
-const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<CustomerModel>({
-    formID: "CustomerDetail",
-    api: customerAPI,
-    createDefaultData: () => new CustomerModel(),
+    setup() {
+        const { proxy } = getCurrentInstance() as any;
+
+        const customerTypeOptions = computed(() => [
+            { label: proxy.$t("i18nCustomer.Detail.Individual"), value: 0 },
+            { label: proxy.$t("i18nCustomer.Detail.Enterprise"), value: 1 },
+        ]);
+
+        const base = useBaseDetail<CustomerModel>({
+            formID: "CustomerDetail",
+            api: customerAPI,
+            createDefaultData: () => new CustomerModel(),
+        });
+
+        return {
+            ...base,
+            customerTypeOptions,
+        };
+    },
 });
-
-const customerTypeOptions = computed(() => [
-    { label: proxy.$t("i18nCustomer.Detail.Individual"), value: 0 },
-    { label: proxy.$t("i18nCustomer.Detail.Enterprise"), value: 1 },
-]);
 </script>
 
 <style scoped lang="scss">

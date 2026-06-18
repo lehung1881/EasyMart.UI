@@ -5,9 +5,9 @@
                 <h1 class="page-title">{{ $t("i18nCustomer.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">{{
-                    $t("i18nCustomer.List.AddCustomer")
-                }}</BaseButton>
+                <BaseButton size="md" variant="primary" @click="createItem">
+                    {{ $t("i18nCustomer.List.AddCustomer") }}
+                </BaseButton>
             </div>
         </div>
 
@@ -46,31 +46,50 @@
     </div>
 </template>
 
-<script setup lang="ts">
-import { getCurrentInstance, ref } from "vue";
+<script lang="ts">
+import { defineComponent, getCurrentInstance } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import customerAPI from "@/api/modules/dictionary/customerAPI";
 import CustomerModel from "@/models/dictionary/customer";
 
-const { proxy } = getCurrentInstance() as any;
+export default defineComponent({
+    name: "CustomerList",
 
-const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
-    if (payload.ids.length === 0) return false;
-    return true;
-};
+    setup() {
+        const { proxy } = getCurrentInstance() as any;
 
-const tableStore = useTableStore("customer", {
-    keyID: "CustomerID",
-    viewOrTableName: "di_customer",
-    tableLoadData: (payload) => loadListData(payload),
-});
+        /**
+         * Validate danh sách ID trước khi thực hiện xóa.
+         */
+        const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
+            if (payload.ids.length === 0) return false;
+            return true;
+        };
 
-const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<CustomerModel>({
-    formID: "CustomerList",
-    tableStore,
-    api: customerAPI,
-    validateBeforeDelete,
+        const tableStore = useTableStore("customer", {
+            keyID: "CustomerID",
+            viewOrTableName: "di_customer",
+            tableLoadData: (payload) => loadListData(payload),
+        });
+
+        const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<CustomerModel>({
+            formID: "CustomerList",
+            tableStore,
+            api: customerAPI,
+            validateBeforeDelete,
+        });
+
+        // Trả ra các biến và hàm để sử dụng ngoài <template>
+        return {
+            tableStore,
+            onSearch,
+            refresh,
+            deleteItem,
+            onListItemAction,
+            createItem,
+        };
+    },
 });
 </script>
 

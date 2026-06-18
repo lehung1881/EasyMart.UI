@@ -29,16 +29,31 @@
     </BasePopup>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from "vue";
 import BasePopup from "@/components/popup/BasePopup.vue";
 import unitAPI from "@/api/modules/dictionary/unitAPI";
 import { useBaseDetail } from "@/composables/base/useBaseDetail";
 import UnitModel from "@/models/dictionary/unit";
 
-const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<UnitModel>({
-    formID: "UnitDetail",
-    api: unitAPI,
-    createDefaultData: () => new UnitModel(),
+export default defineComponent({
+    name: "UnitDetail",
+
+    components: {
+        BasePopup
+    },
+
+    setup() {
+        const base = useBaseDetail<UnitModel>({
+            formID: "UnitDetail",
+            api: unitAPI,
+            createDefaultData: () => new UnitModel(),
+        });
+
+        return {
+            ...base,
+        };
+    },
 });
 </script>
 

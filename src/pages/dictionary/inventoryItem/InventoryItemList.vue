@@ -37,67 +37,83 @@
     </div>
 </template>
 
-<script setup lang="ts">
-import { getCurrentInstance } from "vue";
+<script lang="ts">
+import { defineComponent, getCurrentInstance } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { usePopup } from "@/composables/popup/usePopup";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
 import InventoryItemModel from "@/models/dictionary/inventoryItem";
 
-const { proxy } = getCurrentInstance();
+export default defineComponent({
+    name: "InventoryItemList",
 
-/**
- * Validate nghiệp vụ trước khi xóa hàng hóa.
- * @param payload Dữ liệu validate trước khi xóa.
- * @returns `true` nếu user đồng ý xóa, ngược lại `false`.
- */
-const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
-    if (payload.ids.length === 0) return false;
-    return true;
-};
+    setup() {
+        const { proxy } = getCurrentInstance() as any;
 
-/**
- * Store quản lý trạng thái và dữ liệu của bảng hàng hóa.
- * Cấu hình chế độ truy vấn dữ liệu từ server và hàm tải dữ liệu.
- */
-const tableStore = useTableStore("inventory_item", {
-    keyID: "InventoryItemID",
-    viewOrTableName: "di_inventory_item",
-    tableLoadData: (payload) => loadListData(payload),
+        /**
+         * Validate nghiệp vụ trước khi xóa hàng hóa.
+         * @param payload Dữ liệu validate trước khi xóa.
+         * @returns `true` nếu user đồng ý xóa, ngược lại `false`.
+         */
+        const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
+            if (payload.ids.length === 0) return false;
+            return true;
+        };
+
+        /**
+         * Store quản lý trạng thái và dữ liệu của bảng hàng hóa.
+         * Cấu hình chế độ truy vấn dữ liệu từ server và hàm tải dữ liệu.
+         */
+        const tableStore = useTableStore("inventory_item", {
+            keyID: "InventoryItemID",
+            viewOrTableName: "di_inventory_item",
+            tableLoadData: (payload) => loadListData(payload),
+        });
+
+        /**
+         * Sử dụng composable useBaseList để xử lý logic chung cho các trang danh sách, bao gồm:
+         * - loadListData: Hàm tải dữ liệu từ API dựa trên payload của tableStore.
+         * - search: Hàm thực hiện tìm kiếm với từ khóa hiện tại.
+         */
+        const { loadListData, onSearch, refresh, onListItemAction, createItem } = useBaseList<InventoryItemModel>({
+            formID: "InventoryItemList",
+            tableStore,
+            api: inventoryItemApi,
+            validateBeforeDelete,
+        });
+
+        const { show } = usePopup();
+
+        /**
+         * Mở popup bộ lọc cho danh sách hàng hóa.
+         * @returns Không trả về giá trị.
+         */
+        const openFilterPopup = (): void => {
+            show("FilterPopup", {
+                columns: tableStore.columns,
+                onApply: (payload: {
+                    rows: Array<{ field: string | number | null; operator: string | number | null; value: unknown }>;
+                }) => {
+                    console.log("filter payload", payload);
+                },
+                onReset: () => {
+                    onSearch("");
+                },
+            });
+        };
+
+        // Trả ra các thuộc tính và hàm để sử dụng ở phần <template>
+        return {
+            tableStore,
+            onSearch,
+            refresh,
+            onListItemAction,
+            createItem,
+            openFilterPopup,
+        };
+    },
 });
-
-/**
- * Sử dụng composable useBaseList để xử lý logic chung cho các trang danh sách, bao gồm:
- * - loadListData: Hàm tải dữ liệu từ API dựa trên payload của tableStore.
- * - search: Hàm thực hiện tìm kiếm với từ khóa hiện tại.
- */
-const { loadListData, onSearch, refresh, onListItemAction, createItem } = useBaseList<InventoryItemModel>({
-    formID: "InventoryItemList",
-    tableStore,
-    api: inventoryItemApi,
-    validateBeforeDelete,
-});
-
-const { show } = usePopup();
-
-/**
- * Mở popup bộ lọc cho danh sách hàng hóa.
- * @returns Không trả về giá trị.
- */
-const openFilterPopup = (): void => {
-    show("FilterPopup", {
-        columns: tableStore.columns,
-        onApply: (payload: {
-            rows: Array<{ field: string | number | null; operator: string | number | null; value: unknown }>;
-        }) => {
-            console.log("filter payload", payload);
-        },
-        onReset: () => {
-            onSearch("");
-        },
-    });
-};
 </script>
 
 <style lang="scss" scoped>

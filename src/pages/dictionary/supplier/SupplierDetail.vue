@@ -53,25 +53,40 @@
     </BasePopup>
 </template>
 
-<script setup lang="ts">
-import { computed, getCurrentInstance } from "vue";
+<script lang="ts">
+import { defineComponent, computed, getCurrentInstance } from "vue";
 import BasePopup from "@/components/popup/BasePopup.vue";
 import supplierAPI from "@/api/modules/dictionary/supplierAPI";
 import { useBaseDetail } from "@/composables/base/useBaseDetail";
 import SupplierModel from "@/models/dictionary/supplier";
 
-const { proxy } = getCurrentInstance() as any;
+export default defineComponent({
+    name: "SupplierDetail",
 
-const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<SupplierModel>({
-    formID: "SupplierDetail",
-    api: supplierAPI,
-    createDefaultData: () => new SupplierModel(),
+    components: {
+        BasePopup
+    },
+
+    setup() {
+        const { proxy } = getCurrentInstance() as any;
+
+        const supplierTypeOptions = computed(() => [
+            { label: proxy.$t("i18nSupplier.Detail.Individual"), value: 0 },
+            { label: proxy.$t("i18nSupplier.Detail.Enterprise"), value: 1 },
+        ]);
+
+        const base = useBaseDetail<SupplierModel>({
+            formID: "SupplierDetail",
+            api: supplierAPI,
+            createDefaultData: () => new SupplierModel(),
+        });
+
+        return {
+            ...base,
+            supplierTypeOptions,
+        };
+    },
 });
-
-const supplierTypeOptions = computed(() => [
-    { label: proxy.$t("i18nSupplier.Detail.Individual"), value: 0 },
-    { label: proxy.$t("i18nSupplier.Detail.Enterprise"), value: 1 },
-]);
 </script>
 
 <style scoped lang="scss">

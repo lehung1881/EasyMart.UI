@@ -52,30 +52,18 @@ export default defineComponent({
     setup() {
         const { proxy } = getCurrentInstance() as any;
 
-        /**
-         * Kiểm tra điều kiện hợp lệ trước khi thực hiện xóa
-         */
         const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
             if (payload.ids.length === 0) return false;
             return true;
         };
 
-        /**
-         * Store quản lý trạng thái và dữ liệu của bảng kho.
-         * Cấu hình chế độ truy vấn dữ liệu từ server và hàm tải dữ liệu.
-         */
         const tableStore = useTableStore("stock", {
             keyID: "StockID",
             viewOrTableName: "di_stock",
-            tableLoadData: (payload) => loadListData(payload),
+            tableLoadData: (payload) => base.loadListData(payload),
         });
 
-        /**
-         * Sử dụng composable useBaseList để xử lý logic chung cho các trang danh sách, bao gồm:
-         * - Tải dữ liệu với phân trang, sắp xếp, lọc.
-         * - Xử lý tìm kiếm, làm mới, xóa hàng loạt.
-         */
-        const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<StockModel>({
+        const base = useBaseList<StockModel>({
             formID: "StockList",
             tableStore,
             api: stockAPI,
@@ -84,11 +72,7 @@ export default defineComponent({
 
         return {
             tableStore,
-            onSearch,
-            refresh,
-            deleteItem,
-            onListItemAction,
-            createItem,
+            ...base,
         };
     },
 });
