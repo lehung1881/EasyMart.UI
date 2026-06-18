@@ -101,13 +101,14 @@
                             variant="outline-primary"
                             size="sm"
                             @click="() => refUnitConvert?.addRow()"
-                            :disabled="model.InventoryItemUnitConverts.length >= 5"
+                            :disabled="(model.InventoryItemUnitConverts?.length ?? 0) >= 5"
                             >Thêm dòng</BaseButton
                         >
+
                         <BaseButton
                             size="sm"
                             @click="() => refUnitConvert?.removeAllRow()"
-                            :disabled="model.InventoryItemUnitConverts?.length == 0"
+                            :disabled="(model.InventoryItemUnitConverts?.length ?? 0) == 0"
                         >
                             Xóa hết dòng
                         </BaseButton>
@@ -139,6 +140,7 @@ import stockAPI from "@/api/modules/dictionary/stockAPI";
 import { FormatType, ColumnType, FilterOperator, DataType } from "@/constants";
 import { showError } from "@/commons/messageBox";
 import type { PagingRequest } from "@/models/common/paging";
+import { type BaseTableEditorExpose } from "@/models/common/BaseTableEditorExpose";
 
 export default defineComponent({
     name: "InventoryItemDetail",
@@ -153,7 +155,7 @@ export default defineComponent({
          */
         const { proxy } = getCurrentInstance() as any;
 
-        const refUnitConvert = ref(null);
+        const refUnitConvert = ref<BaseTableEditorExpose | null>(null);
 
         /**
          * Ngầm định thêm dòng
@@ -460,7 +462,7 @@ export default defineComponent({
          */
         const transformBeforeSave = () => {
             return {
-                InventoryItemUnitConverts: proxy.model.InventoryItemUnitConverts.filter((item) => item.UnitID),
+                InventoryItemUnitConverts: proxy.model.InventoryItemUnitConverts.filter((item: any) => item.UnitID),
             };
         };
 

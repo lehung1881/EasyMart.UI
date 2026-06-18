@@ -43,7 +43,7 @@ abstract class BaseAPI {
      * Đính kèm các thông tin định danh người dùng vào header nếu có:
      * - Authorization: Bearer token
      * - X-UserID: ID người dùng
-     * - X-EasyMartID: ID tenant
+     * - X-EasyMartID: ID EasyMart
      * - X-FullName: Họ tên người dùng (encoded UTF-8)
      */
     private initRequestInterceptor() {

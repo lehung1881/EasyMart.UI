@@ -14,9 +14,9 @@ export interface UserInfo {
     /** Khóa chính */
     EasyMartID: string;
     /** Mã định danh khách hàng, ví dụ: CUST_001 */
-    TenantCode: string;
+    EasyMartCode: string;
     /** Tên khách hàng */
-    TenantName: string;
+    EasyMartName: string;
 }
 
 export interface LoginResponse {
@@ -54,7 +54,7 @@ export interface RegisterRequest {
     /** Số điện thoại */
     PhoneNumber: string;
     /** Tên cửa hàng / doanh nghiệp */
-    TenantName: string;
+    EasyMartName: string;
     /** Mã số thuế */
     TaxCode: string;
 }

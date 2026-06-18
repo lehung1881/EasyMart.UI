@@ -32,11 +32,11 @@
                 >
                     <template #cell-FullName="{ row }">
                         <div class="flex items-center gap-3" style="padding: 12px 0">
-                            <UserAvatar 
-                                :full-name="row.FullName" 
-                                :avatar-url="row.AvatarUrl" 
-                                :size="36" 
-                                shape="circle" 
+                            <UserAvatar
+                                :full-name="row.FullName"
+                                :avatar-url="row.AvatarUrl"
+                                :size="36"
+                                shape="circle"
                             />
                             <div class="flex flex-col">
                                 <span class="text-sm font-medium text-gray-900">{{ row.FullName }}</span>
@@ -92,8 +92,7 @@ import SysMscUser from "@/models/system/SysMscUser";
 import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls/useComboboxStore";
 import { ModelState } from "@/constants";
 import SysMscRole from "@/models/system/SysMscRole";
-import UserAvatar from "@/components/UserAvatar.vue";
-
+import UserAvatar from "@/components/common/UserAvatar.vue";
 export default defineComponent({
     name: "UserList",
     components: {

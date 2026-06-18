@@ -28,7 +28,7 @@ export const CacheCode = {
     AuthRefreshToken: "AuthRefreshToken",
     AuthAccessTokenExpires: "AuthAccessTokenExpires",
     AuthUserInfo: "AuthUserInfo",
-    UserInfoByTenantAndUser: "UserInfoByTenantAndUser",
+    UserInfoByEasyMartAndUser: "UserInfoByEasyMartAndUser",
     Locale: "Locale",
 } as const;
 

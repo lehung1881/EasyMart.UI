@@ -44,16 +44,16 @@
                         <span class="error-msg" v-if="errors.TaxCode">{{ errors.TaxCode }}</span>
                     </div>
 
-                    <div class="field" :class="{ 'field-error': errors.TenantName }">
+                    <div class="field" :class="{ 'field-error': errors.EasyMartName }">
                         <BaseInput
-                            v-model="form.TenantName"
+                            v-model="form.EasyMartName"
                             size="lg"
-                            :label="$t('i18nAuth.Register.FieldTenantName')"
-                            :placeholder="$t('i18nAuth.Register.FieldTenantNamePlaceholder')"
-                            @blur="validateField('TenantName')"
-                            @update:modelValue="clearError('TenantName')"
+                            :label="$t('i18nAuth.Register.FieldEasyMartName')"
+                            :placeholder="$t('i18nAuth.Register.FieldEasyMartNamePlaceholder')"
+                            @blur="validateField('EasyMartName')"
+                            @update:modelValue="clearError('EasyMartName')"
                         />
-                        <span class="error-msg" v-if="errors.TenantName">{{ errors.TenantName }}</span>
+                        <span class="error-msg" v-if="errors.EasyMartName">{{ errors.EasyMartName }}</span>
                     </div>
 
                     <div class="field" :class="{ 'field-error': errors.LastName }">
@@ -178,7 +178,7 @@ import type { RegisterRequest } from "@/models/auth/auth";
 
 type RegisterField =
     | "TaxCode"
-    | "TenantName"
+    | "EasyMartName"
     | "LastName"
     | "FirstName"
     | "Email"
@@ -211,7 +211,7 @@ type FormErrors = Partial<Record<ErrorField, string>>;
 
 const REGISTER_FIELDS: RegisterField[] = [
     "TaxCode",
-    "TenantName",
+    "EasyMartName",
     "LastName",
     "FirstName",
     "Email",
@@ -233,7 +233,7 @@ const showConfirmPassword = ref(false);
 
 const form = reactive<RegisterForm>({
     TaxCode: "",
-    TenantName: "",
+    EasyMartName: "",
     LastName: "",
     FirstName: "",
     FullName: "",
@@ -252,7 +252,7 @@ function t(key: string): string {
 
 const validators: Record<RegisterField, (value: FieldValue) => string | undefined> = {
     TaxCode: (value) => (!value ? t("i18nAuth.Register.ValidateTaxCodeRequired") : undefined),
-    TenantName: (value) => (!value ? t("i18nAuth.Register.ValidateTenantNameRequired") : undefined),
+    EasyMartName: (value) => (!value ? t("i18nAuth.Register.ValidateEasyMartNameRequired") : undefined),
     LastName: (value) => (!value ? t("i18nAuth.Register.ValidateLastNameRequired") : undefined),
     FirstName: (value) => (!value ? t("i18nAuth.Register.ValidateFirstNameRequired") : undefined),
     Email: (value) => {
@@ -319,7 +319,7 @@ function buildRegisterPayload(): RegisterRequest {
         FullName: `${form.LastName} ${form.FirstName}`.trim(),
         Password: form.Password,
         PhoneNumber: form.PhoneNumber,
-        TenantName: form.TenantName,
+        EasyMartName: form.EasyMartName,
         TaxCode: form.TaxCode,
     };
 }

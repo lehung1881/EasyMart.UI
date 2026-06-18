@@ -22,6 +22,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        height: 62px;
 
         .role-detail-title {
             font-size: 16px;
@@ -122,6 +123,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        min-height: 62px;
 
         .role-detail-title {
             font-size: 16px;
@@ -131,7 +133,7 @@
 
         .role-title-row {
             display: flex;
-            align-items: center;
+            // align-items: center;
             gap: 10px;
         }
     }
