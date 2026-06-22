@@ -156,7 +156,7 @@ const emit = defineEmits<{
     /** v-model binding */
     (e: "update:modelValue", value: any): void;
     /** Side effects khi chọn */
-    (e: "change", value: any): void;
+    (e: "change", item: any, value: any): void;
     /** Sự kiện khi chọn một item */
     (e: "selected", item: any): void;
     /** Sự kiện trước khi chọn một item */
@@ -327,7 +327,7 @@ const onSelect = (item: any) => {
     if (metaData.allowSelect) {
         props.store.setSelectedItem(item);
         emit("update:modelValue", value);
-        emit("change", value);
+        emit("change", item, value);
         emit("selected", item);
         const displayText = String(item[displayField.value] ?? "");
         confirmedDisplayText.value = displayText;

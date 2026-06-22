@@ -1,17 +1,17 @@
 <template>
-    <div class="list-page">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">{{ $t("i18nSAOrder.List.Title") }}</h1>
+    <LayoutList>
+        <template #page-header>
+            <div class="page-title">
+                <div class="page-title-line"></div>
+                <h1 class="page-title-text">{{ $t("i18nSAOrder.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">
-                    {{ $t("i18nSAOrder.List.AddOrder") }}
+                <BaseButton icon-left="icon-plus-white" size="sm" variant="primary" @click="createItem">
+                    {{ $t("i18nCommon.AddNew") }}
                 </BaseButton>
             </div>
-        </div>
-
-        <div class="page-content">
+        </template>
+        <template #page-content>
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
@@ -37,8 +37,8 @@
                     </template>
                 </BaseTable>
             </div>
-        </div>
-    </div>
+        </template>
+    </LayoutList>
 </template>
 
 <script setup lang="ts">
@@ -46,6 +46,7 @@ import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/bas
 import { useTableStore } from "@/composables/controls/useTableStore";
 import SAOrderAPI from "@/api/modules/business/SAOrderAPI";
 import SAOrder from "@/models/sales/SAOrder";
+import LayoutList from "@/pages/common/LayoutList.vue";
 
 /**
  * Kiểm tra dữ liệu trước khi xóa đơn hàng.

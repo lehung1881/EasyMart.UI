@@ -4,7 +4,7 @@
  */
 export const ColumnType = {
     /** Cột chỉ hiển thị, không render editor */
-    DisplayOnly: 0,
+    Text: 0,
     /** Editor nhập văn bản */
     Input: 1,
     /** Editor nhập số */

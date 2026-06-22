@@ -1,46 +1,56 @@
 <template>
     <BasePopup
-        :show-icon-close="true"
-        fullSize
+        :show-icon-close="false"
+        :full-size="true"
         @beforeOpen="beforeOpen"
         :params="{}"
         class="sales-order-popup"
-        :title="titleForm"
+        width="1150px"
     >
-        <!-- <template #header>
-            <div class="modal-header-custom flex items-center gap-4 min-h-[56px] px-2">
-                <div class="text-xl font-bold">{{  }}</div>
+        <template #header>
+            <div class="title-custom">
+                <div class="title-custom__line"></div>
+                <div class="title-custom__text">{{ titleForm }}</div>
             </div>
-        </template> -->
+        </template>
 
         <template #content>
             <div class="voucher-body flex flex-col gap-4">
-                <div class="voucher-body__master grid grid-cols-12 gap-4">
+                <div class="voucher-body__master flex gap-4">
                     <div class="info-card flex flex-col gap-4 col-span-7">
                         <div class="w-full flex gap-4">
                             <div class="info-card__body w-1/3">
-                                <BaseInput
-                                    v-model="model.CustomerID"
+                                <BaseCombobox
+                                    v-model="proxy.model.CustomerID"
                                     :label="$t('i18nSAOrder.Detail.CustomerID')"
+                                    :store="customerStore"
+                                    :autoLoad="false"
+                                    clearIcon
+                                    :initText="proxy.model.CustomerName"
+                                    class="w-1/2"
+                                    @change="comboboxCustomerChange"
+                                />
+                                <BaseInput
+                                    v-model="proxy.model.CashierName"
+                                    label="Nhân viên thu ngân"
                                     class="w-full"
                                 />
-                                <BaseInput v-model="model.CashierName" label="Nhân viên thu ngân" class="w-full" />
                             </div>
                             <div class="info-card__body w-1/3">
                                 <BaseInput
-                                    v-model="model.CustomerName"
+                                    v-model="proxy.model.CustomerName"
                                     :label="$t('i18nSAOrder.Detail.CustomerName')"
                                     class="w-full"
                                 />
                             </div>
                             <div class="info-card__body w-1/3">
                                 <BaseInput
-                                    v-model="model.RefNo"
+                                    v-model="proxy.model.RefNo"
                                     :label="$t('i18nSAOrder.Detail.SAOrderCode')"
                                     class="w-full"
                                 />
                                 <BaseDatepicker
-                                    v-model="model.RefDate"
+                                    v-model="proxy.model.RefDate"
                                     :label="$t('i18nSAOrder.Detail.OrderDate')"
                                     class="w-full"
                                 />
@@ -48,7 +58,7 @@
                         </div>
                         <div>
                             <BaseTextArea
-                                v-model="model.Description"
+                                v-model="proxy.model.Description"
                                 :label="$t('i18nCommon.Description')"
                                 class="w-full"
                                 :rows="2"
@@ -56,10 +66,10 @@
                         </div>
                     </div>
 
-                    <div class="info-card flex flex-col gap-4 col-span-2">
+                    <div class="info-card flex flex-col gap-4 w-85">
                         <div class="info-card__body">
                             <BaseCombobox
-                                v-model="model.PaymentMethod"
+                                v-model="proxy.model.PaymentMethod"
                                 label="Hình thức thanh toán"
                                 :store="paymentMethodStore"
                                 :searchable="false"
@@ -68,43 +78,31 @@
                         </div>
                     </div>
 
-                    <div class="info-card flex flex-col gap-4 col-span-3">
+                    <div class="info-card flex flex-col gap-4 w-85">
                         <div class="info-card__body">
                             <div class="total-line">
                                 <span class="total-line__label">Tổng tiền hàng</span>
                                 <span class="total-line__value">
-                                    {{ formatData.formatCurrency(Number(model.SubTotalAmount ?? 0)) }}
+                                    {{ formatData.formatCurrency(Number(proxy.model.SubTotalAmount ?? 0)) }}
                                 </span>
                             </div>
                             <div class="total-line">
                                 <span class="total-line__label">Giảm giá</span>
                                 <span class="total-line__value">
-                                    {{ formatData.formatCurrency(Number(model.DiscountAmount ?? 0)) }}
+                                    {{ formatData.formatCurrency(Number(proxy.model.DiscountAmount ?? 0)) }}
                                 </span>
                             </div>
                             <div class="total-line">
                                 <span class="total-line__label">Thuế VAT</span>
                                 <span class="total-line__value">
-                                    {{ formatData.formatCurrency(Number(model.TaxAmount ?? 0)) }}
+                                    {{ formatData.formatCurrency(Number(proxy.model.TaxAmount ?? 0)) }}
                                 </span>
                             </div>
 
-                            <!-- <div class="total-line">
-                                <span class="total-line__label">Khách đã trả</span>
-                                <span class="total-line__value">
-                                    {{ formatData.formatCurrency(Number(model.PaidAmount ?? 0)) }}
-                                </span>
-                            </div>
-                            <div class="total-line">
-                                <span class="total-line__label">Tiền thối lại</span>
-                                <span class="total-line__value">
-                                    {{ formatData.formatCurrency(Number(model.ChangeAmount ?? 0)) }}
-                                </span>
-                            </div> -->
                             <div class="total-line total-line--strong">
                                 <span class="total-line__label">Tổng thanh toán</span>
                                 <span class="total-line__value">
-                                    {{ formatData.formatCurrency(Number(model.TotalAmount ?? 0)) }}
+                                    {{ formatData.formatCurrency(Number(proxy.model.TotalAmount ?? 0)) }}
                                 </span>
                             </div>
                         </div>
@@ -119,7 +117,7 @@
                     <div class="voucher-body__grid">
                         <BaseTableEditor
                             ref="orderItemsEditor"
-                            v-model="model.SAOrderDetails"
+                            v-model="proxy.model.SAOrderDetails"
                             :columns="orderItemColumns"
                             :show-selection="false"
                             row-key="RefDetailID"
@@ -129,6 +127,7 @@
                             :show-pagination="false"
                             @selected="onOrderItemSelected"
                             @before-selected="onOrderItemBeforeSelected"
+                            :model-class="SAOrderDetail"
                         />
                     </div>
 
@@ -137,7 +136,7 @@
                         <BaseButton
                             size="sm"
                             @click="removeAllOrderItems"
-                            :disabled="model.SAOrderDetails.length === 0"
+                            :disabled="proxy.model.SAOrderDetails.length === 0"
                         >
                             Xóa hết dòng
                         </BaseButton>
@@ -157,8 +156,8 @@
     </BasePopup>
 </template>
 
-<script setup lang="ts">
-import { computed, getCurrentInstance, reactive, ref } from "vue";
+<script lang="ts">
+import { computed, defineComponent, getCurrentInstance, reactive, ref } from "vue";
 import BasePopup from "@/components/popup/BasePopup.vue";
 import SAOrderAPI from "@/api/modules/business/SAOrderAPI";
 import inventoryItemAPI from "@/api/modules/dictionary/inventoryItemAPI";
@@ -167,260 +166,322 @@ import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls
 import { formatData } from "@/commons/formatData";
 import { ColumnType, FormatType } from "@/constants";
 import SAOrder from "@/models/sales/SAOrder";
+import SAOrderDetail from "@/models/sales/SAOrderDetail";
 
-const { proxy } = getCurrentInstance();
+export default defineComponent({
+    name: "SAOrderDetail",
+    components: { BasePopup },
+    setup() {
+        const { proxy } = getCurrentInstance() as any;
 
-/**
- * Tham chiếu đến BaseTableEditor để thao tác dòng hàng.
- */
-const orderItemsEditor = ref<any>(null);
+        /**
+         * Tham chiếu đến BaseTableEditor để thao tác dòng hàng.
+         */
+        const orderItemsEditor = ref<any>(null);
 
-/**
- * Dòng chi tiết mặc định khi thêm mới.
- */
-const defaultOrderItem = reactive({
-    RefDetailID: null,
-    RefID: null,
-    InventoryItemID: null,
-    InventoryItemCode: "",
-    InventoryItemName: "",
-    Description: "",
-    UnitID: null,
-    UnitName: null,
-    MainUnitID: null,
-    MainUnitName: null,
-    Quantity: 1,
-    MainQuantity: 0,
-    UnitPrice: 0,
-    MainUnitPrice: 0,
-    DiscountRate: 0,
-    DiscountAmount: 0,
-    VatRate: 0,
-    VatRateName: null,
-    VatAmount: 0,
-    Amount: 0,
-    SortOrder: 1,
-});
+        /**
+         * Store combobox cho chọn hàng hóa trong dòng đơn hàng.
+         */
+        const inventoryItemStore = useComboboxStore("sa_inventory_item", {
+            viewOrTableName: "di_inventory_item",
+            comboboxLoadData: (payload) => loadDataRemoteCombobox(inventoryItemAPI, payload),
+            displayField: "InventoryItemCode",
+            valueField: "InventoryItemID",
+            columns: [
+                { dataField: "InventoryItemCode", title: "Mã hàng", width: 150 },
+                { dataField: "InventoryItemName", title: "Tên hàng", width: 200 },
+                { dataField: "QuantityBalance", title: "Số lượng tồn", width: 150 },
+            ],
+            dropdownWidth: 600,
+        });
 
-/**
- * Store combobox cho chọn hàng hóa trong dòng đơn hàng.
- */
-const inventoryItemStore = useComboboxStore("sales_inventory_item", {
-    viewOrTableName: "di_inventory_item",
-    comboboxLoadData: (payload) => loadDataRemoteCombobox(inventoryItemAPI, payload),
-    displayField: "InventoryItemName",
-    valueField: "InventoryItemID",
-});
+        /**
+         * Cấu hình editor cho từng cột trong bảng dòng đơn hàng.
+         */
+        const editorProps = reactive({
+            InventoryItemID: {
+                store: inventoryItemStore,
+                autoLoad: true,
+            },
+            Quantity: {
+                min: 1,
+            },
+            UnitPrice: {
+                min: 0,
+                formatType: FormatType.Currency,
+            },
+            Amount: {
+                readonly: true,
+            },
+            Description: {
+                readonly: false,
+            },
+        });
 
-/**
- * Store local cho hình thức thanh toán.
- */
-const paymentMethodStore = useComboboxStore("sales_payment_method", {
-    queryMode: "local",
-    data: [
-        { Value: 1, Text: "Tiền mặt" },
-        { Value: 2, Text: "Chuyển khoản" },
-        { Value: 3, Text: "Thẻ" },
-    ],
-    displayField: "Text",
-    valueField: "Value",
-});
+        /**
+         * Dòng chi tiết mặc định khi thêm mới.
+         */
+        const defaultOrderItem = reactive({
+            RefDetailID: null,
+            RefID: null,
+            InventoryItemID: null,
+            InventoryItemCode: "",
+            InventoryItemName: "",
+            Description: "",
+            UnitID: null,
+            UnitName: null,
+            MainUnitID: null,
+            MainUnitName: null,
+            Quantity: 1,
+            MainQuantity: 0,
+            UnitPrice: 0,
+            MainUnitPrice: 0,
+            DiscountRate: 0,
+            DiscountAmount: 0,
+            VatRate: 0,
+            VatRateName: null,
+            VatAmount: 0,
+            Amount: 0,
+            SortOrder: 1,
+        });
 
-/**
- * Cấu hình editor cho từng cột trong bảng dòng đơn hàng.
- */
-const editorProps = reactive({
-    InventoryItemID: {
-        store: inventoryItemStore,
-        autoLoad: true,
-    },
-    Quantity: {
-        min: 1,
-    },
-    UnitPrice: {
-        min: 0,
-        formatType: FormatType.Currency,
-    },
-    Amount: {
-        readonly: true,
-    },
-    Description: {
-        readonly: false,
-    },
-});
+        /**
+         * Store của khách hàng
+         */
+        const customerStore = useComboboxStore("sa_customer", {
+            viewOrTableName: "di_customer",
+            comboboxLoadData: (payload) => loadDataRemoteCombobox(inventoryItemAPI, payload),
+            displayField: "CustomerCode",
+            valueField: "CustomerID",
+            columns: [
+                { dataField: "CustomerCode", title: "Mã khách hàng", width: 150 },
+                { dataField: "CustomerName", title: "Tên khách hàng", width: 200 },
+                { dataField: "PhoneNumber", title: "Số điện thoại", width: 150 },
+            ],
+            dropdownWidth: 600,
+        });
 
-/**
- * Cột hiển thị cho danh sách dòng hàng hóa.
- */
-const orderItemColumns = [
-    {
-        dataField: "InventoryItemID",
-        displayField: "InventoryItemName",
-        title: "Hàng hóa",
-        width: 240,
-        columnType: ColumnType.Combobox,
-        editable: true,
-    },
-    {
-        dataField: "InventoryItemCode",
-        title: "Mã hàng",
-        width: 140,
-        columnType: ColumnType.DisplayOnly,
-        editable: false,
-    },
-    {
-        dataField: "Quantity",
-        title: "Số lượng",
-        width: 120,
-        columnType: ColumnType.InputNumber,
-        formatType: FormatType.Quantity,
-        align: "right",
-        editable: true,
-    },
-    {
-        dataField: "UnitPrice",
-        title: "Đơn giá",
-        width: 160,
-        columnType: ColumnType.InputNumber,
-        formatType: FormatType.Currency,
-        align: "right",
-        editable: true,
-    },
-    {
-        dataField: "Amount",
-        title: "Thành tiền",
-        width: 160,
-        columnType: ColumnType.InputNumber,
-        formatType: FormatType.Currency,
-        align: "right",
-        editable: false,
-    },
-    {
-        dataField: "Description",
-        title: "Ghi chú",
-        columnType: ColumnType.DisplayOnly,
-        editable: false,
-    },
-];
+        /**
+         * Store local cho hình thức thanh toán.
+         */
+        const paymentMethodStore = useComboboxStore("sa_payment_method", {
+            queryMode: "local",
+            data: [
+                { Value: 1, Text: "Tiền mặt" },
+                { Value: 2, Text: "Chuyển khoản" },
+                { Value: 3, Text: "Thẻ" },
+            ],
+            displayField: "Text",
+            valueField: "Value",
+        });
 
-/**
- * Đồng bộ thành tiền cho một dòng hàng.
- * @param row Dòng dữ liệu cần cập nhật.
- * @returns Không trả về dữ liệu.
- */
-const syncOrderItemAmount = (row: any): void => {
-    if (!row) {
-        return;
-    }
+        /**
+         * Cột hiển thị cho danh sách dòng hàng hóa.
+         */
+        const orderItemColumns = [
+            {
+                dataField: "InventoryItemID",
+                displayField: "InventoryItemName",
+                title: "Hàng hóa",
+                width: 240,
+                columnType: ColumnType.Combobox,
+                editable: true,
+            },
+            {
+                dataField: "InventoryItemCode",
+                title: "Mã hàng",
+                width: 140,
+                columnType: ColumnType.Text,
+                editable: false,
+            },
+            {
+                dataField: "Quantity",
+                title: "Số lượng",
+                width: 120,
+                columnType: ColumnType.InputNumber,
+                formatType: FormatType.Quantity,
+                align: "right",
+                editable: true,
+            },
+            {
+                dataField: "UnitPrice",
+                title: "Đơn giá",
+                width: 160,
+                columnType: ColumnType.InputNumber,
+                formatType: FormatType.Currency,
+                align: "right",
+                editable: true,
+            },
+            {
+                dataField: "Amount",
+                title: "Thành tiền",
+                width: 160,
+                columnType: ColumnType.Text,
+                formatType: FormatType.Currency,
+                align: "right",
+                editable: false,
+            },
+            {
+                dataField: "Description",
+                title: "Ghi chú",
+                columnType: ColumnType.Text,
+                editable: false,
+            },
+        ];
 
-    const quantity = Number(row.Quantity ?? 0);
-    const unitPrice = Number(row.UnitPrice ?? 0);
-    row.Amount = Number.isFinite(quantity * unitPrice) ? quantity * unitPrice : 0;
-};
+        const titleForm = computed(() => `${proxy.$t("i18nSAOrder.Detail.Title")} ${proxy.model.RefNo ?? ""}`);
 
-/**
- * Xử lý khi chọn hàng hóa trên một dòng đơn.
- * @param row Dòng đang chỉnh sửa.
- * @param column Cột phát sinh sự kiện.
- * @param selectedItem Dữ liệu được chọn từ combobox.
- * @returns Không trả về dữ liệu.
- */
-const onOrderItemSelected = (row: any, column: any, selectedItem: any): void => {
-    if (!row || !column) {
-        return;
-    }
+        /**
+         * Đồng bộ thành tiền cho một dòng hàng.
+         * @param row Dòng dữ liệu cần cập nhật.
+         * @returns Không trả về dữ liệu.
+         */
+        function syncOrderItemAmount(row: any): void {
+            if (!row) {
+                return;
+            }
 
-    if (column.dataField === "InventoryItemID") {
-        row.InventoryItemCode = selectedItem?.InventoryItemCode ?? "";
-        row.InventoryItemName = selectedItem?.InventoryItemName ?? "";
-        row.UnitID = selectedItem?.UnitID ?? null;
-        row.UnitName = selectedItem?.UnitName ?? null;
-        row.MainUnitID = selectedItem?.MainUnitID ?? null;
-        row.MainUnitName = selectedItem?.MainUnitName ?? null;
-        if (!row.UnitPrice) {
-            row.UnitPrice = selectedItem?.SellPrice ?? 0;
+            const quantity = Number(row.Quantity ?? 0);
+            const unitPrice = Number(row.UnitPrice ?? 0);
+            row.Amount = Number.isFinite(quantity * unitPrice) ? quantity * unitPrice : 0;
         }
-    }
 
-    syncOrderItemAmount(row);
-};
+        /**
+         * Xử lý khi chọn hàng hóa trên một dòng đơn.
+         * @param row Dòng đang chỉnh sửa.
+         * @param column Cột phát sinh sự kiện.
+         * @param selectedItem Dữ liệu được chọn từ combobox.
+         * @returns Không trả về dữ liệu.
+         */
+        const onOrderItemSelected = (row: any, column: any, selectedItem: any): void => {
+            if (!row || !column) {
+                return;
+            }
 
-/**
- * Chặn chọn dữ liệu khi giá trị không phù hợp.
- * @param row Dòng đang chỉnh sửa.
- * @param column Cột phát sinh sự kiện.
- * @param metaData Dữ liệu meta của sự kiện.
- * @returns Không trả về dữ liệu.
- */
-const onOrderItemBeforeSelected = (row: any, column: any, metaData: any): void => {
-    if (!row || !column) {
-        return;
-    }
+            if (column.dataField === "InventoryItemID") {
+                row.InventoryItemCode = selectedItem?.InventoryItemCode ?? "";
+                row.InventoryItemName = selectedItem?.InventoryItemName ?? "";
+                row.UnitID = selectedItem?.UnitID ?? null;
+                row.UnitName = selectedItem?.UnitName ?? null;
+                row.MainUnitID = selectedItem?.MainUnitID ?? null;
+                row.MainUnitName = selectedItem?.MainUnitName ?? null;
+                if (!row.UnitPrice) {
+                    row.UnitPrice = selectedItem?.SellPrice ?? 0;
+                }
+            }
 
-    if (column.dataField === "InventoryItemID" && metaData?.newValue?.InventoryItemID === row.InventoryItemID) {
-        metaData.allowSelect = true;
-    }
-};
+            syncOrderItemAmount(row);
+        };
 
-/**
- * Thêm một dòng hàng mới vào bảng chi tiết.
- * @returns Không trả về dữ liệu.
- */
-const addOrderItem = (): void => {
-    orderItemsEditor.value?.addRow();
-};
+        /**
+         * Chặn chọn dữ liệu khi giá trị không phù hợp.
+         * @param row Dòng đang chỉnh sửa.
+         * @param column Cột phát sinh sự kiện.
+         * @param metaData Dữ liệu meta của sự kiện.
+         * @returns Không trả về dữ liệu.
+         */
+        const onOrderItemBeforeSelected = (row: any, column: any, metaData: any): void => {
+            if (!row || !column) {
+                return;
+            }
 
-/**
- * Xóa toàn bộ dòng hàng hiện có.
- * @returns Không trả về dữ liệu.
- */
-const removeAllOrderItems = (): void => {
-    orderItemsEditor.value?.removeAllRow();
-};
+            if (column.dataField === "InventoryItemID" && metaData?.newValue?.InventoryItemID === row.InventoryItemID) {
+                metaData.allowSelect = true;
+            }
+        };
 
-/**
- * Kiểm tra dữ liệu trước khi lưu đơn hàng.
- * @returns `true` nếu hợp lệ, ngược lại `false`.
- */
-const customValidateBeforeSave = (): boolean => {
-    if (!model.SAOrderDetails?.length) {
-        return false;
-    }
+        /**
+         * Thêm một dòng hàng mới vào bảng chi tiết.
+         * @returns Không trả về dữ liệu.
+         */
+        const addOrderItem = (): void => {
+            orderItemsEditor.value?.addRow();
+        };
 
-    model.SAOrderDetails.forEach((row) => {
-        row.RefID = model.RefID;
-        syncOrderItemAmount(row);
-    });
-    return true;
-};
+        /**
+         * Xóa toàn bộ dòng hàng hiện có.
+         * @returns Không trả về dữ liệu.
+         */
+        const removeAllOrderItems = (): void => {
+            orderItemsEditor.value?.removeAllRow();
+        };
 
-/**
- * Chuẩn hóa payload trước khi gửi lưu.
- * @returns Dữ liệu chi tiết đã được làm sạch.
- */
-const transformBeforeSave = (): { SAOrderDetails: unknown[] } => {
-    return {
-        SAOrderDetails: (model.SAOrderDetails ?? [])
-            .filter((item) => item.InventoryItemID)
-            .map((item, index) => ({
-                ...item,
-                RefID: model.RefID,
-                SortOrder: index + 1,
-            })),
-    };
-};
+        /**
+         * Xử lý khi thay đổi khách hàng được chọn trên combobox.
+         * @param item Dữ liệu khách hàng được chọn.
+         * @param value Giá trị value tương ứng.
+         * @returns Không trả về dữ liệu.
+         */
+        const comboboxCustomerChange = (item: any, value: any): void => {
+            if (item) {
+                proxy.model.CustomerCode = item.CustomerCode;
+                proxy.model.CustomerName = item.CustomerName;
+            }
+        };
 
-const titleForm = computed(() => `${proxy.$t("i18nSAOrder.Detail.Title")} ${model.RefNo ?? ""}`);
+        /**
+         * Kiểm tra dữ liệu trước khi lưu đơn hàng.
+         * @returns `true` nếu hợp lệ, ngược lại `false`.
+         */
+        function customValidateBeforeSave(): boolean {
+            if (!proxy.model.SAOrderDetails?.length) {
+                return false;
+            }
 
-/**
- * Kế thừa logic lưu detail cho đơn hàng bán.
- */
-const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<SAOrder>({
-    formID: "SAOrderDetail",
-    api: SAOrderAPI,
-    createDefaultData: () => new SAOrder(),
-    customValidateBeforeSave,
-    transformBeforeSave,
+            proxy.model.SAOrderDetails.forEach((row: any) => {
+                row.RefID = proxy.model.RefID;
+                syncOrderItemAmount(row);
+            });
+            return true;
+        }
+
+        /**
+         * Chuẩn hóa payload trước khi gửi lưu.
+         * @returns Dữ liệu chi tiết đã được làm sạch.
+         */
+        function transformBeforeSave(): { SAOrderDetails: unknown[] } {
+            return {
+                SAOrderDetails: (proxy.model.SAOrderDetails ?? [])
+                    .filter((item: any) => item.InventoryItemID)
+                    .map((item: any, index: number) => ({
+                        ...item,
+                        RefID: proxy.model.RefID,
+                        SortOrder: index + 1,
+                    })),
+            };
+        }
+
+        /**
+         * Kế thừa logic lưu detail cho đơn hàng bán.
+         */
+        const base = useBaseDetail<SAOrder>({
+            formID: "SAOrderDetail",
+            api: SAOrderAPI,
+            createDefaultData: () => new SAOrder(),
+            customValidateBeforeSave,
+            transformBeforeSave,
+        });
+
+        return {
+            ...base,
+            proxy,
+            orderItemsEditor,
+            inventoryItemStore,
+            editorProps,
+            defaultOrderItem,
+            customerStore,
+            paymentMethodStore,
+            orderItemColumns,
+            titleForm,
+            formatData,
+            onOrderItemSelected,
+            onOrderItemBeforeSelected,
+            addOrderItem,
+            removeAllOrderItems,
+            comboboxCustomerChange,
+            SAOrderDetail,
+        };
+    },
 });
 </script>
 
@@ -449,8 +510,6 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<SAOrder>({
 }
 
 .voucher-body__master {
-    // display: flex;
-    // flex-wrap: wrap;
     gap: 16px;
 }
 
@@ -498,10 +557,6 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<SAOrder>({
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    // padding: 10px 12px;
-    // border-radius: 10px;
-    // background: #f9fafb;
-    // border: 1px solid #e5e7eb;
 }
 
 .total-line__label {
@@ -517,19 +572,13 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<SAOrder>({
     white-space: nowrap;
 }
 
-.total-line--strong {
-    // background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    // border-color: #bfdbfe;
-}
-
 .total-line--strong .total-line__label {
-    // color: #1d4ed8;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .total-line--strong .total-line__value {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 @media (max-width: 1200px) {
@@ -544,5 +593,22 @@ const { model, saving, saveAndClose, beforeOpen } = useBaseDetail<SAOrder>({
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+}
+
+.title-custom {
+    display: flex;
+    padding: 16px 12px;
+    align-items: center;
+    gap: 12px;
+    .title-custom__line {
+        background-color: $primary-color;
+        width: 8px;
+        height: 20px;
+        border-radius: 8px;
+    }
+    .title-custom__text {
+        font-size: 16px;
+        font-weight: 600;
+    }
 }
 </style>

@@ -319,7 +319,7 @@ const isRowChecked = (row: TableRow): boolean => {
  * @returns True nếu row đang edit.
  */
 const isRowEditing = (row: TableRow, column: ColumnDefinition | null = null): boolean => {
-    if (column && column.columnType == ColumnType.DisplayOnly) return false;
+    if (column && column.columnType == ColumnType.Text) return false;
     const key = row[props.rowKey];
     if (typeof key !== "string" && typeof key !== "number") return false;
     return activeEditingRowKey.value === key;
@@ -383,7 +383,7 @@ const getEditorEventNames = (column: ColumnDefinition): EditorEventName[] => {
  * @returns Giá trị column type theo hằng số ColumnType.
  */
 const resolveColumnType = (column: ColumnDefinition): number => {
-    if (column.columnType === undefined || column.columnType === null) return ColumnType.DisplayOnly;
+    if (column.columnType === undefined || column.columnType === null) return ColumnType.Text;
     return column.columnType;
 };
 

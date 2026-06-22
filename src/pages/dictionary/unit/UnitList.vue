@@ -1,17 +1,17 @@
-﻿<template>
-    <div class="list-page">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">{{ $t("i18nUnit.List.Title") }}</h1>
+<template>
+    <LayoutList>
+        <template #page-header>
+            <div class="page-title">
+                <div class="page-title-line"></div>
+                <h1 class="page-title-text">{{ $t("i18nUnit.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">
-                    {{ $t("i18nUnit.List.AddUnit") }}
+                <BaseButton icon-left="icon-plus-white" size="sm" variant="primary" @click="createItem">
+                    {{ $t("i18nCommon.AddNew") }}
                 </BaseButton>
             </div>
-        </div>
-
-        <div class="page-content">
+        </template>
+        <template #page-content>
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
@@ -20,7 +20,6 @@
                     <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
                 </div>
             </div>
-
             <div class="table-container">
                 <BaseTable
                     :store="tableStore"
@@ -34,25 +33,30 @@
                     </template>
                 </BaseTable>
             </div>
-        </div>
-    </div>
+        </template>
+    </LayoutList>
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance } from "vue";
+import { defineComponent } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import unitAPI from "@/api/modules/dictionary/unitAPI";
 import UnitModel from "@/models/dictionary/unit";
+import LayoutList from "@/pages/common/LayoutList.vue";
 
 export default defineComponent({
     name: "UnitList",
+    components: { LayoutList },
 
+    /**
+     * Khởi tạo trạng thái và các hàm xử lý của màn danh sách đơn vị tính.
+     */
     setup() {
-        const { proxy } = getCurrentInstance() as any;
-
         /**
          * Validate danh sách ID trước khi thực hiện xóa.
+         * @param payload Dữ liệu validate trước khi xóa.
+         * @returns `true` nếu có bản ghi hợp lệ, ngược lại `false`.
          */
         const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
             if (payload.ids.length === 0) return false;
@@ -61,6 +65,7 @@ export default defineComponent({
 
         /**
          * Store quản lý trạng thái và dữ liệu của bảng đơn vị tính.
+         * Cấu hình khóa chính, tên bảng và hàm tải dữ liệu.
          */
         const tableStore = useTableStore("unit", {
             keyID: "UnitID",
@@ -68,6 +73,9 @@ export default defineComponent({
             tableLoadData: (payload) => loadListData(payload),
         });
 
+        /**
+         * Tạo các hàm xử lý danh sách chung cho màn đơn vị tính.
+         */
         const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<UnitModel>({
             formID: "UnitList",
             tableStore,
@@ -75,7 +83,9 @@ export default defineComponent({
             validateBeforeDelete,
         });
 
-        // Trả ra các thuộc tính và hàm để sử dụng ngoài template
+        /**
+         * Trả ra các thuộc tính và hàm để sử dụng ở phần <template>.
+         */
         return {
             tableStore,
             onSearch,

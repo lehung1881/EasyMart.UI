@@ -9,6 +9,7 @@
     Save: "Lưu",
     Delete: "Xóa",
     Edit: "Chỉnh sửa",
+    AddNew: "Thêm mới",
     Back: "Quay lại",
     SearchPlaceholder: "Tìm kiếm",
     Description: "Mô tả",

@@ -269,7 +269,7 @@ export default defineComponent({
             {
                 dataField: "Description",
                 title: "Mô tả",
-                columnType: ColumnType.DisplayOnly,
+                columnType: ColumnType.Text,
                 editable: false,
             },
         ];

@@ -8,6 +8,7 @@
     Save: "Save",
     Delete: "Delete",
     Edit: "Edit",
+    AddNew: "Add new",
     Back: "Back",
     SearchPlaceholder: "Search",
     Description: "Description",

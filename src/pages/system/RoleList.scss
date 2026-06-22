@@ -1,15 +1,10 @@
 @use "@/assets/styles/variable" as *;
 
-// ─── Layout gốc ───────────────────────────────────────────────────────────────
-
 .role-screen {
     display: flex;
     height: 100%;
-    gap: 12px;
-    padding-bottom: 12px;
+    // gap: 12px;
 }
-
-// ─── Cột trái: Danh sách vai trò ──────────────────────────────────────────────
 
 .role-panel {
     width: 250px;
@@ -148,7 +143,7 @@
     .permissions-container {
         overflow-y: auto;
         padding: 0 16px;
-        margin-bottom: 16px;
+        // margin-bottom: 16px;
         display: flex;
         flex-direction: column;
         gap: 16px;

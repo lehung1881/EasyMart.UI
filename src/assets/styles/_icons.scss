@@ -1,6 +1,7 @@
 ﻿/* _icons.scss */
 @use "./_variable.scss" as *;
 $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
+$white-color: #ffffff;
 
 @mixin setIcon($icon-name, $icon-x, $icon-y, $icon-size, $color: "", $color-hover: "", $icon-link: "") {
     @if $icon-link == "" {
@@ -101,12 +102,16 @@ $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
 @include setIcon(icon-nav-next-year, -160px, -220px, 20px, $icon-color-default, $primary-color);
 
 /* Icons*/
+@include setIcon(icon-plus-white, -242px, -42px, 16px, $white-color);
+@include setIcon(icon-plus-primary, -242px, -42px, 16px, $primary-color);
+@include setIcon(icon-plus, -60px, 0px, 20px);
 @include setIcon(icon-refresh, -21px, -41px, 18px, $icon-color-default);
 @include setIcon(icon-filter, -261px, 0px, 18px, $icon-color-default);
 @include setIcon(icon-setting, -48px, -60px, 24px, $icon-color-default);
 @include setIcon(icon-row-edit, -340px, -40px, 20px, $icon-color-default);
 @include setIcon(icon-row-delete, -60px, -20px, 20px);
 
+@include setIcon(icon-close-small, -145px, -45px, 10px, $icon-color-default, $icon-color-default);
 @include setIcon(icon-close-24, -144px, -108px, 24px);
 @include setIcon(icon-tick, -216px, -108px, 24px);
 @include setIcon(icon-circle-tick, -194px, -62px, 20px);

@@ -195,7 +195,7 @@ async function handleLogin(): Promise<void> {
     try {
         await authStore.login(buildLoginPayload());
         submitted.value = true;
-        await router.push({ name: "dashboard" });
+        await router.push({ name: "Dashboard" });
     } catch (error: unknown) {
         const loginError = error as LoginApiError;
         errors.form = loginError.Message || t("i18nCommon.Error");

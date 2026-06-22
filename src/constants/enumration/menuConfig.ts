@@ -15,7 +15,7 @@ export const MenuGroup: MenuGroup[] = [
     {
         label: "Tổng quan",
         items: [
-            { key: "dashboard", label: "Dashboard của tôi", routeName: "dashboard" },
+            { key: "dashboard", label: "Dashboard của tôi", routeName: "Dashboard" },
             { key: "knowledge", label: "Kiến thức hữu ích" },
         ],
     },
@@ -23,7 +23,7 @@ export const MenuGroup: MenuGroup[] = [
         label: "Bán hàng",
         items: [
             { key: "orders", label: "Đơn hàng", routeName: "sales" },
-            { key: "customers", label: "Khách hàng", routeName: "customers" },
+            { key: "customer", label: "Khách hàng", routeName: "CustomerList" },
             { key: "invoices", label: "Hóa đơn", routeName: "invoices" },
             { key: "promotions", label: "Khuyến mãi", badge: "Hot", badgeType: "hot" },
         ],
@@ -32,15 +32,15 @@ export const MenuGroup: MenuGroup[] = [
         label: "Kho",
         items: [
             { key: "inventory", label: "Tồn kho", routeName: "inventory-balance" },
-            { key: "stock", label: "Quản lý kho", routeName: "stocks" },
+            { key: "stock", label: "Quản lý kho", routeName: "StockList" },
         ],
     },
     {
         label: "Danh mục",
         items: [
-            { key: "inventory-item", label: "Hàng hóa", routeName: "inventory-items" },
-            { key: "units", label: "Đơn vị tính", routeName: "units" },
-            { key: "suppliers", label: "Nhà cung cấp", routeName: "suppliers" },
+            { key: "inventory-item", label: "Hàng hóa", routeName: "InventoryItemList" },
+            { key: "unit", label: "Đơn vị tính", routeName: "UnitList" },
+            { key: "supplier", label: "Nhà cung cấp", routeName: "SupplierList" },
         ],
     },
     {

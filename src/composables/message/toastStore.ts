@@ -30,7 +30,7 @@ export const useToastStore = defineStore("toast", () => {
         const index = items.value.findIndex((item) => item.id === id);
         if (index !== -1) {
             const targetToast = items.value[index];
-            if (typeof targetToast.beforeClose === "function") {
+            if (typeof targetToast?.beforeClose === "function") {
                 targetToast.beforeClose(id);
             }
             items.value.splice(index, 1);
@@ -46,8 +46,12 @@ export const useToastStore = defineStore("toast", () => {
             // Giả lập call API (Thay bằng axios/fetch thực tế của bạn)
             // const res = await notificationAPI.getUnread();
             const mockApiResponse = [
-                { id: 101, content: "Chào mừng bạn quay trở lại! Hệ thống vừa cập nhật tính năng mới.", type: "success" },
-                { id: 102, content: "Lưu ý: Tài khoản của bạn sẽ hết hạn VIP sau 3 ngày nữa.", type: "warning" }
+                {
+                    id: 101,
+                    content: "Chào mừng bạn quay trở lại! Hệ thống vừa cập nhật tính năng mới.",
+                    type: "success",
+                },
+                { id: 102, content: "Lưu ý: Tài khoản của bạn sẽ hết hạn VIP sau 3 ngày nữa.", type: "warning" },
             ];
 
             // Duyệt qua kết quả từ API và nạp vào danh sách Toast để show lên màn hình
@@ -56,7 +60,7 @@ export const useToastStore = defineStore("toast", () => {
                     id: Date.now() + noti.id,
                     message: noti.content,
                     type: noti.type as ToastType,
-                    position: "top-right", // Vị trí mong muốn xuất hiện khi vào ứng dụng
+                    position: "top-right",
                 });
             });
         } catch (error) {
@@ -68,6 +72,6 @@ export const useToastStore = defineStore("toast", () => {
         items,
         addToast,
         removeToast,
-        fetchAndShowSystemNotifications
+        fetchAndShowSystemNotifications,
     };
 });

@@ -2,6 +2,7 @@ import type { RouteRecordRaw } from "vue-router";
 import dictionaryRoutes from "./dictionaryRouter";
 import salesRoutes from "./salesRouter";
 import reportRoutes from "./reportRouter";
+import systemRoutes from "./systemRouter";
 
 const appRoutes: RouteRecordRaw[] = [
     {
@@ -14,22 +15,18 @@ const appRoutes: RouteRecordRaw[] = [
             },
             {
                 path: "dashboard",
-                name: "dashboard",
+                name: "Dashboard",
                 component: () => import("@/pages/dashboard/Dashboard.vue"),
             },
             {
-                path: "role",
-                name: "role",
-                component: () => import("@/pages/system/RoleListDetail.vue"),
+                path: "sale/saorder-pos",
+                name: "SAOrderPOS",
+                component: () => import("@/pages/sales/SAOrderPOS.vue"),
             },
-            {
-                path: "user",
-                name: "user",
-                component: () => import("@/pages/system/UserList.vue"),
-            },
+
             ...dictionaryRoutes,
             ...salesRoutes,
-            ...reportRoutes,
+            ...systemRoutes,
         ],
     },
 ];

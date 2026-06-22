@@ -5,6 +5,7 @@ import { ModelState, FormState } from "@/constants/enumration/modelState";
 import { attachDetailDebug, detachDetailDebug } from "@/composables/base/useDebug";
 import { showError } from "@/commons/messageBox";
 import { formConfigMap, type FormConfig } from "@/constants/staticConfig/FormConfig";
+import { useToastMessage } from "@/composables/message/useToastMessage";
 
 /**
  * Payload callback trước khi lưu dữ liệu detail.
@@ -56,6 +57,11 @@ export interface BaseDetailOptions<TModel extends BaseModel> {
  * @returns Bộ state/hàm dùng chung cho luồng nhập liệu và lưu detail.
  */
 export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptions<TModel>) {
+    /**
+     * Toast thông báo
+     */
+    const toast = useToastMessage();
+
     /**
      * Các phần chính của useBaseDetail
      */
@@ -199,20 +205,29 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
 
         try {
             saving.value = true;
-            const response = await api.saveData(payload);
-            model.commit();
+            const saveResult = await api.saveData(payload);
 
-            // Nếu có callback cập nhật lại list sau khi save thành công
-            if (proxy.updateListCallback && typeof proxy.updateListCallback === "function") {
-                proxy.updateListCallback(payload);
+            if (saveResult && saveResult.Success) {
+                model.commitChange();
+
+                // Nếu có callback cập nhật lại list sau khi save thành công
+                if (proxy.updateListCallback && typeof proxy.updateListCallback === "function") {
+                    proxy.updateListCallback(payload);
+                }
+
+                await options.onSaveSuccess?.({
+                    payload,
+                    response: saveResult,
+                    formState: formState.value,
+                });
+
+                toast.showSuccess("Lưu thành công", {
+                    position: "top-center",
+                });
+
+                return true;
             }
-
-            await options.onSaveSuccess?.({
-                payload,
-                response,
-                formState: formState.value,
-            });
-            return true;
+            return false;
         } catch (error) {
             const normalizedError = error instanceof Error ? error : new Error("Save detail failed");
             await options.onSaveError?.(normalizedError);

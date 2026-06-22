@@ -1,44 +1,21 @@
-import { createVNode, render, type VNode, type Component } from "vue";
-import BaseToastMessage from "./BaseToastMessage.vue";
+import { type VNode, type Component } from "vue";
 import { useToastStore, type ToastType, type ToastItem, type ToastPosition } from "./toastStore";
 
-let isMounted = false;
-
-/**
- * Tự động tạo node chứa ngoại vi và gắn Component Toast thẳng vào body HTML
- */
-const mountToastContainer = () => {
-    if (isMounted) return;
-    
-    const container = document.createElement("div");
-    container.id = "global-toast-container";
-    document.body.appendChild(container);
-    
-    const vnode = createVNode(BaseToastMessage);
-    render(vnode, container);
-    
-    isMounted = true;
-};
-
 interface ToastOptions {
-    duration?: number;          // Thời gian hiển thị (ms), mặc định 3000ms
-    autoClose?: boolean;        // Tự động đóng hay giữ im? Mặc định là true
-    position?: ToastPosition;   // Vị trí hiển thị, mặc định 'top-right'
+    duration?: number; // Thời gian hiển thị (ms), mặc định 3000ms
+    autoClose?: boolean; // Tự động đóng hay giữ im? Mặc định là true
+    position?: ToastPosition; // Vị trí hiển thị, mặc định 'top-right'
     beforeClose?: (id: number) => void; // Callback kích hoạt ngay trước khi đóng
 }
 
 export function useToastMessage() {
     // Khởi tạo thực thể Pinia Store để tương tác
     const store = useToastStore();
-    
-    const show = (
-        message: string | VNode | Component, 
-        type: ToastType = "info", 
-        options: ToastOptions = {}
-    ) => {
-        // Đảm bảo container giao diện đã có trên body DOM
-        mountToastContainer();
 
+    /**
+     * Hàm lõi đẩy thông báo vào hệ thống quản lý tập trung
+     */
+    const show = (message: string | VNode | Component, type: ToastType = "info", options: ToastOptions = {}) => {
         const id = Date.now() + Math.random();
         const position = options.position || "top-right";
         const autoClose = options.autoClose !== undefined ? options.autoClose : true;
@@ -49,16 +26,16 @@ export function useToastMessage() {
             message,
             type,
             position,
-            beforeClose: options.beforeClose
+            beforeClose: options.beforeClose,
         };
 
-        // Bắn dữ liệu vào Pinia Store thông qua Action gộp trung
+        // Bắn dữ liệu vào Pinia Store thông qua Action gộp chung
         store.addToast(newToast);
 
         // Chỉ tạo bộ đếm thời gian nếu autoClose thiết lập bằng true
         if (autoClose) {
             setTimeout(() => {
-                // Gọi action xoá tập trung của Pinia (Hàm này trong store đã tự xử lý logic chạy trước khi đóng beforeClose)
+                // Gọi action xoá tập trung của Pinia
                 store.removeToast(id);
             }, duration);
         }
@@ -78,7 +55,7 @@ export function useToastMessage() {
         showError,
         showSuccess,
         showCustom,
-        // Tiện tay xuất thêm hàm fetch từ store ra ngoài để app cần dùng thì gọi luôn
-        fetchAndShowSystemNotifications: store.fetchAndShowSystemNotifications
+        // Xuất thêm hàm fetch từ store ra ngoài để app cần dùng thì gọi luôn
+        fetchAndShowSystemNotifications: store.fetchAndShowSystemNotifications,
     };
 }

@@ -1,16 +1,17 @@
-﻿<template>
-    <div class="list-page">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">{{ $t("i18nInventoryItem.List.Title") }}</h1>
+<template>
+    <LayoutList>
+        <template #page-header>
+            <div class="page-title">
+                <div class="page-title-line"></div>
+                <h1 class="page-title-text">{{ $t("i18nInventoryItem.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">
-                    {{ $t("i18nInventoryItem.List.AddInventoryItem") }}
+                <BaseButton icon-left="icon-plus-white" size="sm" variant="primary" @click="createItem">
+                    {{ $t("i18nCommon.AddNew") }}
                 </BaseButton>
             </div>
-        </div>
-        <div class="page-content">
+        </template>
+        <template #page-content>
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
@@ -33,24 +34,27 @@
                     </template>
                 </BaseTable>
             </div>
-        </div>
-    </div>
+        </template>
+    </LayoutList>
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance } from "vue";
+import { defineComponent } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { usePopup } from "@/composables/popup/usePopup";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
 import InventoryItemModel from "@/models/dictionary/inventoryItem";
+import LayoutList from "@/pages/common/LayoutList.vue";
 
 export default defineComponent({
     name: "InventoryItemList",
+    components: { LayoutList },
 
+    /**
+     * Khởi tạo trạng thái và các hàm xử lý của màn danh sách hàng hóa.
+     */
     setup() {
-        const { proxy } = getCurrentInstance() as any;
-
         /**
          * Validate nghiệp vụ trước khi xóa hàng hóa.
          * @param payload Dữ liệu validate trước khi xóa.
@@ -72,9 +76,7 @@ export default defineComponent({
         });
 
         /**
-         * Sử dụng composable useBaseList để xử lý logic chung cho các trang danh sách, bao gồm:
-         * - loadListData: Hàm tải dữ liệu từ API dựa trên payload của tableStore.
-         * - search: Hàm thực hiện tìm kiếm với từ khóa hiện tại.
+         * Sử dụng composable useBaseList để xử lý logic chung cho màn danh sách hàng hóa.
          */
         const { loadListData, onSearch, refresh, onListItemAction, createItem } = useBaseList<InventoryItemModel>({
             formID: "InventoryItemList",
@@ -103,7 +105,9 @@ export default defineComponent({
             });
         };
 
-        // Trả ra các thuộc tính và hàm để sử dụng ở phần <template>
+        /**
+         * Trả ra các biến và hàm để sử dụng ở phần <template>.
+         */
         return {
             tableStore,
             onSearch,

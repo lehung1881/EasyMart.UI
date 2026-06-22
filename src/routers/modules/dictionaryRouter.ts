@@ -2,28 +2,28 @@
 
 const dictionaryRoutes: RouteRecordRaw[] = [
     {
-        path: "dictionary/inventory-items",
-        name: "inventory-items",
+        path: "dictionary/inventory-item",
+        name: "InventoryItemList",
         component: () => import("@/pages/dictionary/inventoryItem/InventoryItemList.vue"),
     },
     {
-        path: "dictionary/stocks",
-        name: "stocks",
+        path: "dictionary/stock",
+        name: "StockList",
         component: () => import("@/pages/dictionary/stock/StockList.vue"),
     },
     {
-        path: "dictionary/units",
-        name: "units",
+        path: "dictionary/unit",
+        name: "UnitList",
         component: () => import("@/pages/dictionary/unit/UnitList.vue"),
     },
     {
-        path: "dictionary/suppliers",
-        name: "suppliers",
+        path: "dictionary/supplier",
+        name: "SupplierList",
         component: () => import("@/pages/dictionary/supplier/SupplierList.vue"),
     },
     {
-        path: "dictionary/customers",
-        name: "customers",
+        path: "dictionary/customer",
+        name: "CustomerList",
         component: () => import("@/pages/dictionary/customer/CustomerList.vue"),
     },
 ];

@@ -7,9 +7,9 @@
         v-bind="$attrs"
         @click="onClick"
     >
-        <span v-if="leftIconClass" class="base-button__icon" :class="leftIconClass" aria-hidden="true"></span>
+        <div v-if="leftIconClass" class="base-button__icon" :class="leftIconClass"></div>
         <slot />
-        <span v-if="rightIconClass" class="base-button__icon" :class="rightIconClass" aria-hidden="true"></span>
+        <div v-if="rightIconClass" class="base-button__icon" :class="rightIconClass"></div>
     </button>
 </template>
 
@@ -116,6 +116,7 @@ $icon-only-width-offset: 2px;
     border: 1px solid transparent;
     // font-family: $font-family-base;
     font-size: $font-size-base;
+    line-height: 16px;
     font-weight: $font-weight-button;
     white-space: nowrap;
     transition:

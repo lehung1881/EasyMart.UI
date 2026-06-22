@@ -18,6 +18,7 @@ import { usePopup } from "@/composables/popup/usePopup";
 import type { BaseModel } from "@/models/common/baseModel";
 import { columnDefault } from "@/constants/columnConfig";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
+import { useToastMessage } from "@/composables/message/useToastMessage";
 
 /**
  * Dữ liệu đầu vào cho callback validate trước khi xóa.
@@ -113,6 +114,9 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
         onDeleteSuccess,
         onDeleteError,
     } = options;
+
+    const toast = useToastMessage();
+
     const { show } = usePopup();
 
     /**
@@ -316,6 +320,9 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
                 // Tối ưu hiệu năng: cập nhật local store thay vì gọi reload từ API.
                 tableStore.deleteRecord(recordData);
                 onDeleteSuccess?.();
+                toast.showSuccess("Xóa thành công", {
+                    position: "top-center",
+                });
             } else {
                 throw new Error("Delete operation failed");
             }

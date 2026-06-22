@@ -1,84 +1,70 @@
 ﻿<template>
-    <div class="list-page">
-        <div class="page-header">
+    <div class="page-content-user">
+        <div class="flex justify-between search-bar">
             <div>
-                <h1 class="page-title">{{ $t("i18nSystem.User.List") }}</h1>
+                <BaseInput size="sm" :placeholder="$t('i18nCommon.SearchPlaceholder')" @input="onSearch" />
             </div>
-            <!-- <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">
-                    {{ $t("i18nSystem.RoleList.AddNew") }}
+            <div class="flex gap-2">
+                <BaseButton size="sm" @click="refresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
+                <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
+                <BaseButton icon-left="icon-plus-white" size="sm" variant="primary" @click="createItem">
+                    {{ $t("i18nCommon.AddNew") }}
                 </BaseButton>
-            </div> -->
+            </div>
         </div>
 
-        <div class="page-content">
-            <div class="flex justify-between search-bar">
-                <div class="flex gap-2"></div>
-                <div class="flex gap-2">
-                    <BaseInput size="sm" :placeholder="$t('i18nCommon.SearchPlaceholder')" @input="onSearch" />
-                    <BaseButton size="sm" @click="refresh" icon-left="icon-refresh rotate-y-180"></BaseButton>
-                    <BaseButton size="sm" icon-left="icon-filter" @click="deleteItem"></BaseButton>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <BaseTable
-                    :store="tableStore"
-                    :auto-load="false"
-                    :show-selection="false"
-                    :empty-text="$t('i18nCommon.EmptyData')"
-                    @row-action-click="onItemAction"
-                    :listRowAction="listRowAction"
-                >
-                    <template #cell-FullName="{ row }">
-                        <div class="flex items-center gap-3" style="padding: 12px 0">
-                            <UserAvatar
-                                :full-name="row.FullName"
-                                :avatar-url="row.AvatarUrl"
-                                :size="36"
-                                shape="circle"
-                            />
-                            <div class="flex flex-col">
-                                <span class="text-sm font-medium text-gray-900">{{ row.FullName }}</span>
-                                <span class="text-xs text-gray-500 flex items-center gap-1">
-                                    {{ row.Email }}
-                                </span>
+        <div class="table-container">
+            <BaseTable
+                :store="tableStore"
+                :auto-load="false"
+                :show-selection="false"
+                :empty-text="$t('i18nCommon.EmptyData')"
+                @row-action-click="onItemAction"
+                :listRowAction="listRowAction"
+            >
+                <template #cell-FullName="{ row }">
+                    <div class="flex items-center gap-3" style="padding: 12px 0">
+                        <UserAvatar :full-name="row.FullName" :avatar-url="row.AvatarUrl" :size="36" shape="circle" />
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-gray-900">{{ row.FullName }}</span>
+                            <span class="text-xs text-gray-500 flex items-center gap-1">
+                                {{ row.Email }}
+                            </span>
+                        </div>
+                    </div>
+                </template>
+                <template #cell-Gender="{ row }">
+                    <StatusTag :status="row.Gender" :list-status="gendorStatus" :hasDot="false" />
+                </template>
+                <template #cell-Status="{ row }">
+                    <StatusTag :status="row.Status" :list-status="statusUsers" />
+                </template>
+                <template #cell-RoleName="{ row }">
+                    <div class="w-full">
+                        <div class="flex gap-2" v-if="!row.edited">
+                            <div>{{ row.RoleName }}</div>
+                        </div>
+                        <div v-else class="flex items-center gap-3">
+                            <div class="w-[256px]">
+                                <BaseCombobox
+                                    v-model="row.RoleID"
+                                    :store="roleStore"
+                                    :autoLoad="false"
+                                    clearIcon
+                                    :initText="row.RoleName"
+                                    @selected="(item: any) => roleSelected(item, row)"
+                                    @change="(item: any) => roleChange(item, row)"
+                                    class="w-[256px]"
+                                />
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="icon-circle-close" @click="cancelSave(row)"></div>
+                                <div class="icon-circle-tick" @click="saveUserRole(row)"></div>
                             </div>
                         </div>
-                    </template>
-                    <template #cell-Gender="{ row }">
-                        <StatusTag :status="row.Gender" :list-status="gendorStatus" :hasDot="false" />
-                    </template>
-                    <template #cell-Status="{ row }">
-                        <StatusTag :status="row.Status" :list-status="statusUsers" />
-                    </template>
-                    <template #cell-RoleName="{ row }">
-                        <div class="w-full">
-                            <div class="flex gap-2" v-if="!row.edited">
-                                <div>{{ row.RoleName }}</div>
-                            </div>
-                            <div v-else class="flex items-center gap-3">
-                                <div class="w-[256px]">
-                                    <BaseCombobox
-                                        v-model="row.RoleID"
-                                        :store="roleStore"
-                                        :autoLoad="false"
-                                        clearIcon
-                                        :initText="row.RoleName"
-                                        @selected="(item: any) => roleSelected(item, row)"
-                                        @change="(item: any) => roleChange(item, row)"
-                                        class="w-[256px]"
-                                    />
-                                </div>
-                                <div class="flex gap-2">
-                                    <div class="icon-circle-close" @click="cancelSave(row)"></div>
-                                    <div class="icon-circle-tick" @click="saveUserRole(row)"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                </BaseTable>
-            </div>
+                    </div>
+                </template>
+            </BaseTable>
         </div>
     </div>
 </template>
@@ -87,7 +73,7 @@
 import { defineComponent, reactive } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
-import UserAPI from "@/api/modules/system/UserAPI";
+import userAPI from "@/api/modules/system/userAPI";
 import SysMscUser from "@/models/system/SysMscUser";
 import { useComboboxStore, loadDataRemoteCombobox } from "@/composables/controls/useComboboxStore";
 import { ModelState } from "@/constants";
@@ -171,7 +157,7 @@ export default defineComponent({
                         desc: false,
                     },
                 ];
-                return loadDataRemoteCombobox(UserAPI, pay);
+                return loadDataRemoteCombobox(userAPI, pay);
             },
             displayField: "RoleName",
             valueField: "RoleID",
@@ -220,7 +206,7 @@ export default defineComponent({
          */
         const saveUserRole = async (row: any) => {
             row.ModelState = ModelState.Update;
-            const saveResult = await UserAPI.saveData(row);
+            const saveResult = await userAPI.saveData(row);
             if (saveResult && saveResult.Success) {
                 row.edited = false;
             }
@@ -266,7 +252,7 @@ export default defineComponent({
         const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<SysMscUser>({
             formID: "UserList",
             tableStore,
-            api: UserAPI,
+            api: userAPI,
             validateBeforeDelete,
         });
 
@@ -331,4 +317,10 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @use "@/assets/styles/dictionary.scss";
+.page-content-user {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
 </style>

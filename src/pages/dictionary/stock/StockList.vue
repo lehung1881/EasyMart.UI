@@ -1,17 +1,17 @@
-﻿<template>
-    <div class="list-page">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">{{ $t("i18nStock.List.Title") }}</h1>
+<template>
+    <LayoutList>
+        <template #page-header>
+            <div class="page-title">
+                <div class="page-title-line"></div>
+                <h1 class="page-title-text">{{ $t("i18nStock.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">
-                    {{ $t("i18nStock.List.AddStock") }}
+                <BaseButton icon-left="icon-plus-white" size="sm" variant="primary" @click="createItem">
+                    {{ $t("i18nCommon.AddNew") }}
                 </BaseButton>
             </div>
-        </div>
-
-        <div class="page-content">
+        </template>
+        <template #page-content>
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
@@ -21,7 +21,6 @@
                     <BaseButton size="sm" icon-left="icon-setting scale-[0.85]"></BaseButton>
                 </div>
             </div>
-
             <div class="table-container">
                 <BaseTable
                     :store="tableStore"
@@ -35,44 +34,66 @@
                     </template>
                 </BaseTable>
             </div>
-        </div>
-    </div>
+        </template>
+    </LayoutList>
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance } from "vue";
+import { defineComponent } from "vue";
 import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/base/useBaseList";
 import { useTableStore } from "@/composables/controls/useTableStore";
 import stockAPI from "@/api/modules/dictionary/stockAPI";
 import StockModel from "@/models/dictionary/stock";
+import LayoutList from "@/pages/common/LayoutList.vue";
 
 export default defineComponent({
     name: "StockList",
+    components: { LayoutList },
 
+    /**
+     * Khởi tạo trạng thái và các hàm xử lý của màn danh sách tồn kho.
+     */
     setup() {
-        const { proxy } = getCurrentInstance() as any;
-
+        /**
+         * Validate danh sách ID trước khi thực hiện xóa.
+         * @param payload Dữ liệu validate trước khi xóa.
+         * @returns `true` nếu có bản ghi hợp lệ, ngược lại `false`.
+         */
         const validateBeforeDelete = async (payload: ValidateBeforeDeletePayload): Promise<boolean> => {
             if (payload.ids.length === 0) return false;
             return true;
         };
 
+        /**
+         * Store quản lý trạng thái và dữ liệu của bảng tồn kho.
+         * Cấu hình khóa chính, tên bảng và hàm tải dữ liệu.
+         */
         const tableStore = useTableStore("stock", {
             keyID: "StockID",
             viewOrTableName: "di_stock",
-            tableLoadData: (payload) => base.loadListData(payload),
+            tableLoadData: (payload) => loadListData(payload),
         });
 
-        const base = useBaseList<StockModel>({
+        /**
+         * Tạo các hàm xử lý danh sách chung cho màn tồn kho.
+         */
+        const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<StockModel>({
             formID: "StockList",
             tableStore,
             api: stockAPI,
             validateBeforeDelete,
         });
 
+        /**
+         * Trả ra các thuộc tính và hàm để sử dụng ở phần <template>.
+         */
         return {
             tableStore,
-            ...base,
+            onSearch,
+            refresh,
+            deleteItem,
+            onListItemAction,
+            createItem,
         };
     },
 });

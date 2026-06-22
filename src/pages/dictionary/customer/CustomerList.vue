@@ -1,17 +1,17 @@
 ﻿<template>
-    <div class="list-page">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">{{ $t("i18nCustomer.List.Title") }}</h1>
+    <LayoutList>
+        <template #page-header>
+            <div class="page-title">
+                <div class="page-title-line"></div>
+                <h1 class="page-title-text">{{ $t("i18nCustomer.List.Title") }}</h1>
             </div>
             <div class="page-actions">
-                <BaseButton size="md" variant="primary" @click="createItem">
-                    {{ $t("i18nCustomer.List.AddCustomer") }}
+                <BaseButton icon-left="icon-plus-white" size="sm" variant="primary" @click="createItem">
+                    {{ $t("i18nCommon.AddNew") }}
                 </BaseButton>
             </div>
-        </div>
-
-        <div class="page-content">
+        </template>
+        <template #page-content>
             <div class="flex justify-between search-bar">
                 <div class="flex gap-2"></div>
                 <div class="flex gap-2">
@@ -42,8 +42,8 @@
                     </template>
                 </BaseTable>
             </div>
-        </div>
-    </div>
+        </template>
+    </LayoutList>
 </template>
 
 <script lang="ts">
@@ -52,10 +52,11 @@ import { useBaseList, type ValidateBeforeDeletePayload } from "@/composables/bas
 import { useTableStore } from "@/composables/controls/useTableStore";
 import customerAPI from "@/api/modules/dictionary/customerAPI";
 import CustomerModel from "@/models/dictionary/customer";
+import LayoutList from "@/pages/common/LayoutList.vue";
 
 export default defineComponent({
     name: "CustomerList",
-
+    components: { LayoutList },
     setup() {
         const { proxy } = getCurrentInstance() as any;
 
@@ -73,12 +74,13 @@ export default defineComponent({
             tableLoadData: (payload) => loadListData(payload),
         });
 
-        const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } = useBaseList<CustomerModel>({
-            formID: "CustomerList",
-            tableStore,
-            api: customerAPI,
-            validateBeforeDelete,
-        });
+        const { loadListData, onSearch, refresh, deleteItem, onListItemAction, createItem } =
+            useBaseList<CustomerModel>({
+                formID: "CustomerList",
+                tableStore,
+                api: customerAPI,
+                validateBeforeDelete,
+            });
 
         // Trả ra các biến và hàm để sử dụng ngoài <template>
         return {
