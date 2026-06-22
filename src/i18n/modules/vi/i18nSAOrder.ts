@@ -1,4 +1,5 @@
 export default {
+    CreateOrder: "Đơn mới",
     List: {
         Title: "Danh sách đơn hàng",
         AddOrder: "Thêm đơn hàng",

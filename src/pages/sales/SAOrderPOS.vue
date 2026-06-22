@@ -1,16 +1,16 @@
 <template>
     <div class="saorder-pos">
-        <div class="saorder-pos_tab">
+        <div class="saorder-pos_header">
             <div class="tab-container">
                 <div
                     v-for="order in listOrders"
-                    :key="order.id"
+                    :key="order.RefID"
                     class="tab-item"
-                    :class="{ active: order.id === activeTabId }"
-                    @click="setActiveTab(order.id)"
+                    :class="{ active: order.RefID === currentOrder?.RefID }"
+                    @click="switchOrder(order as SAOrder)"
                 >
-                    <div class="tab-title">{{ order.name }}</div>
-                    <div @click.stop="closeTab(order.id)">
+                    <div class="tab-title">{{ order.RefNo }}</div>
+                    <div @click.stop="removeOrder(order.RefID)" class="w-4 h-4 flex-center">
                         <svg width="9" height="9" viewBox="100 4 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M108.5 4.5L100.5 12.5M100.5 4.5L108.5 12.5"
@@ -26,8 +26,14 @@
                 <div class="tab-divider"></div>
 
                 <div class="action-group">
-                    <BaseButton class="btn-add-order" icon-right="icon-plus-primary" size="sm" @click="createOrder">
-                        Đơn mới
+                    <BaseButton
+                        class="btn-add-order"
+                        icon-right="icon-plus-primary"
+                        size="sm"
+                        @click="createOrder"
+                        :disabled="isMaxTabsReached"
+                    >
+                        {{ $t("i18nSAOrder.CreateOrder") }}
                     </BaseButton>
                 </div>
             </div>
@@ -38,53 +44,95 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
-
-interface OrderTab {
-    id: number;
-    name: string;
-}
+import { defineComponent, ref, onMounted, computed } from "vue";
+import SAOrder from "@/models/sales/SAOrder";
 
 export default defineComponent({
     name: "SAOrderPOS",
     setup() {
-        const listOrders = ref<OrderTab[]>([
-            { id: 3, name: "Đơn hàng 3" },
-            { id: 2, name: "Đơn hàng 2" },
-            { id: 1, name: "Đơn hàng 1" },
-        ]);
+        /**
+         * Danh sách các đơn hàng đang mở dưới dạng các tab
+         */
+        const listOrders = ref<SAOrder[]>([]);
 
-        const activeTabId = ref<number>(2);
+        /**
+         * Đơn hàng hiện tại đang được chọn/hiển thị
+         */
+        const currentOrder = ref<SAOrder | null>(null);
 
-        const setActiveTab = (id: number) => {
-            activeTabId.value = id;
+        /**
+         * Thay đổi tab đơn hàng đang active
+         * @param {SAOrder} order - Đối tượng đơn hàng được chọn
+         */
+        const switchOrder = (order: SAOrder) => {
+            currentOrder.value = order;
         };
 
-        const closeTab = (id: number) => {
-            const index = listOrders.value.findIndex((item) => item.id === id);
-            if (index !== -1) {
-                listOrders.value.splice(index, 1);
-                if (activeTabId.value === id && listOrders.value.length > 0) {
-                    activeTabId.value = listOrders.value[0].id;
-                }
+        /**
+         * Kiểm tra số lượng tab đã đạt giới hạn tối đa (5 tab) hay chưa
+         * Trả về true nếu số tab >= 5, ngược lại trả về false
+         */
+        const isMaxTabsReached = computed(() => {
+            return listOrders.value.length >= 5;
+        });
+
+        /**
+         * Đóng một tab đơn hàng dựa trên ID
+         * Nếu đóng tab đang active, hệ thống sẽ tự động chuyển active sang tab đầu tiên (nếu có)
+         * * @param {string} refID - ID của đơn hàng cần đóng
+         */
+        const removeOrder = (refID: string) => {
+            const index = listOrders.value.findIndex((item) => item.RefID === refID);
+            if (index === -1) {
+                return;
+            }
+            const isCurrentOrder = currentOrder.value?.RefID === refID;
+            listOrders.value.splice(index, 1);
+            if (isCurrentOrder) {
+                currentOrder.value = listOrders.value[0] ?? null;
+            }
+            // Ngầm định lại 1 đơn
+            if (listOrders.value.length == 0) {
+                createOrder();
             }
         };
 
+        /**
+         * Khởi tạo và thêm một đơn hàng mới vào đầu danh sách tab
+         * Mã số đơn hàng (RefNo) sẽ tự động tăng dựa trên ID lớn nhất hiện tại
+         */
         const createOrder = () => {
-            const nextId = listOrders.value.length > 0 ? Math.max(...listOrders.value.map((o) => o.id)) + 1 : 1;
-            const newOrder: OrderTab = {
-                id: nextId,
-                name: `Đơn hàng ${nextId}`,
-            };
+            // Tính toán hậu tố số cho tên đơn hàng tiếp theo (ví dụ: Đơn hàng 1, Đơn hàng 2,...)
+            const nextId =
+                listOrders.value.length > 0
+                    ? Math.max(...listOrders.value.map((order) => Number(order.RefID) || 0)) + 1
+                    : 1;
+
+            const newOrder = new SAOrder({
+                RefNo: `Đơn hàng ${nextId}`,
+            });
+
+            // Thiết lập khóa chính tự động cho đơn hàng
+            newOrder.setAutoPrimaryKey();
+
+            // Thêm đơn hàng mới vào đầu mảng và đặt làm tab active
             listOrders.value.unshift(newOrder);
-            activeTabId.value = nextId;
+            currentOrder.value = newOrder;
         };
+
+        /**
+         * Hook lifecycle: Tự động tạo một đơn hàng đầu tiên ngay khi component được mount thành công
+         */
+        onMounted(() => {
+            createOrder();
+        });
 
         return {
             listOrders,
-            activeTabId,
-            setActiveTab,
-            closeTab,
+            currentOrder,
+            isMaxTabsReached,
+            switchOrder,
+            removeOrder,
             createOrder,
         };
     },
@@ -104,7 +152,7 @@ $corner-size: 12px;
     inset: 0;
     z-index: 1000;
 
-    .saorder-pos_tab {
+    .saorder-pos_header {
         height: 48px;
         width: 100%;
         background-color: $primary-color;
@@ -130,14 +178,13 @@ $corner-size: 12px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
-            margin-right: 2px;
             border-radius: $radius $radius 0 0;
-            display: flex;
-            align-items: center;
             gap: 12px;
+
             .tab-title {
                 white-space: nowrap;
             }
+
             &.active {
                 background-color: $tab-active-bg;
                 color: #374151;
@@ -172,15 +219,20 @@ $corner-size: 12px;
 
         .tab-divider {
             width: 1px;
-            height: 20px;
+            height: 18px;
             background-color: #d1d5db;
-            margin: 0 12px 10px 12px;
+            margin: 0 12px 12px 12px;
         }
 
         .action-group {
             display: flex;
             align-items: center;
             margin-bottom: 6px;
+
+            .btn-add-order {
+                color: $primary-color;
+                border-color: unset !important;
+            }
         }
     }
 
@@ -189,9 +241,5 @@ $corner-size: 12px;
         background-color: $tab-active-bg;
         width: 100%;
     }
-}
-.btn-add-order {
-    color: $primary-color;
-    border-color: unset !important;
 }
 </style>
