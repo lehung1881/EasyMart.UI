@@ -39,7 +39,15 @@
             </div>
         </div>
 
-        <div class="saorder-pos_content"></div>
+        <div class="saorder-pos_body">
+            <div class="pos-content__main">
+                <div class="selected-items-list">
+                </div>
+            </div>
+            
+            <div class="pos-content__sidebar">
+            </div>
+        </div>
     </div>
 </template>
 
@@ -236,10 +244,34 @@ $corner-size: 12px;
         }
     }
 
-    .saorder-pos_content {
+    .saorder-pos_body {
         height: calc(100% - 48px);
         background-color: $tab-active-bg;
         width: 100%;
+        display: flex;
+        padding: 12px;
+        gap: 12px;
+        box-sizing: border-box;
+
+        .pos-content__main {
+            flex: 1;
+            background-color: #ffffff;
+            border-radius: 0 8px 8px 8px;
+            padding: 16px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .pos-content__sidebar {
+            width: 380px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 16px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
     }
 }
 </style>
