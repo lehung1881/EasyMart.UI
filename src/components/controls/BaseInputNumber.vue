@@ -74,7 +74,8 @@ const emit = defineEmits<{
     (event: "update:modelValue", value: number | null): void;
     (event: "focus", value: FocusEvent): void;
     (event: "blur", value: FocusEvent): void;
-    (event: "change", value: Event): void;
+    (event: "change", value: number | null): void;
+    (event: "input", value: number | null): void;
 }>();
 
 const inputRef = ref<HTMLInputElement | null>(null);
@@ -320,6 +321,7 @@ function emitNumericValue(raw: string): void {
     if (props.max != null && finalValue > props.max) finalValue = props.max;
 
     emit("update:modelValue", finalValue);
+    emit("input", finalValue);
 }
 
 function onInput(event: Event): void {
@@ -377,6 +379,16 @@ function onInput(event: Event): void {
     });
 }
 
+/**
+ * Convert giá trị hiện tại của input thành number | null để emit ra ngoài.
+ * Lấy từ modelValue đã được clamp thay vì parse lại raw string.
+ */
+function getEmitValue(): number | null {
+    if (props.modelValue == null || props.modelValue === "") return null;
+    const num = Number(props.modelValue);
+    return Number.isNaN(num) ? null : num;
+}
+
 // ============================================================
 // Focus / Blur / Change
 // ============================================================
@@ -423,8 +435,8 @@ function onBlur(event: FocusEvent): void {
     emit("blur", event);
 }
 
-function onChange(event: Event): void {
-    emit("change", event);
+function onChange(_event: Event): void {
+    emit("change", getEmitValue());
 }
 
 // ============================================================
