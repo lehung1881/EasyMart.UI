@@ -288,6 +288,7 @@ export default defineComponent({
                 { dataField: "Address", title: "Địa chỉ", width: 250 },
             ],
             dropdownWidth: 600,
+            searchFields: ["StockCode", "StockName", "Address"],
         });
 
         /**

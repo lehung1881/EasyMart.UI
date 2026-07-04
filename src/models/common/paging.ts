@@ -1,5 +1,18 @@
 ﻿import { DataType, FilterOperator } from "@/constants";
 
+export const FilterNodeType = {
+    Condition: 0,
+    Group: 1,
+} as const;
+// Định nghĩa Type để truyền làm kiểu dữ liệu cho property
+export type FilterNodeType = (typeof FilterNodeType)[keyof typeof FilterNodeType];
+
+export const LogicalOperator = {
+    And: 0,
+    Or: 1,
+} as const;
+export type LogicalOperator = (typeof LogicalOperator)[keyof typeof LogicalOperator];
+
 /**
  * Điều kiện sắp xếp - map với SortCondition (C#)
  */
@@ -9,14 +22,28 @@ export interface SortCondition {
 }
 
 /**
- * Điều kiện lọc - map với FilterCondition (C#)
+ * Một node trong cây filter — có thể là điều kiện đơn hoặc nhóm lồng nhau.
+ * Đã cấu trúc lại để map khớp 100% với class FilterCondition (C#).
  */
 export interface FilterCondition {
-    property: string;
-    value: any;
-    operator: FilterOperator;
-    operand?: number;
-    dataType: DataType;
+    /** Xác định node hiện tại là điều kiện đơn hay một nhóm các điều kiện */
+    NodeType: FilterNodeType;
+
+    // ── Chỉ dùng khi NodeType = FilterNodeType.Condition ───────────────────
+    /** Tên thuộc tính hoặc trường dữ liệu cần lọc (ví dụ: "age", "createdDate") */
+    Property?: string | null;
+    /** Giá trị dùng để so sánh */
+    Value?: any;
+    /** Toán tử so sánh (ví dụ: Equal, Contains) */
+    Operator?: FilterOperator;
+    /** Kiểu dữ liệu của thuộc tính */
+    DataType?: DataType;
+
+    // ── Chỉ dùng khi NodeType = FilterNodeType.Group ───────────────────────
+    /** Toán tử logic để nối các điều kiện con (AND / OR) */
+    LogicalOperator?: LogicalOperator;
+    /** Danh sách các điều kiện con hoặc nhóm con lồng bên trong */
+    Children?: FilterCondition[];
 }
 
 /**
@@ -33,14 +60,15 @@ export interface SelectedValue {
  * Yêu cầu phân trang - map với PagingRequest (C#)
  */
 export interface PagingRequest {
-    sort: SortCondition[];
-    filter: FilterCondition[];
-    columns: string;
-    pageIndex: number;
-    pageSize: number;
-    viewOrTableName: string;
+    Sort: SortCondition[];
+    /** Cây điều kiện lọc (đã hỗ trợ cả đơn lẻ lẫn lồng nhau) */
+    Filter?: FilterCondition | null;
+    Columns: string;
+    PageIndex: number;
+    PageSize: number;
+    ViewOrTableName: string;
     /** Giá trị đang selected trong Combobox, bản ghi này sẽ được ưu tiên lên đầu */
-    selectedValue?: SelectedValue | null;
+    SelectedValue?: SelectedValue | null;
 }
 
 /**

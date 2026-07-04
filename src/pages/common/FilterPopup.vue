@@ -129,7 +129,7 @@ const fieldStore = useComboboxStore("filter_popup_fields", {
     data: columns.value,
     displayField: "title",
     valueField: "dataField",
-    searchField: ["title"],
+    searchFields: ["title"],
 });
 
 const operatorStore = useComboboxStore("filter_popup_operators", {
@@ -145,7 +145,7 @@ const operatorStore = useComboboxStore("filter_popup_operators", {
     ],
     displayField: "Text",
     valueField: "Value",
-    searchField: ["Text"],
+    searchFields: ["Text"],
 });
 
 const connectorStore = useComboboxStore("filter_popup_connectors", {
@@ -156,7 +156,7 @@ const connectorStore = useComboboxStore("filter_popup_connectors", {
     ],
     displayField: "Text",
     valueField: "Value",
-    searchField: ["Text"],
+    searchFields: ["Text"],
 });
 
 /**

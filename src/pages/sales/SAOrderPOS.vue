@@ -41,22 +41,29 @@
 
         <div class="saorder-pos_body">
             <div class="pos-content__main">
-                <div class="selected-items-list">
+                <div class="flex items-center gap-4">
+                    <SearchInventoryItem />
+                    <BaseSwitch label="Gộp dòng" />
                 </div>
             </div>
-            
-            <div class="pos-content__sidebar">
-            </div>
+
+            <div class="pos-content__resize-handle" @mousedown="startResize"></div>
+
+            <div class="pos-content__sidebar" :style="{ width: `${sidebarWidth}px` }"></div>
         </div>
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed } from "vue";
+import { defineComponent, ref, onMounted, computed, onBeforeUnmount } from "vue";
 import SAOrder from "@/models/sales/SAOrder";
+import SearchInventoryItem from "@/pages/sales/SearchInventoryItem.vue";
 
 export default defineComponent({
     name: "SAOrderPOS",
+    components: {
+        SearchInventoryItem,
+    },
     setup() {
         /**
          * Danh sách các đơn hàng đang mở dưới dạng các tab
@@ -67,6 +74,12 @@ export default defineComponent({
          * Đơn hàng hiện tại đang được chọn/hiển thị
          */
         const currentOrder = ref<SAOrder | null>(null);
+        const sidebarWidth = ref(380);
+        const minSidebarWidth = 380;
+        const maxSidebarWidth = 600;
+        const isResizing = ref(false);
+        const resizeStartX = ref(0);
+        const resizeStartWidth = ref(380);
 
         /**
          * Thay đổi tab đơn hàng đang active
@@ -128,6 +141,34 @@ export default defineComponent({
             currentOrder.value = newOrder;
         };
 
+        const clampSidebarWidth = (width: number) => {
+            return Math.min(maxSidebarWidth, Math.max(minSidebarWidth, width));
+        };
+
+        const stopResize = () => {
+            isResizing.value = false;
+            window.removeEventListener("mousemove", handleResize);
+            window.removeEventListener("mouseup", stopResize);
+        };
+
+        const handleResize = (event: MouseEvent) => {
+            if (!isResizing.value) {
+                return;
+            }
+
+            const nextWidth = resizeStartWidth.value - (event.clientX - resizeStartX.value);
+            sidebarWidth.value = clampSidebarWidth(nextWidth);
+        };
+
+        const startResize = (event: MouseEvent) => {
+            event.preventDefault();
+            isResizing.value = true;
+            resizeStartX.value = event.clientX;
+            resizeStartWidth.value = sidebarWidth.value;
+            window.addEventListener("mousemove", handleResize);
+            window.addEventListener("mouseup", stopResize);
+        };
+
         /**
          * Hook lifecycle: Tự động tạo một đơn hàng đầu tiên ngay khi component được mount thành công
          */
@@ -135,13 +176,19 @@ export default defineComponent({
             createOrder();
         });
 
+        onBeforeUnmount(() => {
+            stopResize();
+        });
+
         return {
             listOrders,
             currentOrder,
             isMaxTabsReached,
+            sidebarWidth,
             switchOrder,
             removeOrder,
             createOrder,
+            startResize,
         };
     },
 });
@@ -250,20 +297,44 @@ $corner-size: 12px;
         width: 100%;
         display: flex;
         padding: 12px;
-        gap: 12px;
+        // gap: 12px;
         box-sizing: border-box;
+        overflow: hidden;
 
         .pos-content__main {
             flex: 1;
             background-color: #ffffff;
-            border-radius: 0 8px 8px 8px;
+            border-radius: 8px;
             padding: 16px;
             box-sizing: border-box;
             overflow-y: auto;
+            min-width: 0;
+        }
+
+        .pos-content__resize-handle {
+            width: 12px;
+            cursor: col-resize;
+            position: relative;
+            user-select: none;
+            &::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 50%;
+                width: 2px;
+                transform: translateX(-50%);
+                border-radius: 999px;
+                background-color: transparent;
+            }
+
+            &:hover::before {
+                background-color: $primary-color;
+                opacity: 0.8;
+            }
         }
 
         .pos-content__sidebar {
-            width: 380px;
             background-color: #ffffff;
             border-radius: 8px;
             padding: 16px;

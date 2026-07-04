@@ -14,10 +14,11 @@ export default defineConfig({
         preprocessorOptions: {
             scss: {
                 additionalData: `
-          @use "sass:map";
-          @use "@/assets/styles/_variable.scss" as *;
-          @use "@/assets/styles/_icons.scss" as *;
-        `,
+                    @use "sass:map";
+                    @use "@/assets/styles/_variable.scss" as *;
+                    @use "@/assets/styles/_icons.scss" as *;
+                    @use "@/assets/styles/_icon_v2.scss" as *;
+                    `,
             },
         },
     },

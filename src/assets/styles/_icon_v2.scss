@@ -1,0 +1,55 @@
+﻿/* _icons.scss */
+@use "./_variable.scss" as *;
+$link-default-icon: url("@/assets/icons/IconEasyMart.svg");
+$white-color: #ffffff;
+
+@mixin setIcon($icon-name, $icon-x, $icon-y, $icon-size, $color: "", $color-hover: "", $icon-link: "") {
+    @if $icon-link == "" {
+        $icon-link: $link-default-icon;
+    }
+    @if $color == "" {
+        .#{$icon-name} {
+            min-width: $icon-size;
+            min-height: $icon-size;
+            width: $icon-size;
+            height: $icon-size;
+            background: $icon-link $icon-x $icon-y no-repeat;
+            cursor: pointer;
+        }
+    } @else {
+        .#{$icon-name} {
+            min-width: $icon-size;
+            min-height: $icon-size;
+            width: $icon-size;
+            height: $icon-size;
+            -webkit-mask: $icon-link no-repeat $icon-x $icon-y;
+            mask: $icon-link no-repeat $icon-x $icon-y;
+            background-color: $color;
+            cursor: pointer;
+
+            @if $color-hover != "" {
+                &:hover {
+                    background-color: $color-hover;
+                }
+            }
+        }
+    }
+}
+
+@mixin setIconCustomSize($icon-name, $icon-x, $icon-y, $icon-width, $icon-height, $icon-link: "") {
+    @if $icon-link == "" {
+        $icon-link: $link-default-icon;
+    }
+    .#{$icon-name} {
+        min-width: $icon-width;
+        min-height: $icon-height;
+        width: $icon-width;
+        height: $icon-height;
+        background: $icon-link $icon-x $icon-y no-repeat;
+        cursor: pointer;
+    }
+}
+
+/* Eye Icons for Password Visibility Toggle - colored directly in SVG */
+@include setIcon(icon-search, -37px, -250px, 24px);
+@include setIcon(icon-scan, -67px, -250px, 24px);

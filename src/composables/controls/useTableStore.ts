@@ -169,12 +169,11 @@ export const useTableStore = (storeID: string, options?: TableStoreOptions) => {
          * @returns Paging request payload.
          */
         const buildPayload = (pageIndex: number): PagingRequest => ({
-            pageIndex,
-            pageSize: pageSize.value,
-            sort: options?.sorts ?? [],
-            filter: [],
-            columns: "",
-            viewOrTableName: viewName.value,
+            PageIndex: pageIndex,
+            PageSize: pageSize.value,
+            Sort: options?.sorts ?? [],
+            Columns: "",
+            ViewOrTableName: viewName.value,
         });
 
         /**

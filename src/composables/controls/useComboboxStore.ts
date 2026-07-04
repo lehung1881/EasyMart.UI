@@ -8,7 +8,7 @@ import { ref } from "vue";
 import { defineStore } from "pinia";
 import commonFunction from "@/commons/commonFunction";
 import { DataType, FilterOperator } from "@/constants";
-import type { FilterCondition, PagingRequest } from "@/models/common/paging";
+import { FilterNodeType, LogicalOperator, type FilterCondition, type PagingRequest } from "@/models/common/paging";
 import type BaseAPI from "@/api/baseAPI";
 import type { ComboboxLoadData, ComboboxStoreOptions, QueryMode, ModelConstructor } from "@/models/common/combobox";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
@@ -100,14 +100,14 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
         };
 
         /**
-         * Tạo filter text search từ keyword, searchField và displayField.
+         * Tạo filter text search từ keyword, searchFields và displayField.
          * Gộp searchFields với displayField (dedup, bỏ rỗng) rồi tạo FilterCondition cho từng field.
          * @param searchFields Danh sách field search cấu hình.
          * @returns Mảng FilterCondition, rỗng nếu chưa có keyword hoặc không có field nào hợp lệ.
          */
-        const buildTextSearchFilter = (searchFields: Array<string>): Array<FilterCondition> => {
+        const buildTextSearchFilter = (searchFields: Array<string>): FilterCondition | null => {
             const keyword = currentTextSearch.value.trim();
-            if (!keyword) return [];
+            if (!keyword) return null;
 
             const mergedFields = new Set<string>();
             searchFields.forEach((f) => {
@@ -116,15 +116,20 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
             // Gộp displayField vào search fields
             if (displayField.value.trim()) mergedFields.add(displayField.value.trim());
 
-            if (mergedFields.size === 0) return [];
+            if (mergedFields.size === 0) return null;
 
-            return Array.from(mergedFields).map((field) => ({
-                property: field,
-                value: keyword,
-                operator: FilterOperator.Contains,
-                operand: 1,
-                dataType: DataType.String,
-            }));
+            return {
+                NodeType: FilterNodeType.Group,
+                LogicalOperator: LogicalOperator.Or,
+                Children: Array.from(mergedFields).map((field) => ({
+                    NodeType: FilterNodeType.Condition,
+                    Property: field,
+                    Value: keyword,
+                    Operator: FilterOperator.Contains,
+                    Operand: 2, // Đã chuyển sang PascalCase
+                    DataType: DataType.String,
+                })),
+            };
         };
 
         /**
@@ -133,15 +138,14 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
          * @returns Payload phân trang/filter.
          */
         const buildPayload = (pageIndex: number): PagingRequest => ({
-            pageIndex,
-            pageSize: pageSize.value,
-            sort: [],
-            filter: buildTextSearchFilter(configuredSearchFields.value),
-            columns: "",
-            viewOrTableName: viewName.value,
-            selectedValue: getSelectedValueForPayload(),
+            PageIndex: pageIndex,
+            PageSize: pageSize.value,
+            Sort: [],
+            Filter: buildTextSearchFilter(configuredSearchFields.value),
+            Columns: "",
+            ViewOrTableName: viewName.value,
+            SelectedValue: getSelectedValueForPayload(),
         });
-
         /**
          * Lấy selectedValue để đưa vào payload gửi BE, giúp BE biết giá trị nào đang được chọn (vd: để exclude khỏi kết quả).
          * @returns Selected value dạng payload, hoặc null nếu không có giá trị.
@@ -255,7 +259,7 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
             viewName.value = config.viewOrTableName ?? "";
 
             const uniqueFields = new Set<string>();
-            (config.searchField ?? []).forEach((f) => {
+            (config.searchFields ?? []).forEach((f) => {
                 if (f.trim()) uniqueFields.add(f.trim());
             });
             configuredSearchFields.value = Array.from(uniqueFields);

@@ -99,6 +99,7 @@ function onChange(event: Event): void {
 
 .base-switch__label {
     line-height: 14px;
+    width: max-content;
 }
 
 .base-switch__input:checked ~ .base-switch__track {

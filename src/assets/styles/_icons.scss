@@ -1,6 +1,7 @@
 ﻿/* _icons.scss */
 @use "./_variable.scss" as *;
 $link-default-icon: url("@/assets/icons/easy_mart_icon.svg");
+$link-easymart-icon: url("@/assets/icons/IconEasyMart.svg");
 $white-color: #ffffff;
 
 @mixin setIcon($icon-name, $icon-x, $icon-y, $icon-size, $color: "", $color-hover: "", $icon-link: "") {
@@ -116,7 +117,6 @@ $white-color: #ffffff;
 @include setIcon(icon-tick, -216px, -108px, 24px);
 @include setIcon(icon-circle-tick, -194px, -62px, 20px);
 @include setIcon(icon-circle-close, -170px, -62px, 20px);
-// @include setIcon(icon-cl, -216px, -108px, 24px);
 
 
 

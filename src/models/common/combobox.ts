@@ -29,7 +29,7 @@ export interface ComboboxStoreOptions {
     /** Tên view/table gửi BE trong payload */
     viewOrTableName?: string;
     /** Danh sách field dùng để search (gộp thêm displayField khi build filter) */
-    searchField?: string[];
+    searchFields?: string[];
     /** Field dùng để hiển thị text trong input và dropdown */
     displayField: string;
     /** Field dùng làm value khi emit */
