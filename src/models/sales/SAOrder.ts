@@ -11,6 +11,9 @@ export class SAOrder extends BaseModel {
     /** Số đơn hàng. */
     declare RefNo: string;
 
+    /** Số đơn hàng hiển thị trên giao diện. */
+    declare RefNoText: string;
+
     /** Ngày lập đơn hàng. */
     declare RefDate: string;
 
@@ -85,6 +88,7 @@ export class SAOrder extends BaseModel {
 SAOrder.prototype._fields = [
     { name: "RefID", dataType: "string", defaultValue: null, isPrimaryKey: true },
     { name: "RefNo", dataType: "string", defaultValue: null, validateRules: [{ type: "NotNull" }] },
+    { name: "RefNoText", dataType: "string", defaultValue: null, ignoreCheckChange: true },
     { name: "RefDate", dataType: "string", defaultValue: null, validateRules: [{ type: "NotNull" }] },
     { name: "CustomerID", dataType: "string", defaultValue: null },
     { name: "CustomerCode", dataType: "string", defaultValue: null },
@@ -106,7 +110,7 @@ SAOrder.prototype._fields = [
     { name: "CreatedBy", dataType: "string", defaultValue: null },
     { name: "ModifiedDate", dataType: "string", defaultValue: null },
     { name: "ModifiedBy", dataType: "string", defaultValue: null },
-    { name: "SAOrderDetails", dataType: "array", defaultValue: [] },
+    { name: "SAOrderDetails", dataType: "array", defaultValue: [], isDetail: true, detailModel: SAOrderDetail },
 ] as BaseFieldConfig[];
 
 export default SAOrder;

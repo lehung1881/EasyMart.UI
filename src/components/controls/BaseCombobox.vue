@@ -17,7 +17,7 @@
         <!-- Control: input + dropdown — position:relative tính từ đây -->
         <div ref="controlRef" class="cb-control">
             <!-- Input wrapper -->
-            <div class="cb-input-wrap">
+            <div class="cb-input-wrap" :title="visibleText || undefined">
                 <input
                     ref="inputRef"
                     :value="visibleText"
@@ -53,6 +53,17 @@
                     @mousedown.prevent="isOpen ? closeDropdown() : openDropdown()"
                 >
                     <div class="icon-chevron-small" :class="{ 'cb-chevron--open': isOpen }"></div>
+                </button>
+
+                <!-- Nút thêm -->
+                <button
+                    class="cb-btn cb-btn--add"
+                    type="button"
+                    tabindex="-1"
+                    :disabled="disabled"
+                    :readonly="!searchable"
+                >
+                    <div class="icon-add-16"></div>
                 </button>
             </div>
         </div>
@@ -134,6 +145,10 @@ const props = withDefaults(
         searchable?: boolean;
         /** Số item tối đa hiển thị trước khi scroll. default: 6 */
         maxDisplayItem?: number;
+        /**
+         * Hàm custom để override text hiển thị trong input.
+         */
+        customDisplayText?: (selectedItem: any) => string;
     }>(),
     {
         placeholder: "",
@@ -220,7 +235,15 @@ const hasClearValue = computed(() => props.clearIcon && inputText.value && !prop
  * Ưu tiên: inputText (đã resolve) → initText (fallback khi chưa load) → ''
  * Không áp dụng initText khi đang focus để tránh che keyword search.
  */
-const visibleText = computed(() => (inputText.value || isFocused.value ? inputText.value : (props.initText ?? "")));
+const visibleText = computed(() => {
+    const baseText = (() => {
+        if (props.customDisplayText && props.store.selectedItem) {
+            return props.customDisplayText(props.store.selectedItem);
+        }
+        return inputText.value;
+    })();
+    return baseText || isFocused.value ? baseText : (props.initText ?? "");
+});
 
 /** Class size — khớp pattern với BaseInput */
 const sizeClass = computed(() => `cb-root--${props.size}`);
@@ -262,12 +285,19 @@ const getDisplayText = (value: typeof props.modelValue): string => {
  * vị trí của cb-control trong viewport.
  * Gọi mỗi khi mở dropdown để đảm bảo vị trí luôn chính xác dù page đã scroll.
  */
+/**
+ * lvhung - 05.07.2026
+ * Tính toán vị trí fixed cho cb-panel dựa trên vị trí cb-control trong viewport.
+ * Xử lý cả trục Y (trên/dưới) và trục X (trái/phải) để tránh tràn ra ngoài màn hình.
+ */
 const calcDropdownPosition = (): void => {
     if (!controlRef.value || !panelRef.value) return;
 
     const controlRect = controlRef.value.getBoundingClientRect();
     const panelRect = panelRef.value.getBoundingClientRect();
     const gap = 4;
+
+    // ── Trục Y ──────────────────────────────────────────────
     const spaceBelow = window.innerHeight - controlRect.bottom;
     const spaceAbove = controlRect.top;
     const panelHeight = panelRect.height;
@@ -279,10 +309,17 @@ const calcDropdownPosition = (): void => {
               ? controlRect.top - panelHeight - gap
               : controlRect.bottom + gap;
 
+    // ── Trục X ──────────────────────────────────────────────
+    const panelWidth = props.store.dropdownWidth || controlRect.width;
+    const spaceRight = window.innerWidth - controlRect.left;
+
+    // Nếu không đủ chỗ bên phải → căn phải panel với cạnh phải của control
+    const leftPosition = spaceRight >= panelWidth ? controlRect.left : Math.max(0, controlRect.right - panelWidth);
+
     dropdownStyle.value = {
         top: `${topPosition}px`,
-        left: `${controlRect.left}px`,
-        width: `${props.store.dropdownWidth ? props.store.dropdownWidth : controlRect.width}px`,
+        left: `${leftPosition}px`,
+        width: `${panelWidth}px`,
     };
 };
 
@@ -346,7 +383,7 @@ const clearValue = () => {
     confirmedDisplayText.value = "";
     props.store.setSelectedItem(null);
     emit("update:modelValue", null);
-    emit("change", null);
+    emit("change", null, null);
     activeIndex.value = -1;
     inputRef.value?.focus();
     // Reset về full list
@@ -635,16 +672,14 @@ onBeforeUnmount(() => {
         }
     }
 
-    &--toggle {
+    &--toggle,
+    &--add {
         width: 32px;
         height: 100%;
-        // .icon-chevron-small {
-        //     border-radius: 50%;
-        //     &:hover {
-        //         background: rgba($primary-color, 0.08);
-        //     }
-        // }
-        // border-left: 1px solid rgba($border-color, 0.6);
+    }
+
+    &--add {
+        border-left: 1px solid #ddd;
     }
 }
 

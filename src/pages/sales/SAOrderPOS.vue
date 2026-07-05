@@ -1,15 +1,16 @@
-<template>
+﻿<template>
     <div class="saorder-pos">
+        <!-- ── HEADER TABS ── -->
         <div class="saorder-pos_header">
             <div class="tab-container">
                 <div
-                    v-for="order in orders"
+                    v-for="order in orderList"
                     :key="order.RefID"
                     class="tab-item"
-                    :class="{ active: order.RefID === currentOrder?.RefID }"
+                    :class="{ active: order.RefID === activeOrder?.RefID }"
                     @click="setActiveOrder(order as SAOrder)"
                 >
-                    <div class="tab-title">{{ order.RefNo }}</div>
+                    <div class="tab-title">{{ order.RefNoText }}</div>
                     <div @click.stop="closeOrderTab(order.RefID)" class="icon-close16"></div>
                 </div>
 
@@ -29,27 +30,38 @@
             </div>
         </div>
 
+        <!-- ── BODY CONTENT ── -->
         <div class="saorder-pos_body">
+            <!-- Left Side: Main Content Panel -->
             <div class="pos-content__main">
                 <div class="flex items-center gap-4">
-                    <SearchInventoryItem @select-item="handleSelectInventoryItem" />
-                    <BaseSwitch v-model="isGroupRows" label="Gộp dòng" />
+                    <SearchInventoryItem
+                        @select-item="(inventoryItem) => handleSelectInventoryItem(inventoryItem, isGroupRows)"
+                    />
+                    <BaseSwitch v-model="isGroupRows" :label="$t('i18nSAOrder.POS.GroupRows')" />
                 </div>
 
                 <div class="main-selected-panel">
                     <div class="main-selected-panel__header">
                         <div>
-                            <div class="main-selected-panel__title">Hàng hóa đã chọn</div>
+                            <div class="main-selected-panel__title">
+                                {{ $t("i18nSAOrder.POS.SelectedProducts") }}
+                            </div>
                             <div class="main-selected-panel__subtitle">
-                                {{ currentOrder?.SAOrderDetails?.length ?? 0 }} sản phẩm trong đơn
+                                {{
+                                    $t("i18nSAOrder.POS.ProductCount", {
+                                        count: activeOrder?.SAOrderDetails?.length ?? 0,
+                                    })
+                                }}
                             </div>
                         </div>
-                        <div class="main-selected-panel__badge">
+                        <div class="main-selected-panel__badge" v-if="orderSummary.totalAmount > 0">
                             {{ formatCurrency(orderSummary.totalAmount) }}
                         </div>
                     </div>
 
-                    <div v-if="orderDetails.length > 0" class="main-selected-table-wrapper">
+                    <!-- Products Table -->
+                    <div v-if="currentOrderDetails.length > 0" class="main-selected-table-wrapper">
                         <table class="main-selected-table">
                             <thead>
                                 <tr>
@@ -66,17 +78,27 @@
 
                             <tbody>
                                 <tr
-                                    v-for="orderDetail in orderDetails"
+                                    v-for="orderDetail in currentOrderDetails"
                                     :key="orderDetail.RefDetailID"
                                     :class="{ 'is-active': selectedDetailID === orderDetail.RefDetailID }"
                                     @click="selectOrderDetail(orderDetail.RefDetailID)"
+                                    class="main-selected-table__row"
                                 >
                                     <td
                                         v-for="column in tableColumns"
                                         :key="column.key"
                                         :class="[`col-${column.key}`, `is-${column.align}`]"
                                         :style="{ width: column.width }"
+                                        class="main-selected-table__col"
                                     >
+                                        <!-- Serial Column -->
+                                        <template v-if="column.key === 'serial'">
+                                            <div class="flex items-center justify-center font-bold">
+                                                {{ orderDetail.SortOrder }}
+                                            </div>
+                                        </template>
+
+                                        <!-- Product Info Column -->
                                         <template v-if="column.key === 'product'">
                                             <div class="cell-product">
                                                 <div class="cell-product__name">
@@ -88,10 +110,12 @@
                                             </div>
                                         </template>
 
+                                        <!-- Unit Column -->
                                         <template v-else-if="column.key === 'unit'">
                                             {{ orderDetail.UnitName || orderDetail.MainUnitName || "-" }}
                                         </template>
 
+                                        <!-- Quantity Column -->
                                         <template v-else-if="column.key === 'quantity'">
                                             <div class="flex justify-end">
                                                 <BaseInputNumber
@@ -100,7 +124,7 @@
                                                     :max-decimals="0"
                                                     :format-type="FormatType.Quantity"
                                                     @input="
-                                                        (value: any) =>
+                                                        (value: number | null) =>
                                                             updateItemQuantity(orderDetail as SAOrderDetail, value)
                                                     "
                                                     class="quantity-input"
@@ -121,29 +145,41 @@
                                             </div>
                                         </template>
 
+                                        <!-- Unit Price Column -->
                                         <template v-else-if="column.key === 'unit-price'">
                                             <BaseInputNumber
                                                 :model-value="orderDetail.UnitPrice"
                                                 :min="0"
                                                 :format-type="FormatType.Currency"
                                                 @input="
-                                                    (value: any) =>
+                                                    (value: number | null) =>
                                                         updateItemUnitPrice(orderDetail as SAOrderDetail, value)
                                                 "
                                             />
                                         </template>
 
+                                        <!-- Amount Column -->
                                         <template v-else-if="column.key === 'amount'">
                                             <BaseInputNumber
                                                 :model-value="orderDetail.Amount"
                                                 :min="0"
                                                 :format-type="FormatType.Currency"
                                                 @input="
-                                                    (value: any) =>
+                                                    (value: number | null) =>
                                                         updateItemAmount(orderDetail as SAOrderDetail, value)
                                                 "
                                                 class="input-amount"
                                             />
+                                        </template>
+
+                                        <!-- Actions Column -->
+                                        <template v-else-if="column.key === 'action'">
+                                            <div class="flex justify-end">
+                                                <div
+                                                    class="icon-trash-24"
+                                                    @click.stop="removeOrderDetail(orderDetail.RefDetailID)"
+                                                ></div>
+                                            </div>
                                         </template>
                                     </td>
                                 </tr>
@@ -151,26 +187,58 @@
                         </table>
                     </div>
 
+                    <!-- Empty State -->
                     <div v-else class="main-selected-panel__empty">
-                        Chọn sản phẩm từ ô tìm kiếm để thêm vào danh sách hàng hóa.
+                        <div class="text">
+                            {{ $t("i18nSAOrder.POS.EmptyState") }}<br />
+                            <span v-html="$t('i18nSAOrder.POS.SearchShortcut')"></span>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Resize Splitter Split Handle -->
             <div class="pos-content__resize-handle" @mousedown="initiateSidebarResize"></div>
 
+            <!-- Right Side: Sidebar Info & Payment -->
             <div class="pos-content__sidebar" :style="{ width: `${sidebarWidth}px` }">
+                <div class="flex items-center gap-2">
+                    <BaseCombobox
+                        v-if="activeOrder"
+                        v-model="activeOrder.CustomerID"
+                        :store="customerStore"
+                        :autoLoad="false"
+                        clearIcon
+                        class="w-1/2"
+                        @change="handleCustomerChange"
+                        :placeholder="$t('i18nSAOrder.POS.CustomerPlaceholder')"
+                        :custom-display-text="formatCustomerDisplayText"
+                    >
+                        <template #item="{ item }">
+                            <div class="cb-custom-item">
+                                <div class="cb-custom-item__header">
+                                    <span class="cb-custom-item__name">{{ item.CustomerName }}</span>
+                                    <span class="cb-custom-item__code">{{ item.CustomerCode }}</span>
+                                </div>
+                                <div class="cb-custom-item__phone">
+                                    <span>{{ item.PhoneNumber ?? "-" }}</span>
+                                </div>
+                            </div>
+                        </template>
+                    </BaseCombobox>
+                </div>
+
                 <div class="sidebar-footer">
                     <div class="summary-row">
-                        <span>Tạm tính</span>
+                        <span>{{ $t("i18nSAOrder.POS.SubTotal") }}</span>
                         <strong>{{ formatCurrency(orderSummary.totalAmount) }}</strong>
                     </div>
                     <div class="summary-row">
-                        <span>Tổng số lượng</span>
+                        <span>{{ $t("i18nSAOrder.POS.TotalQuantity") }}</span>
                         <strong>{{ orderSummary.totalQuantity }}</strong>
                     </div>
-                    <BaseButton class="w-full" type="primary" :disabled="orderDetails.length === 0">
-                        Thanh toán
+                    <BaseButton class="w-full" type="primary" :disabled="currentOrderDetails.length === 0">
+                        {{ $t("i18nSAOrder.POS.Checkout") }}
                     </BaseButton>
                 </div>
             </div>
@@ -179,313 +247,114 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, onBeforeUnmount } from "vue";
+import { defineComponent, ref, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { FormatType } from "@/constants";
 import SAOrder from "@/models/sales/SAOrder";
 import SAOrderDetail from "@/models/sales/SAOrderDetail";
 import SearchInventoryItem from "@/pages/sales/SearchInventoryItem.vue";
-
-interface InventoryItemSearchResult {
-    InventoryItemID: string;
-    InventoryItemCode: string;
-    InventoryItemName: string;
-    SellPrice: number;
-    MinimumStock: number;
-    ImageUrl: string | null;
-}
+import BaseCombobox from "@/components/controls/BaseCombobox.vue";
+import { useOrderTabManager } from "@/composables/sales/SAOrderPos/useOrderTabManager";
+import { useOrderDetailActions } from "@/composables/sales/SAOrderPos/useOrderDetailActions";
+import { useSidebarResize } from "@/composables/sales/SAOrderPos/useOrderSidebarResize.ts";
 
 export default defineComponent({
     name: "SAOrderPOS",
     components: {
         SearchInventoryItem,
+        BaseCombobox,
     },
     setup() {
-        // Cấu hình các cột hiển thị trong bảng chi tiết hàng hóa
+        // #region CONFIG & LOCAL STATES
+        const { t } = useI18n();
+
         const tableColumns = [
-            { key: "product", label: "Hàng hóa", align: "left" },
-            { key: "unit", label: "Đơn vị tính", align: "left", width: "140px" },
-            { key: "quantity", label: "Số lượng", align: "right", width: "140px" },
-            { key: "unit-price", label: "Đơn giá", align: "right", width: "160px" },
-            { key: "amount", label: "Thành tiền", align: "right", width: "170px" },
+            { key: "serial", label: "", align: "center", width: "50px" },
+            { key: "product", label: t("i18nSAOrder.POS.ColProduct"), align: "left" },
+            { key: "unit", label: t("i18nSAOrder.POS.ColUnit"), align: "left", width: "140px" },
+            { key: "quantity", label: t("i18nSAOrder.POS.ColQuantity"), align: "right", width: "140px" },
+            { key: "unit-price", label: t("i18nSAOrder.POS.ColUnitPrice"), align: "right", width: "160px" },
+            { key: "amount", label: t("i18nSAOrder.POS.ColAmount"), align: "right", width: "170px" },
+            { key: "action", label: "", align: "right", width: "100px" },
         ];
 
-        // Quản lý trạng thái đơn hàng & tabs
-        const orders = ref<SAOrder[]>([]);
-        const currentOrder = ref<SAOrder | null>(null);
         const isGroupRows = ref(true);
+        // #endregion
 
-        // Quản lý kích thước Sidebar kéo dãn
-        const sidebarWidth = ref(380);
-        const MIN_SIDEBAR_WIDTH = 380;
-        const MAX_SIDEBAR_WIDTH = 600;
-        const isResizing = ref(false);
-        const resizeStartX = ref(0);
-        const resizeStartWidth = ref(380);
+        // #region COMPOSABLES
+        const { orderList, activeOrder, isMaxTabsReached, createNewOrder, setActiveOrder, closeOrderTab } =
+            useOrderTabManager();
 
-        /**
-         * Chuyển đổi tab hiển thị sang một đơn hàng được chỉ định.
-         * @param order Đối tượng đơn hàng cần kích hoạt.
-         */
-        const setActiveOrder = (order: SAOrder) => {
-            currentOrder.value = order;
-            selectedDetailID.value = null;
-        };
-
-        const selectOrderDetail = (refDetailID: string) => {
-            selectedDetailID.value = refDetailID;
-        };
-
-        // Danh sách chi tiết hàng hóa của đơn hàng đang chọn
-        const orderDetails = computed(() => currentOrder.value?.SAOrderDetails ?? []);
-        const selectedDetailID = ref<string | null>(null);
-
-        // Tổng hợp tổng số lượng và thành tiền của đơn hàng hiện tại
-        const orderSummary = computed(() => {
-            return orderDetails.value.reduce(
-                (summary, detail) => {
-                    summary.totalQuantity += Number(detail.Quantity ?? 0);
-                    summary.totalAmount += Number(detail.Amount ?? 0);
-                    return summary;
-                },
-                { totalQuantity: 0, totalAmount: 0 },
-            );
-        });
-
-        /**
-         * Định dạng giá trị số thành chuỗi tiền tệ VND (vi-VN).
-         * @param value Giá trị số cần định dạng.
-         */
-        const formatCurrency = (value: number) => {
-            return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
-        };
-
-        /**
-         * Đồng bộ và cập nhật lại mảng chi tiết hàng hóa của đơn hàng hiện tại (Trigger reactivity).
-         * @param details Mảng danh sách chi tiết hàng hóa mới.
-         */
-        const syncOrderDetails = (details: SAOrderDetail[]) => {
-            if (!currentOrder.value) return;
-            currentOrder.value.SAOrderDetails = details;
-        };
-
-        /**
-         * Cập nhật số lượng của một mặt hàng trong đơn và tính lại thành tiền.
-         * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
-         * @param value Số lượng mới.
-         */
-        const updateItemQuantity = (detail: SAOrderDetail, value: number | null) => {
-            if (!currentOrder.value) return;
-            const nextValue = Math.max(0, Number(value ?? 0));
-            detail.Quantity = nextValue;
-            detail.MainQuantity = nextValue;
-            detail.Amount = Number(detail.UnitPrice ?? 0) * nextValue;
-            syncOrderDetails([...(currentOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-        };
-
-        /**
-         * Tăng số lượng mặt hàng lên 1 đơn vị.
-         * @param detail Đối tượng chi tiết hàng hóa cần tăng số lượng.
-         */
-        const increaseItemQuantity = (detail: SAOrderDetail) => {
-            updateItemQuantity(detail, Number(detail.Quantity ?? 0) + 1);
-        };
-
-        /**
-         * Giảm số lượng mặt hàng đi 1 đơn vị.
-         * @param detail Đối tượng chi tiết hàng hóa cần giảm số lượng.
-         */
-        const decreaseItemQuantity = (detail: SAOrderDetail) => {
-            updateItemQuantity(detail, Number(detail.Quantity ?? 0) - 1);
-        };
-
-        /**
-         * Cập nhật đơn giá của một mặt hàng trong đơn và tính lại thành tiền.
-         * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
-         * @param value Giá trị đơn giá mới.
-         */
-        const updateItemUnitPrice = (detail: SAOrderDetail, value: number | null) => {
-            if (!currentOrder.value) return;
-            const nextValue = Math.max(0, Number(value ?? 0));
-            detail.UnitPrice = nextValue;
-            detail.MainUnitPrice = nextValue;
-            detail.Amount = nextValue * Number(detail.Quantity ?? 0);
-            syncOrderDetails([...(currentOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-        };
-
-        /**
-         * Cập nhật thành tiền của một mặt hàng và tính ngược lại đơn giá tương ứng.
-         * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
-         * @param value Giá trị thành tiền mới.
-         */
-        const updateItemAmount = (detail: SAOrderDetail, value: number | null) => {
-            if (!currentOrder.value) return;
-            const nextValue = Math.max(0, Number(value ?? 0));
-            detail.Amount = nextValue;
-            const quantity = Number(detail.Quantity ?? 0);
-            if (quantity > 0) {
-                const nextUnitPrice = nextValue / quantity;
-                detail.UnitPrice = nextUnitPrice;
-                detail.MainUnitPrice = nextUnitPrice;
-            }
-            syncOrderDetails([...(currentOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-        };
-
-        // Giới hạn tối đa cho phép mở 5 tabs đơn hàng đồng thời
-        const isMaxTabsReached = computed(() => orders.value.length >= 5);
-
-        /**
-         * Đóng một tab đơn hàng. Nếu đóng tab hiện tại thì tự động kích hoạt tab kề cạnh hoặc tạo mới nếu trống.
-         * @param refID ID của đơn hàng cần đóng tab.
-         */
-        const closeOrderTab = (refID: string) => {
-            const index = orders.value.findIndex((item) => item.RefID === refID);
-            if (index === -1) return;
-
-            const isClosingActiveOrder = currentOrder.value?.RefID === refID;
-            orders.value.splice(index, 1);
-
-            if (isClosingActiveOrder) {
-                currentOrder.value = orders.value[0] ?? null;
-            }
-
-            if (orders.value.length === 0) {
-                createNewOrder();
-            }
-        };
-
-        /**
-         * Tạo mới một đơn hàng, sinh mã đơn tạm thời tăng dần và đưa lên đầu danh sách tabs.
-         */
-        const createNewOrder = () => {
-            const nextId =
-                orders.value.length > 0 ? Math.max(...orders.value.map((order) => Number(order.RefID) || 0)) + 1 : 1;
-
-            const newOrder = new SAOrder({
-                RefNo: `Đơn hàng ${nextId}`,
-                SAOrderDetails: [],
-            });
-
-            newOrder.setAutoPrimaryKey();
-            orders.value.unshift(newOrder);
-            currentOrder.value = newOrder;
-        };
-
-        /**
-         * Xử lý sự kiện chọn hàng hóa từ ô tìm kiếm. Nếu chưa có đơn hàng sẽ tạo mới,
-         * nếu hàng hóa đã tồn tại thì tăng số lượng, ngược lại thêm mới dòng chi tiết.
-         * @param item Đối tượng hàng hóa được chọn từ cổng kết quả tìm kiếm.
-         */
-        const handleSelectInventoryItem = (item: InventoryItemSearchResult) => {
-            if (!currentOrder.value) {
-                createNewOrder();
-            }
-
-            if (!currentOrder.value) return;
-
-            const order = currentOrder.value;
-            const details = [...(order.SAOrderDetails ?? [])];
-            const existingDetail = isGroupRows.value
-                ? details.find((detail) => detail.InventoryItemID === item.InventoryItemID)
-                : null;
-
-            if (existingDetail) {
-                existingDetail.Quantity = Number(existingDetail.Quantity ?? 0) + 1;
-                existingDetail.MainQuantity = Number(existingDetail.MainQuantity ?? 0) + 1;
-                existingDetail.Amount = Number(existingDetail.UnitPrice ?? 0) * Number(existingDetail.Quantity ?? 0);
-            } else {
-                const newDetail = new SAOrderDetail({
-                    InventoryItemID: item.InventoryItemID,
-                    InventoryItemCode: item.InventoryItemCode,
-                    InventoryItemName: item.InventoryItemName,
-                    Quantity: 1,
-                    MainQuantity: 1,
-                    UnitPrice: item.SellPrice,
-                    MainUnitPrice: item.SellPrice,
-                    Amount: item.SellPrice,
-                    SortOrder: details.length + 1,
-                });
-
-                newDetail.setAutoPrimaryKey();
-                details.push(newDetail);
-            }
-
-            order.SAOrderDetails = details;
-        };
-
-        /**
-         * Đảm bảo chiều rộng sidebar luôn nằm trong phạm vi cấu hình cho phép.
-         * @param width Chiều rộng dự định thiết lập.
-         */
-        const clampSidebarWidth = (width: number) => {
-            return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width));
-        };
-
-        /**
-         * Hủy bỏ việc lắng nghe sự kiện di chuyển chuột, kết thúc tiến trình thay đổi kích thước sidebar.
-         */
-        const terminateSidebarResize = () => {
-            isResizing.value = false;
-            window.removeEventListener("mousemove", executeSidebarResize);
-            window.removeEventListener("mouseup", terminateSidebarResize);
-        };
-
-        /**
-         * Tính toán và gán chiều rộng mới cho sidebar dựa vào tọa độ di chuyển chuột theo trục X.
-         * @param event Sự kiện chuột di chuyển (MouseEvent).
-         */
-        const executeSidebarResize = (event: MouseEvent) => {
-            if (!isResizing.value) return;
-
-            const nextWidth = resizeStartWidth.value - (event.clientX - resizeStartX.value);
-            sidebarWidth.value = clampSidebarWidth(nextWidth);
-        };
-
-        /**
-         * Kích hoạt tiến trình thay đổi kích thước sidebar khi người dùng nhấn giữ chuột vào thanh phân tách.
-         * @param event Sự kiện nhấn chuột (MouseEvent).
-         */
-        const initiateSidebarResize = (event: MouseEvent) => {
-            event.preventDefault();
-            isResizing.value = true;
-            resizeStartX.value = event.clientX;
-            resizeStartWidth.value = sidebarWidth.value;
-            window.addEventListener("mousemove", executeSidebarResize);
-            window.addEventListener("mouseup", terminateSidebarResize);
-        };
-
-        // Khởi tạo đơn hàng đầu tiên khi Component được gắn kết thành công
-        onMounted(() => {
-            createNewOrder();
-        });
-
-        // Giải phóng các sự kiện chuột trước khi Component bị hủy bỏ khỏi DOM
-        onBeforeUnmount(() => {
-            terminateSidebarResize();
-        });
-
-        return {
-            orders,
-            currentOrder,
-            tableColumns,
-            isMaxTabsReached,
-            isGroupRows,
-            sidebarWidth,
-            orderDetails,
+        const {
             selectedDetailID,
+            currentOrderDetails,
             orderSummary,
-            formatCurrency,
-            FormatType,
-            setActiveOrder,
             selectOrderDetail,
-            closeOrderTab,
-            createNewOrder,
-            initiateSidebarResize,
-            handleSelectInventoryItem,
             updateItemQuantity,
             increaseItemQuantity,
             decreaseItemQuantity,
             updateItemUnitPrice,
             updateItemAmount,
+            removeOrderDetail,
+            handleSelectInventoryItem,
+            customerStore,
+            handleCustomerChange,
+            formatCustomerDisplayText,
+        } = useOrderDetailActions(activeOrder);
+
+        const { sidebarWidth, initiateSidebarResize } = useSidebarResize();
+        // #endregion
+
+        // #region HELPERS & UTILS
+        /**
+         * lvhung - 05.07.2026
+         * Định dạng giá trị số thành chuỗi tiền tệ VND (vi-VN).
+         * @param value Giá trị số cần định dạng.
+         */
+        function formatCurrency(value: number): string {
+            return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
+        }
+        // #endregion
+
+        // #region LIFECYCLE
+        onMounted(() => {
+            createNewOrder();
+        });
+        // #endregion
+
+        return {
+            // config
+            tableColumns,
+            isGroupRows,
+            FormatType,
+            // tab
+            orderList,
+            activeOrder,
+            isMaxTabsReached,
+            createNewOrder,
+            setActiveOrder,
+            closeOrderTab,
+            // detail
+            selectedDetailID,
+            currentOrderDetails,
+            orderSummary,
+            selectOrderDetail,
+            updateItemQuantity,
+            increaseItemQuantity,
+            decreaseItemQuantity,
+            updateItemUnitPrice,
+            updateItemAmount,
+            removeOrderDetail,
+            handleSelectInventoryItem,
+            // sidebar
+            sidebarWidth,
+            initiateSidebarResize,
+            // customer
+            customerStore,
+            handleCustomerChange,
+            formatCustomerDisplayText,
+            // helpers
+            formatCurrency,
         };
     },
 });
@@ -494,11 +363,14 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use "@/assets/styles/variable" as *;
 
+// #region VARIABLES
 $tab-active-bg: #f0f5ff;
 $tab-height: 38px;
 $radius: 10px;
 $corner-size: 12px;
+// #endregion
 
+// #region MAIN LAYOUT & STRUCTURE
 .saorder-pos {
     position: fixed;
     inset: 0;
@@ -552,7 +424,7 @@ $corner-size: 12px;
                     height: $corner-size;
                     background-color: $primary-color;
                     border-bottom-right-radius: $corner-size;
-                    box-shadow: #{$corner-size / 2} #{$corner-size / 2} 0 #{$corner-size / 2} $tab-active-bg;
+                    box-shadow: ($corner-size / 2) ($corner-size / 2) 0 ($corner-size / 2) $tab-active-bg;
                 }
 
                 &::after {
@@ -564,7 +436,7 @@ $corner-size: 12px;
                     height: $corner-size;
                     background-color: $primary-color;
                     border-bottom-left-radius: $corner-size;
-                    box-shadow: #{-$corner-size / 2} #{$corner-size / 2} 0 #{$corner-size / 2} $tab-active-bg;
+                    box-shadow: (-$corner-size / 2) ($corner-size / 2) 0 ($corner-size / 2) $tab-active-bg;
                 }
             }
         }
@@ -606,16 +478,22 @@ $corner-size: 12px;
             overflow-y: auto;
             min-width: 0;
         }
+    }
+}
+// #endregion
 
+// #region SELECTED ITEMS PANEL & TABLE
+.saorder-pos {
+    .saorder-pos_body {
         .main-selected-panel {
             margin-top: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
             padding: 16px;
-            border-radius: 12px;
+            border-radius: 8px;
             border: 1px solid #e5e7eb;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            background: #ffffff;
             height: calc(100% - 54px);
         }
 
@@ -643,15 +521,15 @@ $corner-size: 12px;
             border-radius: 999px;
             background-color: #eff6ff;
             color: $primary-color;
-            font-weight: 600;
-            font-size: 12px;
+            font-weight: 700;
+            font-size: 14px;
             white-space: nowrap;
         }
 
         .main-selected-table-wrapper {
             overflow: auto;
             border: 1px solid #e5e7eb;
-            border-radius: 12px;
+            border-radius: 8px;
             background: #ffffff;
         }
 
@@ -660,55 +538,55 @@ $corner-size: 12px;
             border-collapse: collapse;
             table-layout: fixed;
             min-width: 920px;
+
+            thead th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                background: #f8fafc;
+                color: #475569;
+                font-size: 14px;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+                padding: 12px 24px 12px 12px;
+                border-bottom: 1px solid #e5e7eb;
+                white-space: nowrap;
+
+                &.is-left {
+                    text-align: left;
+                }
+                &.is-right {
+                    text-align: right;
+                }
+            }
         }
 
-        .main-selected-table thead th {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            background: #f8fafc;
-            color: #475569;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            padding: 12px 24px 12px 12px;
-            border-bottom: 1px solid #e5e7eb;
-            white-space: nowrap;
-        }
-
-        .main-selected-table thead th.is-left,
-        .main-selected-table tbody td.is-left {
-            text-align: left;
-        }
-
-        .main-selected-table thead th.is-right,
-        .main-selected-table tbody td.is-right {
-            text-align: right;
-        }
-
-        .main-selected-table tbody td {
+        .main-selected-table__col {
             padding: 12px;
             border-bottom: 1px solid #eef2f7;
             vertical-align: top;
+            &.is-left {
+                text-align: left;
+            }
+            &.is-right {
+                text-align: right;
+            }
         }
 
-        .main-selected-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .main-selected-table tbody tr {
+        .main-selected-table__row {
             cursor: pointer;
             transition: background-color 0.15s ease;
-        }
 
-        .main-selected-table tbody tr:hover,
-        .main-selected-table tbody tr.is-active {
-            background-color: #eff4fe;
-        }
-
-        .main-selected-table tbody tr:hover td,
-        .main-selected-table tbody tr.is-active td {
-            background-color: #eff4fe;
+            &:last-child td {
+                border-bottom: none;
+            }
+            &.is-active,
+            &:hover {
+                background-color: #eff4fe;
+            }
+            :deep .base-input-number {
+                border: unset;
+            }
         }
 
         .col-unit {
@@ -720,10 +598,6 @@ $corner-size: 12px;
         .col-number :deep(.base-input-number-container),
         .col-number :deep(.base-input-number) {
             width: 100%;
-        }
-
-        .cell-product {
-            min-width: 0;
         }
 
         .cell-product__name {
@@ -740,14 +614,27 @@ $corner-size: 12px;
         }
 
         .main-selected-panel__empty {
-            padding: 24px;
             border: 1px dashed #cbd5e1;
-            border-radius: 10px;
-            color: #64748b;
-            text-align: center;
+            border-radius: 8px;
             background: #f8fafc;
-        }
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
+            .text {
+                color: #64748b;
+                font-size: 14px;
+                text-align: center;
+            }
+        }
+    }
+}
+// #endregion
+
+// #region SPLITTER HANDLE & SIDEBAR
+.saorder-pos {
+    .saorder-pos_body {
         .pos-content__resize-handle {
             width: 12px;
             cursor: col-resize;
@@ -802,6 +689,9 @@ $corner-size: 12px;
         }
     }
 }
+// #endregion
+
+// #region CUSTOM CONTROLS SPECIFIC STYLES
 .quantity-input {
     width: 100px;
     :deep .base-input-number {
@@ -812,10 +702,51 @@ $corner-size: 12px;
         border-radius: 50%;
     }
 }
+
 .input-amount {
     :deep .base-input-number {
         font-weight: 800;
         font-size: 14px;
     }
 }
+
+.cb-custom-item {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+    box-sizing: border-box;
+
+    &:last-child {
+        border-bottom: none;
+    }
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+    &__name {
+        font-weight: 500;
+        color: #1f2937;
+    }
+    &__code {
+        font-size: 12px;
+        font-weight: 600;
+        color: $primary-color;
+        background-color: #eff6ff;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    &__phone {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 2px;
+    }
+}
+// #endregion
 </style>

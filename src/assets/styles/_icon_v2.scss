@@ -51,11 +51,13 @@ $white-color: #ffffff;
 }
 // Icon16px
 @include setIcon(icon-close16, -103px, -134px, 16px, #9ca3af);
+@include setIcon(icon-add-16, -87px, -134px, 16px, $primary-color);
 
 // Icon20px
 @include setIcon(icon-plus, -85px, -132px, 20px);
 @include setIcon(icon-decrease, -327px, -176px, 20px);
 
 // Icon24px
+@include setIcon(icon-trash-24, -95px, -250px, 24px, #ef4444);
 @include setIcon(icon-search, -37px, -250px, 24px);
 @include setIcon(icon-scan, -67px, -250px, 24px);

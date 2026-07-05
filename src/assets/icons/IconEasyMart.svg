@@ -254,6 +254,12 @@
 </g>
 </g>
 <rect x="332" y="185.3" width="10.5" height="1.5" rx="0.75" fill="#4B5563"/>
+<g clip-path="url(#clip6_1_5054)">
+<path d="M99 257H115" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M100 257L101 269C101 269.53 101.211 270.039 101.586 270.414C101.961 270.789 102.47 271 103 271H111C111.53 271 112.039 270.789 112.414 270.414C112.789 270.039 113 269.53 113 269L114 257" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M104 257V254C104 253.735 104.105 253.48 104.293 253.293C104.48 253.105 104.735 253 105 253H109C109.265 253 109.52 253.105 109.707 253.293C109.895 253.48 110 253.735 110 254V257" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M105 262L109 266M109 262L105 266" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
 <defs>
 <clipPath id="clip0_1_5054">
 <rect width="20" height="20" fill="white" transform="translate(187 107)"/>
@@ -272,6 +278,9 @@
 </clipPath>
 <clipPath id="clip5_1_5054">
 <rect width="24" height="24" fill="white" transform="translate(67 250)"/>
+</clipPath>
+<clipPath id="clip6_1_5054">
+<rect width="24" height="24" fill="white" transform="translate(95 250)"/>
 </clipPath>
 </defs>
 </svg>
