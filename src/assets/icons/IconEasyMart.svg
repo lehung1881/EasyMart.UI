@@ -260,6 +260,27 @@
 <path d="M104 257V254C104 253.735 104.105 253.48 104.293 253.293C104.48 253.105 104.735 253 105 253H109C109.265 253 109.52 253.105 109.707 253.293C109.895 253.48 110 253.735 110 254V257" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M105 262L109 266M109 262L105 266" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
+<g clip-path="url(#clip7_1_5054)">
+<path d="M128 271H146" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M128 260H146" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M130 256L137 253L144 256" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M129 260V271" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M145 260V271" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M133 264V267" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M137 264V267" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M141 264V267" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g clip-path="url(#clip8_1_5054)">
+<path d="M166 265H163C162.735 265 162.48 264.895 162.293 264.707C162.105 264.52 162 264.265 162 264V256C162 255.735 162.105 255.48 162.293 255.293C162.48 255.105 162.735 255 163 255H175C175.265 255 175.52 255.105 175.707 255.293C175.895 255.48 176 255.735 176 256V259" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M166 260C166 259.735 166.105 259.48 166.293 259.293C166.48 259.105 166.735 259 167 259H179C179.265 259 179.52 259.105 179.707 259.293C179.895 259.48 180 259.735 180 260V268C180 268.265 179.895 268.52 179.707 268.707C179.52 268.895 179.265 269 179 269H167C166.735 269 166.48 268.895 166.293 268.707C166.105 268.52 166 268.265 166 268V260Z" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M171 264C171 264.53 171.211 265.039 171.586 265.414C171.961 265.789 172.47 266 173 266C173.53 266 174.039 265.789 174.414 265.414C174.789 265.039 175 264.53 175 264C175 263.47 174.789 262.961 174.414 262.586C174.039 262.211 173.53 262 173 262C172.47 262 171.961 262.211 171.586 262.586C171.211 262.961 171 263.47 171 264Z" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g clip-path="url(#clip9_1_5054)">
+<path d="M195 258C195 257.204 195.316 256.441 195.879 255.879C196.441 255.316 197.204 255 198 255H210C210.796 255 211.559 255.316 212.121 255.879C212.684 256.441 213 257.204 213 258V266C213 266.796 212.684 267.559 212.121 268.121C211.559 268.684 210.796 269 210 269H198C197.204 269 196.441 268.684 195.879 268.121C195.316 267.559 195 266.796 195 266V258Z" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M195 260H213" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M199 265H199.01" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M203 265H205" stroke="#8B929D" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
 <defs>
 <clipPath id="clip0_1_5054">
 <rect width="20" height="20" fill="white" transform="translate(187 107)"/>
@@ -281,6 +302,15 @@
 </clipPath>
 <clipPath id="clip6_1_5054">
 <rect width="24" height="24" fill="white" transform="translate(95 250)"/>
+</clipPath>
+<clipPath id="clip7_1_5054">
+<rect width="24" height="24" fill="white" transform="translate(125 250)"/>
+</clipPath>
+<clipPath id="clip8_1_5054">
+<rect width="24" height="24" fill="white" transform="translate(159 250)"/>
+</clipPath>
+<clipPath id="clip9_1_5054">
+<rect width="24" height="24" fill="white" transform="translate(192 250)"/>
 </clipPath>
 </defs>
 </svg>

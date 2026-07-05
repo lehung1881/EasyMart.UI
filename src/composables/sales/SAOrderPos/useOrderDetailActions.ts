@@ -20,7 +20,7 @@ interface InventoryItemSearchResult {
  * Nhận activeOrder dưới dạng Ref để reactive với tab đang active.
  * @param activeOrder Ref tới đơn hàng đang được chọn trên POS.
  */
-export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
+export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>) => {
     // #region STATE
     const selectedDetailID = ref<string | null>(null);
     // #endregion
@@ -54,10 +54,10 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * Đồng bộ và trigger reactivity cho mảng chi tiết của đơn hàng hiện tại.
      * @param updatedDetails Mảng chi tiết hàng hóa đã được cập nhật.
      */
-    function syncOrderDetails(updatedDetails: SAOrderDetail[]): void {
+    const syncOrderDetails = (updatedDetails: SAOrderDetail[]): void => {
         if (!activeOrder.value) return;
         activeOrder.value.SAOrderDetails = updatedDetails;
-    }
+    };
     // #endregion
 
     // #region ACTIONS
@@ -66,9 +66,9 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * Chọn một dòng chi tiết trong bảng hàng hóa.
      * @param refDetailID ID của dòng chi tiết cần chọn.
      */
-    function selectOrderDetail(refDetailID: string): void {
+    const selectOrderDetail = (refDetailID: string): void => {
         selectedDetailID.value = refDetailID;
-    }
+    };
 
     /**
      * lvhung - 05.07.2026
@@ -76,37 +76,37 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
      * @param value Số lượng mới.
      */
-    function updateItemQuantity(detail: SAOrderDetail, value: number | null): void {
+    const updateItemQuantity = (detail: SAOrderDetail, value: number | null): void => {
         if (!activeOrder.value) return;
         const nextQuantity = Math.max(0, Number(value ?? 0));
         detail.Quantity = nextQuantity;
         detail.MainQuantity = nextQuantity;
         detail.Amount = Number(detail.UnitPrice ?? 0) * nextQuantity;
         syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-    }
+    };
 
     /**
      * lvhung - 05.07.2026
      * Tăng số lượng mặt hàng lên 1 đơn vị.
      * @param detail Đối tượng chi tiết hàng hóa cần tăng số lượng.
      */
-    function increaseItemQuantity(detail: SAOrderDetail): void {
+    const increaseItemQuantity = (detail: SAOrderDetail): void => {
         updateItemQuantity(detail, Number(detail.Quantity ?? 0) + 1);
-    }
+    };
 
     /**
      * lvhung - 05.07.2026
      * Giảm số lượng mặt hàng đi 1 đơn vị. Nếu số lượng về 0 thì xóa dòng.
      * @param detail Đối tượng chi tiết hàng hóa cần giảm số lượng.
      */
-    function decreaseItemQuantity(detail: SAOrderDetail): void {
+    const decreaseItemQuantity = (detail: SAOrderDetail): void => {
         const currentQuantity = Number(detail.Quantity ?? 0);
         if (currentQuantity <= 1) {
             removeOrderDetail(detail.RefDetailID);
         } else {
             updateItemQuantity(detail, currentQuantity - 1);
         }
-    }
+    };
 
     /**
      * lvhung - 05.07.2026
@@ -114,14 +114,14 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
      * @param value Giá trị đơn giá mới.
      */
-    function updateItemUnitPrice(detail: SAOrderDetail, value: number | null): void {
+    const updateItemUnitPrice = (detail: SAOrderDetail, value: number | null): void => {
         if (!activeOrder.value) return;
         const nextUnitPrice = Math.max(0, Number(value ?? 0));
         detail.UnitPrice = nextUnitPrice;
         detail.MainUnitPrice = nextUnitPrice;
         detail.Amount = nextUnitPrice * Number(detail.Quantity ?? 0);
         syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-    }
+    };
 
     /**
      * lvhung - 05.07.2026
@@ -129,7 +129,7 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
      * @param value Giá trị thành tiền mới.
      */
-    function updateItemAmount(detail: SAOrderDetail, value: number | null): void {
+    const updateItemAmount = (detail: SAOrderDetail, value: number | null): void => {
         if (!activeOrder.value) return;
         const nextAmount = Math.max(0, Number(value ?? 0));
         detail.Amount = nextAmount;
@@ -140,7 +140,7 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
             detail.MainUnitPrice = nextUnitPrice;
         }
         syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-    }
+    };
 
     /**
      * lvhung - 05.07.2026
@@ -148,7 +148,7 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * Tự động reset selectedDetailID nếu dòng bị xóa đang được chọn.
      * @param refDetailID ID của dòng chi tiết cần xóa.
      */
-    function removeOrderDetail(refDetailID: string): void {
+    const removeOrderDetail = (refDetailID: string): void => {
         if (!activeOrder.value) return;
         const updatedDetails = [...(activeOrder.value.SAOrderDetails ?? [])].filter(
             (detail) => detail.RefDetailID !== refDetailID,
@@ -157,7 +157,7 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
         if (selectedDetailID.value === refDetailID) {
             selectedDetailID.value = null;
         }
-    }
+    };
 
     /**
      * lvhung - 05.07.2026
@@ -166,7 +166,7 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * @param inventoryItem Hàng hóa được chọn từ kết quả tìm kiếm.
      * @param isGroupRows Chế độ gộp dòng nếu cùng mặt hàng.
      */
-    function handleSelectInventoryItem(inventoryItem: InventoryItemSearchResult, isGroupRows: boolean): void {
+    const handleSelectInventoryItem = (inventoryItem: InventoryItemSearchResult, isGroupRows: boolean): void => {
         if (!activeOrder.value) return;
 
         const detailList = [...(activeOrder.value.SAOrderDetails ?? [])];
@@ -195,7 +195,7 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
         }
 
         activeOrder.value.SAOrderDetails = detailList;
-    }
+    };
     // #endregion
 
     // #region CUSTOMER COMBOBOX
@@ -213,11 +213,11 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * Đồng bộ CustomerCode và CustomerName vào đơn hàng đang active.
      * @param selectedItem Dữ liệu khách hàng được chọn từ combobox.
      */
-    function handleCustomerChange(selectedItem: any): void {
+    const handleCustomerChange = (selectedItem: any): void => {
         if (!activeOrder.value) return;
         activeOrder.value.CustomerCode = selectedItem?.CustomerCode ?? "";
         activeOrder.value.CustomerName = selectedItem?.CustomerName ?? "";
-    }
+    };
 
     /**
      * lvhung - 05.07.2026
@@ -225,12 +225,34 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
      * Format: "Mã - Tên - (SĐT)", bỏ qua SĐT nếu không có.
      * @param selectedItem Dữ liệu khách hàng đang được chọn.
      */
-    function formatCustomerDisplayText(selectedItem: any): string {
+    const formatCustomerDisplayText = (selectedItem: any): string => {
         if (!selectedItem) return "";
         const displayParts = [selectedItem.CustomerCode, selectedItem.CustomerName];
         if (selectedItem.PhoneNumber) displayParts.push(`(${selectedItem.PhoneNumber})`);
         return displayParts.join(" - ");
-    }
+    };
+    // #endregion
+
+    // #region CASHIER COMBOBOX
+    const cashierStore = useComboboxStore("sa_cashier", {
+        viewOrTableName: "di_cashier",
+        comboboxLoadData: (payload) => loadDataRemoteCombobox(CustomerApi, payload),
+        displayField: "CashierName",
+        valueField: "CashierID",
+        searchFields: ["CashierCode", "CashierName"],
+    });
+
+    /**
+     * lvhung - 05.07.2026
+     * Xử lý khi người dùng chọn nhân viên thu ngân từ combobox.
+     * Đồng bộ CashierID và CashierName vào đơn hàng đang active.
+     * @param selectedItem Dữ liệu nhân viên thu ngân được chọn từ combobox.
+     */
+    const handleCashierChange = (selectedItem: any): void => {
+        if (!activeOrder.value) return;
+        activeOrder.value.CashierID = selectedItem?.CashierID ?? null;
+        activeOrder.value.CashierName = selectedItem?.CashierName ?? "";
+    };
     // #endregion
 
     return {
@@ -248,5 +270,7 @@ export function useOrderDetailActions(activeOrder: Ref<SAOrder | null>) {
         customerStore,
         handleCustomerChange,
         formatCustomerDisplayText,
+        cashierStore,
+        handleCashierChange,
     };
-}
+};

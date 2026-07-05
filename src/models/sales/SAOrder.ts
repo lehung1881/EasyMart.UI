@@ -26,6 +26,9 @@ export class SAOrder extends BaseModel {
     /** Tên khách hàng snapshot. */
     declare CustomerName: string | null;
 
+    /** ID nhân viên thu ngân lập đơn. */
+    declare CashierID: string | null;
+
     /** Tên nhân viên thu ngân lập đơn. */
     declare CashierName: string;
 
@@ -93,6 +96,7 @@ SAOrder.prototype._fields = [
     { name: "CustomerID", dataType: "string", defaultValue: null },
     { name: "CustomerCode", dataType: "string", defaultValue: null },
     { name: "CustomerName", dataType: "string", defaultValue: null },
+    { name: "CashierID", dataType: "string", defaultValue: null },
     { name: "CashierName", dataType: "string", defaultValue: null, validateRules: [{ type: "NotNull" }] },
     { name: "StockID", dataType: "string", defaultValue: null, validateRules: [{ type: "NotNull" }] },
     { name: "StockCode", dataType: "string", defaultValue: null, validateRules: [{ type: "NotNull" }] },

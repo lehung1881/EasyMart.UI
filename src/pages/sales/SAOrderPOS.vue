@@ -197,19 +197,30 @@
                 </div>
             </div>
 
-            <!-- Resize Splitter Split Handle -->
+            <!-- Resize Splitter Handle -->
             <div class="pos-content__resize-handle" @mousedown="initiateSidebarResize"></div>
 
             <!-- Right Side: Sidebar Info & Payment -->
-            <div class="pos-content__sidebar" :style="{ width: `${sidebarWidth}px` }">
-                <div class="flex items-center gap-2">
+            <div class="pos-content__sidebar" :style="{ width: `${sidebarWidth}px` }" v-if="activeOrder">
+                <div class="sidebar-section">
+                    <div class="sidebar-section__label">{{ $t("i18nSAOrder.POS.Cashier") }}</div>
                     <BaseCombobox
-                        v-if="activeOrder"
+                        v-model="activeOrder.CashierName"
+                        :store="cashierStore"
+                        :autoLoad="false"
+                        clearIcon
+                        @change="handleCashierChange"
+                        :placeholder="$t('i18nSAOrder.POS.CashierPlaceholder')"
+                    />
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section__label">{{ $t("i18nSAOrder.POS.Customer") }}</div>
+                    <BaseCombobox
                         v-model="activeOrder.CustomerID"
                         :store="customerStore"
                         :autoLoad="false"
                         clearIcon
-                        class="w-1/2"
                         @change="handleCustomerChange"
                         :placeholder="$t('i18nSAOrder.POS.CustomerPlaceholder')"
                         :custom-display-text="formatCustomerDisplayText"
@@ -228,17 +239,99 @@
                     </BaseCombobox>
                 </div>
 
-                <div class="sidebar-footer">
+                <div class="sidebar-section">
+                    <div class="sidebar-section__label">{{ $t("i18nSAOrder.POS.OrderSummary") }}</div>
                     <div class="summary-row">
                         <span>{{ $t("i18nSAOrder.POS.SubTotal") }}</span>
                         <strong>{{ formatCurrency(orderSummary.totalAmount) }}</strong>
                     </div>
-                    <div class="summary-row">
-                        <span>{{ $t("i18nSAOrder.POS.TotalQuantity") }}</span>
-                        <strong>{{ orderSummary.totalQuantity }}</strong>
+                    <div class="summary-row summary-row--discount">
+                        <span>{{ $t("i18nSAOrder.POS.Discount") }}</span>
+                        <div class="discount-input-wrap">
+                            <BaseInputNumber
+                                v-model="discountValue"
+                                :min="0"
+                                :max="discountType === 'percent' ? 100 : undefined"
+                                :format-type="FormatType.Quantity"
+                                class="discount-input"
+                            />
+                            <div class="discount-type-toggle">
+                                <button
+                                    class="discount-type-btn"
+                                    :class="{ 'is-active': discountType === 'percent' }"
+                                    @click="discountType = 'percent'"
+                                >
+                                    %
+                                </button>
+                                <button
+                                    class="discount-type-btn"
+                                    :class="{ 'is-active': discountType === 'amount' }"
+                                    @click="discountType = 'amount'"
+                                >
+                                    ₫
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <BaseButton class="w-full" type="primary" :disabled="currentOrderDetails.length === 0">
-                        {{ $t("i18nSAOrder.POS.Checkout") }}
+                    <div class="summary-divider"></div>
+                    <div class="summary-row summary-row--total">
+                        <span>{{ $t("i18nSAOrder.POS.NeedToPay") }}</span>
+                        <strong class="summary-total-value">{{ formatCurrency(amountDue) }}</strong>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section__label">{{ $t("i18nSAOrder.POS.PaymentMethod") }}</div>
+                    <div class="payment-method-grid">
+                        <div
+                            v-for="method in paymentMethods"
+                            :key="method.value"
+                            class="payment-method-btn"
+                            :class="{ 'is-active': selectedPaymentMethod === method.value }"
+                            @click="selectedPaymentMethod = method.value"
+                        >
+                            <div :class="method.icon"></div>
+                            <span>{{ method.label }}</span>
+                        </div>
+                    </div>
+
+                    <template v-if="selectedPaymentMethod === 'cash'">
+                        <div class="cash-row">
+                            <span class="cash-row__label">{{ $t("i18nSAOrder.POS.CustomerPaid") }}</span>
+                            <BaseInputNumber
+                                v-model="activeOrder.PaidAmount"
+                                :min="0"
+                                :format-type="FormatType.Currency"
+                                class="cash-input"
+                            />
+                        </div>
+                        <div
+                            v-if="activeOrder.PaidAmount > 0"
+                            class="change-row"
+                            :class="{ 'is-positive': changeAmount > 0 }"
+                        >
+                            <span>{{ $t("i18nSAOrder.POS.Change") }}</span>
+                            <strong>{{ formatCurrency(changeAmount) }}</strong>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section__label">{{ $t("i18nSAOrder.POS.Note") }}</div>
+                    <BaseTextArea
+                        v-model="activeOrder.Description"
+                        :placeholder="$t('i18nSAOrder.POS.NotePlaceholder')"
+                    />
+                </div>
+
+                <div class="sidebar-checkout">
+                    <BaseButton
+                        class="checkout-btn"
+                        variant="primary"
+                        :disabled="currentOrderDetails.length === 0"
+                        @click="handleCheckout"
+                    >
+                        <span>{{ $t("i18nSAOrder.POS.Checkout") }}</span>
                     </BaseButton>
                 </div>
             </div>
@@ -247,24 +340,33 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, ref, computed, watch, onMounted, getCurrentInstance } from "vue";
 import { useI18n } from "vue-i18n";
 import { FormatType } from "@/constants";
 import SAOrder from "@/models/sales/SAOrder";
 import SAOrderDetail from "@/models/sales/SAOrderDetail";
 import SearchInventoryItem from "@/pages/sales/SearchInventoryItem.vue";
-import BaseCombobox from "@/components/controls/BaseCombobox.vue";
 import { useOrderTabManager } from "@/composables/sales/SAOrderPos/useOrderTabManager";
 import { useOrderDetailActions } from "@/composables/sales/SAOrderPos/useOrderDetailActions";
-import { useSidebarResize } from "@/composables/sales/SAOrderPos/useOrderSidebarResize.ts";
+import { useOrderSidebarResize } from "@/composables/sales/SAOrderPos/useOrderSidebarResize.ts";
+
+/** Map PaymentMethod number từ model sang string key để dùng trong UI */
+const PAYMENT_METHOD_MAP = {
+    cash: 1,
+    card: 2,
+    transfer: 3,
+} as const;
+type PaymentMethodKey = keyof typeof PAYMENT_METHOD_MAP;
+type DiscountType = "percent" | "amount";
 
 export default defineComponent({
     name: "SAOrderPOS",
     components: {
         SearchInventoryItem,
-        BaseCombobox,
     },
     setup() {
+        const { proxy } = getCurrentInstance() as any;
+
         // #region CONFIG & LOCAL STATES
         const { t } = useI18n();
 
@@ -278,7 +380,17 @@ export default defineComponent({
             { key: "action", label: "", align: "right", width: "100px" },
         ];
 
-        const isGroupRows = ref(true);
+        const isGroupRows = ref(localStorage.getItem("saorder_pos_group_rows") !== "false");
+
+        watch(isGroupRows, (val) => {
+            localStorage.setItem("saorder_pos_group_rows", String(val));
+        });
+
+        const paymentMethods: { value: PaymentMethodKey; label: string; icon: string }[] = [
+            { value: "cash", label: t("i18nSAOrder.POS.PayCash"), icon: "icon-cash-24" },
+            { value: "card", label: t("i18nSAOrder.POS.PayCard"), icon: "icon-card-24" },
+            { value: "transfer", label: t("i18nSAOrder.POS.PayTransfer"), icon: "icon-bank-24" },
+        ];
         // #endregion
 
         // #region COMPOSABLES
@@ -289,6 +401,7 @@ export default defineComponent({
             selectedDetailID,
             currentOrderDetails,
             orderSummary,
+            customerStore,
             selectOrderDetail,
             updateItemQuantity,
             increaseItemQuantity,
@@ -297,12 +410,88 @@ export default defineComponent({
             updateItemAmount,
             removeOrderDetail,
             handleSelectInventoryItem,
-            customerStore,
             handleCustomerChange,
             formatCustomerDisplayText,
+            cashierStore,
+            handleCashierChange,
         } = useOrderDetailActions(activeOrder);
 
-        const { sidebarWidth, initiateSidebarResize } = useSidebarResize();
+        const { sidebarWidth, initiateSidebarResize } = useOrderSidebarResize();
+        // #endregion
+
+        // #region PAYMENT STATE
+        /**
+         * lvhung - 05.07.2026
+         * UI key của phương thức thanh toán đang chọn — sync 2 chiều với activeOrder.PaymentMethod (number).
+         */
+        const selectedPaymentMethod = computed<PaymentMethodKey>({
+            get: () => {
+                const val = activeOrder.value?.PaymentMethod ?? 1;
+                return (
+                    (Object.entries(PAYMENT_METHOD_MAP).find(([, num]) => num === val)?.[0] as PaymentMethodKey) ??
+                    "cash"
+                );
+            },
+            set: (key: PaymentMethodKey) => {
+                if (!activeOrder.value) return;
+                activeOrder.value.PaymentMethod = PAYMENT_METHOD_MAP[key];
+            },
+        });
+
+        /** Loại giảm giá: % hoặc ₫ — local UI state, không lưu vào model */
+        const discountType = ref<DiscountType>("percent");
+
+        /**
+         * lvhung - 05.07.2026
+         * Giá trị nhập giảm giá — local UI state.
+         * Khi thay đổi sẽ tính lại discountAmount và ghi vào activeOrder.DiscountAmount.
+         */
+        const discountValue = ref<number>(0);
+
+        /**
+         * lvhung - 05.07.2026
+         * Số tiền giảm giá thực tế — computed từ discountValue + discountType,
+         * đồng thời sync vào activeOrder.DiscountAmount.
+         */
+        const discountAmount = computed<number>({
+            get: () => activeOrder.value?.DiscountAmount ?? 0,
+            set: (val: number) => {
+                if (!activeOrder.value) return;
+                activeOrder.value.DiscountAmount = val;
+            },
+        });
+
+        /**
+         * lvhung - 05.07.2026
+         * Số tiền cần thanh toán = SubTotalAmount - DiscountAmount.
+         * Đọc từ orderSummary.totalAmount (reactive theo SAOrderDetails) trừ discountAmount.
+         */
+        const amountDue = computed<number>(() => {
+            return Math.max(0, orderSummary.value.totalAmount - discountAmount.value);
+        });
+
+        /**
+         * lvhung - 05.07.2026
+         * Tiền thừa trả lại khách = PaidAmount - amountDue.
+         * Bind 2 chiều với activeOrder.ChangeAmount.
+         */
+        const changeAmount = computed<number>(() => {
+            return Math.max(0, (activeOrder.value?.PaidAmount ?? 0) - amountDue.value);
+        });
+
+        /**
+         * lvhung - 05.07.2026
+         * Cập nhật discountAmount vào model mỗi khi discountValue hoặc discountType thay đổi.
+         */
+        watch([discountValue, discountType], () => {
+            if (!activeOrder.value) return;
+            const total = orderSummary.value.totalAmount;
+            if (discountType.value === "percent") {
+                activeOrder.value.DiscountAmount = Math.round((total * discountValue.value) / 100);
+            } else {
+                activeOrder.value.DiscountAmount = discountValue.value;
+            }
+        });
         // #endregion
 
         // #region HELPERS & UTILS
@@ -316,9 +505,21 @@ export default defineComponent({
         }
         // #endregion
 
+        // #region ACTIONS
+        /**
+         * lvhung - 05.07.2026
+         * Xử lý sự kiện nhấn nút Thanh toán.
+         * TODO: tích hợp useOrderPayment khi implement flow thanh toán đầy đủ.
+         */
+        function handleCheckout(): void {
+            // placeholder — sẽ gọi useOrderPayment.submitPayment() sau
+        }
+        // #endregion
+
         // #region LIFECYCLE
         onMounted(() => {
             createNewOrder();
+            (window as any)._pos = proxy;
         });
         // #endregion
 
@@ -327,6 +528,7 @@ export default defineComponent({
             tableColumns,
             isGroupRows,
             FormatType,
+            paymentMethods,
             // tab
             orderList,
             activeOrder,
@@ -353,8 +555,19 @@ export default defineComponent({
             customerStore,
             handleCustomerChange,
             formatCustomerDisplayText,
+            // cashier
+            cashierStore,
+            handleCashierChange,
+            // payment
+            selectedPaymentMethod,
+            discountType,
+            discountValue,
+            discountAmount,
+            amountDue,
+            changeAmount,
             // helpers
             formatCurrency,
+            handleCheckout,
         };
     },
 });
@@ -580,10 +793,12 @@ $corner-size: 12px;
             &:last-child td {
                 border-bottom: none;
             }
+
             &.is-active,
             &:hover {
                 background-color: #eff4fe;
             }
+
             :deep .base-input-number {
                 border: unset;
             }
@@ -593,11 +808,6 @@ $corner-size: 12px;
             white-space: nowrap;
             color: #374151;
             font-size: 13px;
-        }
-
-        .col-number :deep(.base-input-number-container),
-        .col-number :deep(.base-input-number) {
-            width: 100%;
         }
 
         .cell-product__name {
@@ -632,7 +842,7 @@ $corner-size: 12px;
 }
 // #endregion
 
-// #region SPLITTER HANDLE & SIDEBAR
+// #region SPLITTER HANDLE & SIDEBAR LAYOUT
 .saorder-pos {
     .saorder-pos_body {
         .pos-content__resize-handle {
@@ -662,31 +872,209 @@ $corner-size: 12px;
         .pos-content__sidebar {
             background-color: #ffffff;
             border-radius: 8px;
-            padding: 16px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            gap: 16px;
             min-width: 0;
+            overflow: hidden;
         }
+    }
+}
+// #endregion
 
-        .sidebar-footer {
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding-top: 12px;
-            border-top: 1px solid #e5e7eb;
-        }
+// #region SIDEBAR SECTIONS
+.sidebar-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 
-        .summary-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            font-size: 13px;
-            color: #374151;
+    &__label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+}
+
+.summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: #374151;
+
+    &--discount {
+        align-items: center;
+    }
+
+    &--total {
+        padding-top: 4px;
+
+        span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
         }
+    }
+}
+
+.summary-total-value {
+    font-size: 17px;
+    font-weight: 700;
+    color: $primary-color;
+}
+
+.summary-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 2px 0;
+}
+
+.discount-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.discount-input {
+    width: 80px;
+}
+
+.discount-type-toggle {
+    display: flex;
+    border: 1px solid $primary-color;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.discount-type-btn {
+    width: 30px;
+    height: 28px;
+    border: none;
+    background: #f9fafb;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background 0.12s,
+        color 0.12s;
+
+    & + & {
+        border-left: 1px solid #e5e7eb;
+    }
+
+    &.is-active {
+        background: $primary-color;
+        color: #ffffff;
+    }
+}
+// #endregion
+
+// #region PAYMENT METHOD
+.payment-method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.payment-method-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+    cursor: pointer;
+    transition:
+        border-color 0.12s,
+        background 0.12s;
+
+    span {
+        font-size: 12px;
+        color: #6b7280;
+        white-space: nowrap;
+    }
+
+    &.is-active {
+        border-color: $primary-color;
+        background: #eff6ff;
+
+        span {
+            color: $primary-color;
+            font-weight: 600;
+        }
+    }
+
+    &:hover:not(.is-active) {
+        border-color: #d1d5db;
+        background: #f3f4f6;
+    }
+}
+
+.cash-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+
+    &__label {
+        font-size: 13px;
+        color: #6b7280;
+        white-space: nowrap;
+    }
+}
+
+.cash-input {
+    width: 140px;
+}
+
+.change-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    font-size: 13px;
+    color: #6b7280;
+
+    strong {
+        color: #374151;
+    }
+
+    &.is-positive {
+        background: #f0fdf4;
+        color: #166534;
+
+        strong {
+            color: #16a34a;
+            font-size: 15px;
+        }
+    }
+}
+// #endregion
+
+// #region CHECKOUT BUTTON
+.sidebar-checkout {
+    padding: 12px 16px 16px;
+    margin-top: auto;
+}
+
+.checkout-btn {
+    width: 100%;
+    height: 56px;
+
+    span {
+        font-size: 16px;
+        font-weight: 600;
     }
 }
 // #endregion
@@ -721,16 +1109,19 @@ $corner-size: 12px;
     &:last-child {
         border-bottom: none;
     }
+
     &__header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         width: 100%;
     }
+
     &__name {
         font-weight: 500;
         color: #1f2937;
     }
+
     &__code {
         font-size: 12px;
         font-weight: 600;
@@ -739,6 +1130,7 @@ $corner-size: 12px;
         padding: 2px 6px;
         border-radius: 4px;
     }
+
     &__phone {
         display: flex;
         align-items: center;

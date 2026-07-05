@@ -11,12 +11,9 @@
             },
         ]"
     >
-        <!-- Label──-->
         <label v-if="label" class="cb-label">{{ label }}</label>
 
-        <!-- Control: input + dropdown — position:relative tính từ đây -->
         <div ref="controlRef" class="cb-control">
-            <!-- Input wrapper -->
             <div class="cb-input-wrap" :title="visibleText || undefined">
                 <input
                     ref="inputRef"
@@ -37,12 +34,10 @@
                     @keydown="onKeydown"
                 />
 
-                <!-- Nút clear (×) — dùng mousedown.prevent để tránh blur -->
                 <button v-if="hasClearValue" class="cb-btn cb-btn--clear" type="button" @mousedown.prevent="clearValue">
                     <div class="icon-close-small"></div>
                 </button>
 
-                <!-- Nút toggle (▼) — chevron xoay khi mở -->
                 <button
                     class="cb-btn cb-btn--toggle"
                     type="button"
@@ -55,20 +50,18 @@
                     <div class="icon-chevron-small" :class="{ 'cb-chevron--open': isOpen }"></div>
                 </button>
 
-                <!-- Nút thêm -->
                 <button
                     class="cb-btn cb-btn--add"
                     type="button"
                     tabindex="-1"
                     :disabled="disabled"
                     :readonly="!searchable"
+                    v-if="quickAddEnabled"
                 >
                     <div class="icon-add-16"></div>
                 </button>
             </div>
         </div>
-        <!-- /cb-control -->
-        <!-- Dropdown panel -->
         <Teleport to="body">
             <Transition name="cb-dropdown">
                 <div v-if="isOpen" ref="panelRef" class="cb-panel" :style="dropdownStyle">
@@ -86,7 +79,6 @@
                         @select="onSelect"
                         @load-more="store.loadNextPage()"
                     >
-                        <!-- Pass-through slots -->
                         <template v-for="(_, name) in $slots" #[name]="slotData">
                             <slot :name="name" v-bind="slotData ?? {}" />
                         </template>
@@ -97,471 +89,480 @@
     </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
+<script lang="ts">
+import { defineComponent, ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
+import type { PropType } from "vue";
 import BaseComboboxDropdown from "@/components/controls/BaseComboboxDropdown.vue";
 import type { ComboboxStoreInstance } from "@/composables/controls/useComboboxStore";
 
 // Types
 type ComboboxSize = "sm" | "md" | "lg";
 
-// Props
-const props = withDefaults(
-    defineProps<{
+export default defineComponent({
+    name: "BaseCombobox",
+    components: {
+        BaseComboboxDropdown,
+    },
+    props: {
         /** v-model value — object hoặc primitive */
-        modelValue: string | number | Record<string, any> | null;
+        modelValue: {
+            type: [String, Number, Object] as PropType<string | number | Record<string, any> | null>,
+            default: null,
+        },
         /** Nhãn hiển thị phía trên input */
-        label?: string;
+        label: {
+            type: String,
+            default: "",
+        },
         /** Instance từ useComboboxStore() */
-        store: ComboboxStoreInstance;
+        store: {
+            type: Object as PropType<ComboboxStoreInstance>,
+            required: true,
+        },
         /** Placeholder của input */
-        placeholder?: string;
+        placeholder: {
+            type: String,
+            default: "",
+        },
         /** Vô hiệu hoá component */
-        disabled?: boolean;
+        disabled: {
+            type: Boolean,
+            default: false,
+        },
         /** Debounce thời gian gõ (ms) */
-        debounceTime?: number;
+        debounceTime: {
+            type: Number,
+            default: 300,
+        },
         /** Kích thước component — khớp với BaseInput size: 'sm' | 'md' | 'lg' */
-        size?: ComboboxSize;
+        size: {
+            type: String as PropType<ComboboxSize>,
+            default: "md",
+        },
         /** Số ký tự tối thiểu để trigger search */
-        minChars?: number;
+        minChars: {
+            type: Number,
+            default: 0,
+        },
         /** Hiển thị nút × để xoá giá trị đang chọn. default: false */
-        clearIcon?: boolean;
+        clearIcon: {
+            type: Boolean,
+            default: false,
+        },
         /**
          * Text hiển thị khi data chưa load xong hoặc giá trị nằm ở trang chưa fetch.
          * Tạo cảm giác có dữ liệu ngay từ đầu, tự động bị thay thế khi resolve được display text.
          */
-        initText?: string;
+        initText: {
+            type: String,
+            default: "",
+        },
         /**
          * Tự động load data ngay khi component mount.
          * Hữu ích cho local mode hoặc khi muốn pre-fetch trước khi user mở dropdown.
          * default: false
          */
-        autoLoad?: boolean;
+        autoLoad: {
+            type: Boolean,
+            default: true,
+        },
+        quickAddEnabled: {
+            type: Boolean,
+            default: false,
+        },
         /**
          * Cho phép gõ để tìm kiếm trong dropdown.
          * false → input không gõ được, dropdown vẫn mở và chọn bình thường.
          * default: true
          */
-        searchable?: boolean;
+        searchable: {
+            type: Boolean,
+            default: true,
+        },
         /** Số item tối đa hiển thị trước khi scroll. default: 6 */
-        maxDisplayItem?: number;
+        maxDisplayItem: {
+            type: Number,
+            default: 6,
+        },
         /**
          * Hàm custom để override text hiển thị trong input.
          */
-        customDisplayText?: (selectedItem: any) => string;
-    }>(),
-    {
-        placeholder: "",
-        label: "",
-        disabled: false,
-        size: "md",
-        debounceTime: 300,
-        minChars: 0,
-        autoLoad: true,
-        searchable: true,
-        clearIcon: false,
-        initText: "",
-        maxDisplayItem: 6,
+        customDisplayText: {
+            type: Function as PropType<(selectedItem: any) => string>,
+            default: undefined,
+        },
     },
-);
+    emits: ["update:modelValue", "change", "selected", "before-selected", "search"],
+    setup(props, { emit }) {
+        const displayField = computed(() => props.store.displayField);
+        const valueField = computed(() => props.store.valueField);
+        const columns = computed(() => props.store.columns);
 
-// Emits
+        // Internal State
 
-const emit = defineEmits<{
-    /** v-model binding */
-    (e: "update:modelValue", value: any): void;
-    /** Side effects khi chọn */
-    (e: "change", item: any, value: any): void;
-    /** Sự kiện khi chọn một item */
-    (e: "selected", item: any): void;
-    /** Sự kiện trước khi chọn một item */
-    (e: "before-selected", metaData: any): void;
-    /** Mỗi lần trigger search */
-    (e: "search", keyword: string): void;
-}>();
+        /** Ref tới root element để detect click outside */
+        const rootRef = ref<HTMLElement | null>(null);
+        /** Ref tới input element */
+        const inputRef = ref<HTMLInputElement | null>(null);
+        /** Ref tới cb-control để tính toán vị trí dropdown */
+        const controlRef = ref<HTMLElement | null>(null);
+        /** Style position cho cb-panel khi dùng fixed */
+        const dropdownStyle = ref<{ top: any; left: string; width?: string }>({
+            top: "0px",
+            left: "0px",
+            width: "0px",
+        });
 
-const displayField = computed(() => props.store.displayField);
-const valueField = computed(() => props.store.valueField);
-const columns = computed(() => props.store.columns);
+        /** Ref tới panel element để kiểm tra click inside khi scroll */
+        const panelRef = ref<HTMLElement | null>(null);
 
-// Internal State
+        /** Dropdown đang mở hay không */
+        const isOpen = ref(false);
+        /** Input đang được focus */
+        const isFocused = ref(false);
+        /** Text hiển thị trong input */
+        const inputText = ref("");
+        /**
+         * Display text đã được confirm — chỉ cập nhật khi:
+         * 1. User chọn item (onSelect)
+         * 2. modelValue đổi từ ngoài (watch modelValue)
+         * 3. storeData load xong và resolve được display text (watch storeData)
+         * Dùng để revert inputText khi blur mà không phụ thuộc vào storeData đang filtered.
+         */
+        const confirmedDisplayText = ref("");
+        /** Index item đang active (keyboard nav), -1 = không có */
+        const activeIndex = ref(-1);
+        /** Timer debounce */
+        let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-/** Ref tới root element để detect click outside */
-const rootRef = ref<HTMLElement | null>(null);
-/** Ref tới input element */
-const inputRef = ref<HTMLInputElement | null>(null);
-/** Ref tới cb-control để tính toán vị trí dropdown */
-const controlRef = ref<HTMLElement | null>(null);
-/** Style position cho cb-panel khi dùng fixed */
-const dropdownStyle = ref<{ top: any; left: string; width?: string }>({
-    top: "0px",
-    left: "0px",
-    width: "0px",
-});
+        /**
+         * Guard: luôn trả về array, không bao giờ undefined/null.
+         */
+        const storeData = computed<Array<any>>(() => props.store.data ?? []);
 
-/** Ref tới panel element để kiểm tra click inside khi scroll */
-const panelRef = ref<HTMLElement | null>(null);
+        /** Có giá trị để hiển thị nút clear hay không */
+        const hasClearValue = computed(() => props.clearIcon && inputText.value && !props.disabled);
 
-/** Dropdown đang mở hay không */
-const isOpen = ref(false);
-/** Input đang được focus */
-const isFocused = ref(false);
-/** Text hiển thị trong input */
-const inputText = ref("");
-/**
- * Display text đã được confirm — chỉ cập nhật khi:
- * 1. User chọn item (onSelect)
- * 2. modelValue đổi từ ngoài (watch modelValue)
- * 3. storeData load xong và resolve được display text (watch storeData)
- * Dùng để revert inputText khi blur mà không phụ thuộc vào storeData đang filtered.
- */
-const confirmedDisplayText = ref("");
-/** Index item đang active (keyboard nav), -1 = không có */
-const activeIndex = ref(-1);
-/** Timer debounce */
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+        /**
+         * visibleText — Text hiển thị trong input.
+         * Ưu tiên: inputText (đã resolve) → initText (fallback khi chưa load) → ''
+         * Không áp dụng initText khi đang focus để tránh che keyword search.
+         */
+        const visibleText = computed(() => {
+            const baseText = (() => {
+                if (props.customDisplayText && props.store.selectedItem) {
+                    return props.customDisplayText(props.store.selectedItem);
+                }
+                return inputText.value;
+            })();
+            return baseText || isFocused.value ? baseText : (props.initText ?? "");
+        });
 
-/**
- * Guard: luôn trả về array, không bao giờ undefined/null.
- * Pinia unwrap reactive khi access qua props nên không cần .value.
- */
-const storeData = computed<Array<any>>(() => props.store.data ?? []);
+        /** Class size — khớp pattern với BaseInput */
+        const sizeClass = computed(() => `cb-root--${props.size}`);
 
-/** Có giá trị để hiển thị nút clear hay không */
-const hasClearValue = computed(() => props.clearIcon && inputText.value && !props.disabled);
+        // Helpers
 
-/**
- * visibleText — Text hiển thị trong input.
- * Ưu tiên: inputText (đã resolve) → initText (fallback khi chưa load) → ''
- * Không áp dụng initText khi đang focus để tránh che keyword search.
- */
-const visibleText = computed(() => {
-    const baseText = (() => {
-        if (props.customDisplayText && props.store.selectedItem) {
-            return props.customDisplayText(props.store.selectedItem);
-        }
-        return inputText.value;
-    })();
-    return baseText || isFocused.value ? baseText : (props.initText ?? "");
-});
+        /**
+         * Set selectedItem trong store dựa trên modelValue.
+         * Dùng khi data load xong mà modelValue đã có sẵn (vd: reset form với value primitive).
+         */
+        const setSelectedItem = (value: any) => {
+            const found = storeData.value.find((item) => item[valueField.value] === value || item === value);
+            props.store.setSelectedItem(found ?? null);
+        };
 
-/** Class size — khớp pattern với BaseInput */
-const sizeClass = computed(() => `cb-root--${props.size}`);
+        /**
+         * getDisplayText — Lấy text hiển thị từ modelValue.
+         * null/undefined → ''
+         * object         → value[displayField]
+         * primitive      → tìm trong storeData
+         */
+        const getDisplayText = (value: typeof props.modelValue): string => {
+            if (value == null) return "";
+            if (typeof value === "object") return String((value as Record<string, any>)[displayField.value] ?? "");
+            // Tìm trong storeData để lấy display text
+            const found = storeData.value.find((item) => item[valueField.value] === value);
+            if (found) return String(found[displayField.value]);
+            // storeData rỗng = data chưa load xong → trả "" tránh hiện thô primitive
+            return storeData.value.length > 0 ? String(value) : "";
+        };
 
-// Helpers
+        /**
+         * Tính toán vị trí fixed cho cb-panel dựa trên vị trí cb-control trong viewport.
+         */
+        const calcDropdownPosition = (): void => {
+            if (!controlRef.value || !panelRef.value) return;
 
-/**
- * Set selectedItem trong store dựa trên modelValue.
- * Dùng khi data load xong mà modelValue đã có sẵn (vd: reset form với value primitive).
- * @param value
- */
-const setSelectedItem = (value: any) => {
-    const found = storeData.value.find((item) => item[valueField.value] === value || item === value);
-    props.store.setSelectedItem(found ?? null);
-};
+            const controlRect = controlRef.value.getBoundingClientRect();
+            const panelRect = panelRef.value.getBoundingClientRect();
+            const gap = 4;
 
-/**
- * getDisplayText — Lấy text hiển thị từ modelValue.
- * null/undefined → ''
- * object         → value[displayField]
- * primitive      → tìm trong storeData:
- *   - Tìm thấy                → displayField của item
- *   - Không thấy + data đã có → String(value)  (giá trị không tồn tại trong list)
- *   - Không thấy + data rỗng  → ''             (data chưa load, tránh flash primitive)
- */
-const getDisplayText = (value: typeof props.modelValue): string => {
-    if (value == null) return "";
-    if (typeof value === "object") return String((value as Record<string, any>)[displayField.value] ?? "");
-    // Tìm trong storeData để lấy display text
-    const found = storeData.value.find((item) => item[valueField.value] === value);
-    if (found) return String(found[displayField.value]);
-    // storeData rỗng = data chưa load xong → trả "" tránh hiện thô primitive (vd: "1")
-    // watch(storeData) sẽ re-resolve sau khi data về
-    return storeData.value.length > 0 ? String(value) : "";
-};
+            // ── Trục Y ──────────────────────────────────────────────
+            const spaceBelow = window.innerHeight - controlRect.bottom;
+            const spaceAbove = controlRect.top;
+            const panelHeight = panelRect.height;
 
-/**
- * calcDropdownPosition — Tính toán vị trí fixed cho cb-panel dựa trên
- * vị trí của cb-control trong viewport.
- * Gọi mỗi khi mở dropdown để đảm bảo vị trí luôn chính xác dù page đã scroll.
- */
-/**
- * lvhung - 05.07.2026
- * Tính toán vị trí fixed cho cb-panel dựa trên vị trí cb-control trong viewport.
- * Xử lý cả trục Y (trên/dưới) và trục X (trái/phải) để tránh tràn ra ngoài màn hình.
- */
-const calcDropdownPosition = (): void => {
-    if (!controlRef.value || !panelRef.value) return;
+            const topPosition =
+                spaceBelow >= panelHeight + gap
+                    ? controlRect.bottom + gap
+                    : spaceAbove >= panelHeight + gap
+                      ? controlRect.top - panelHeight - gap
+                      : controlRect.bottom + gap;
 
-    const controlRect = controlRef.value.getBoundingClientRect();
-    const panelRect = panelRef.value.getBoundingClientRect();
-    const gap = 4;
+            // ── Trục X ──────────────────────────────────────────────
+            const panelWidth = props.store.dropdownWidth || controlRect.width;
+            const spaceRight = window.innerWidth - controlRect.left;
 
-    // ── Trục Y ──────────────────────────────────────────────
-    const spaceBelow = window.innerHeight - controlRect.bottom;
-    const spaceAbove = controlRect.top;
-    const panelHeight = panelRect.height;
+            // Nếu không đủ chỗ bên phải → căn phải panel với cạnh phải của control
+            const leftPosition =
+                spaceRight >= panelWidth ? controlRect.left : Math.max(0, controlRect.right - panelWidth);
 
-    const topPosition =
-        spaceBelow >= panelHeight + gap
-            ? controlRect.bottom + gap
-            : spaceAbove >= panelHeight + gap
-              ? controlRect.top - panelHeight - gap
-              : controlRect.bottom + gap;
+            dropdownStyle.value = {
+                top: `${topPosition}px`,
+                left: `${leftPosition}px`,
+                width: `${panelWidth}px`,
+            };
+        };
 
-    // ── Trục X ──────────────────────────────────────────────
-    const panelWidth = props.store.dropdownWidth || controlRect.width;
-    const spaceRight = window.innerWidth - controlRect.left;
+        /** closeDropdown — Đóng dropdown và reset activeIndex */
+        const closeDropdown = () => {
+            isOpen.value = false;
+            activeIndex.value = -1;
+        };
 
-    // Nếu không đủ chỗ bên phải → căn phải panel với cạnh phải của control
-    const leftPosition = spaceRight >= panelWidth ? controlRect.left : Math.max(0, controlRect.right - panelWidth);
+        /**
+         * openDropdown — Mở dropdown và trigger load data.
+         */
+        const openDropdown = async () => {
+            if (props.disabled) return;
+            // Luôn load trước — không guard bằng isOpen
+            props.store.loadData("");
+            if (isOpen.value) return; // guard UI
+            isOpen.value = true;
+            await nextTick();
+            calcDropdownPosition();
+        };
 
-    dropdownStyle.value = {
-        top: `${topPosition}px`,
-        left: `${leftPosition}px`,
-        width: `${panelWidth}px`,
-    };
-};
+        /**
+         * onSelect — Xử lý khi user chọn một item.
+         */
+        const onSelect = (item: any) => {
+            const isObjectMode = typeof props.modelValue === "object" && props.modelValue !== null;
+            const value = isObjectMode ? item : item[valueField.value];
 
-/** closeDropdown — Đóng dropdown và reset activeIndex */
-const closeDropdown = () => {
-    isOpen.value = false;
-    activeIndex.value = -1;
-};
+            const metaData = {
+                newValue: item,
+                oldValue: props.store.selectedItem,
+                allowSelect: true,
+            };
 
-/**
- * openDropdown — Mở dropdown và trigger load data.
- * Luôn gọi store.loadData() trước khi check isOpen
- * để đảm bảo data luôn fresh kể cả khi dropdown đã mở.
- */
-const openDropdown = async () => {
-    if (props.disabled) return;
-    // Luôn load trước — không guard bằng isOpen
-    props.store.loadData("");
-    if (isOpen.value) return; // guard UI
-    isOpen.value = true;
-    await nextTick();
-    calcDropdownPosition();
-};
+            emit("before-selected", metaData);
 
-/**
- * onSelect — Xử lý khi user chọn một item.
- * modelValue là object → emit nguyên item
- * modelValue là primitive → emit item[valueField]
- */
-const onSelect = (item: any) => {
-    const isObjectMode = typeof props.modelValue === "object" && props.modelValue !== null;
-    const value = isObjectMode ? item : item[valueField.value];
-
-    const metaData = {
-        newValue: item,
-        oldValue: props.store.selectedItem,
-        allowSelect: true,
-    };
-
-    emit("before-selected", metaData);
-
-    if (metaData.allowSelect) {
-        props.store.setSelectedItem(item);
-        emit("update:modelValue", value);
-        emit("change", item, value);
-        emit("selected", item);
-        const displayText = String(item[displayField.value] ?? "");
-        confirmedDisplayText.value = displayText;
-        inputText.value = displayText;
-    }
-
-    closeDropdown();
-    inputRef.value?.blur();
-};
-
-/**
- * clearValue — Xoá giá trị đang chọn và reset về full list.
- */
-const clearValue = () => {
-    inputText.value = "";
-    confirmedDisplayText.value = "";
-    props.store.setSelectedItem(null);
-    emit("update:modelValue", null);
-    emit("change", null, null);
-    activeIndex.value = -1;
-    inputRef.value?.focus();
-    // Reset về full list
-    props.store.loadData("");
-};
-
-// Input Handlers
-
-/**
- * onInput — Xử lý khi user gõ vào input.
- * Debounce trước khi gọi store.loadData.
- */
-const onInput = (e: Event) => {
-    if (!props.searchable) return;
-    const keyword = (e.target as HTMLInputElement).value;
-    activeIndex.value = -1;
-
-    if (!isOpen.value) isOpen.value = true;
-
-    // Clear debounce cũ
-    if (debounceTimer) clearTimeout(debounceTimer);
-
-    debounceTimer = setTimeout(() => {
-        if (keyword.length >= props.minChars) {
-            props.store.loadData(keyword);
-        }
-        emit("search", keyword);
-    }, props.debounceTime);
-};
-
-/**
- * onFocus — Khi input được focus.
- */
-const onFocus = () => {
-    isFocused.value = true;
-    openDropdown();
-};
-
-/**
- * onBlur — Khi input mất focus.
- * Delay 150ms để click vào item trong dropdown không bị blur chặn.
- */
-const onBlur = () => {
-    isFocused.value = false;
-    setTimeout(() => {
-        // Kiểm tra focus còn trong rootRef không
-        if (rootRef.value?.contains(document.activeElement)) return;
-        if (!isOpen.value) return;
-        closeDropdown();
-        // Revert về confirmed display text — không dùng getDisplayText vì storeData
-        // vẫn đang ở trạng thái filtered, sẽ resolve sai (trả về "" hoặc raw primitive).
-        inputText.value = confirmedDisplayText.value;
-    }, 150);
-};
-
-// Keyboard Navigation
-
-/**
- * onKeydown — Xử lý phím điều hướng.
- */
-const onKeydown = (e: KeyboardEvent) => {
-    const total = storeData.value.length;
-
-    switch (e.key) {
-        case "ArrowDown":
-            e.preventDefault();
-            if (!isOpen.value) {
-                openDropdown();
-            } else {
-                activeIndex.value = Math.min(activeIndex.value + 1, total - 1);
+            if (metaData.allowSelect) {
+                props.store.setSelectedItem(item);
+                emit("update:modelValue", value);
+                emit("change", item, value);
+                emit("selected", item);
+                const displayText = String(item[displayField.value] ?? "");
+                confirmedDisplayText.value = displayText;
+                inputText.value = displayText;
             }
-            break;
 
-        case "ArrowUp":
-            e.preventDefault();
-            activeIndex.value = Math.max(activeIndex.value - 1, 0);
-            break;
+            closeDropdown();
+            inputRef.value?.blur();
+        };
 
-        case "Enter":
-            e.preventDefault();
-            if (activeIndex.value >= 0 && storeData.value[activeIndex.value]) {
-                onSelect(storeData.value[activeIndex.value]);
+        /**
+         * clearValue — Xoá giá trị đang chọn và reset về full list.
+         */
+        const clearValue = () => {
+            inputText.value = "";
+            confirmedDisplayText.value = "";
+            props.store.setSelectedItem(null);
+            emit("update:modelValue", null);
+            emit("change", null, null);
+            activeIndex.value = -1;
+            inputRef.value?.focus();
+            // Reset về full list
+            props.store.loadData("");
+        };
+
+        // Input Handlers
+
+        /**
+         * onInput — Xử lý khi user gõ vào input.
+         */
+        const onInput = (e: Event) => {
+            if (!props.searchable) return;
+            const keyword = (e.target as HTMLInputElement).value;
+            activeIndex.value = -1;
+
+            if (!isOpen.value) isOpen.value = true;
+
+            // Clear debounce cũ
+            if (debounceTimer) clearTimeout(debounceTimer);
+
+            debounceTimer = setTimeout(() => {
+                if (keyword.length >= props.minChars) {
+                    props.store.loadData(keyword);
+                }
+                emit("search", keyword);
+            }, props.debounceTime);
+        };
+
+        /**
+         * onFocus — Khi input được focus.
+         */
+        const onFocus = () => {
+            isFocused.value = true;
+            openDropdown();
+        };
+
+        /**
+         * onBlur — Khi input mất focus.
+         */
+        const onBlur = () => {
+            isFocused.value = false;
+            setTimeout(() => {
+                // Kiểm tra focus còn trong rootRef không
+                if (rootRef.value?.contains(document.activeElement)) return;
+                if (!isOpen.value) return;
+                closeDropdown();
+                inputText.value = confirmedDisplayText.value;
+            }, 150);
+        };
+
+        // Keyboard Navigation
+
+        /**
+         * onKeydown — Xử lý phím điều hướng.
+         */
+        const onKeydown = (e: KeyboardEvent) => {
+            const total = storeData.value.length;
+
+            switch (e.key) {
+                case "ArrowDown":
+                    e.preventDefault();
+                    if (!isOpen.value) {
+                        openDropdown();
+                    } else {
+                        activeIndex.value = Math.min(activeIndex.value + 1, total - 1);
+                    }
+                    break;
+
+                case "ArrowUp":
+                    e.preventDefault();
+                    activeIndex.value = Math.max(activeIndex.value - 1, 0);
+                    break;
+
+                case "Enter":
+                    e.preventDefault();
+                    if (activeIndex.value >= 0 && storeData.value[activeIndex.value]) {
+                        onSelect(storeData.value[activeIndex.value]);
+                    }
+                    break;
+
+                case "Escape":
+                    closeDropdown();
+                    inputText.value = confirmedDisplayText.value;
+                    break;
+
+                case "Tab":
+                    closeDropdown();
+                    break;
             }
-            break;
+        };
 
-        case "Escape":
+        // Click Outside
+
+        /**
+         * handleClickOutside — Đóng dropdown khi click ra ngoài rootRef.
+         */
+        const handleClickOutside = (e: MouseEvent) => {
+            if (rootRef.value && !rootRef.value.contains(e.target as Node)) {
+                if (!isOpen.value) return;
+                closeDropdown();
+                inputText.value = confirmedDisplayText.value;
+            }
+        };
+
+        // Watch
+
+        watch(
+            () => props.modelValue,
+            (val) => {
+                const text = getDisplayText(val);
+                confirmedDisplayText.value = text;
+                if (text !== inputText.value) inputText.value = text;
+
+                setSelectedItem(val);
+            },
+            { immediate: true },
+        );
+
+        watch(storeData, () => {
+            if (isFocused.value) return;
+            const text = getDisplayText(props.modelValue);
+            if (text && text !== inputText.value) {
+                confirmedDisplayText.value = text;
+                inputText.value = text;
+            }
+            setSelectedItem(props.modelValue);
+        });
+
+        const onWindowScroll = (e: Event): void => {
+            if (!isOpen.value) return;
+            if (panelRef.value && panelRef.value.contains(e.target as Node)) return;
             closeDropdown();
             inputText.value = confirmedDisplayText.value;
-            break;
+        };
 
-        case "Tab":
-            closeDropdown();
-            break;
-    }
-};
+        // Lifecycle
 
-// Click Outside
+        onMounted(() => {
+            document.addEventListener("click", handleClickOutside);
+            window.addEventListener("scroll", onWindowScroll, { passive: true, capture: true });
+            window.addEventListener("resize", closeDropdown, { passive: true });
+            if (props.autoLoad) {
+                props.store.loadData("");
+            }
+        });
 
-/**
- * handleClickOutside — Đóng dropdown khi click ra ngoài rootRef.
- */
-const handleClickOutside = (e: MouseEvent) => {
-    if (rootRef.value && !rootRef.value.contains(e.target as Node)) {
-        if (!isOpen.value) return;
-        closeDropdown();
-        inputText.value = confirmedDisplayText.value;
-    }
-};
+        onBeforeUnmount(() => {
+            document.removeEventListener("click", handleClickOutside);
+            window.removeEventListener("scroll", onWindowScroll, { capture: true });
+            window.removeEventListener("resize", closeDropdown);
+            if (debounceTimer) clearTimeout(debounceTimer);
+            props.store.$dispose();
+        });
 
-// Watch
-
-/**
- * Sync inputText khi modelValue thay đổi từ ngoài (vd: reset form).
- * immediate: true để init ngay lần đầu.
- */
-watch(
-    () => props.modelValue,
-    (val) => {
-        const text = getDisplayText(val);
-        confirmedDisplayText.value = text;
-        if (text !== inputText.value) inputText.value = text;
-
-        setSelectedItem(val);
+        return {
+            rootRef,
+            controlRef,
+            inputRef,
+            panelRef,
+            isOpen,
+            isFocused,
+            activeIndex,
+            dropdownStyle,
+            storeData,
+            displayField,
+            valueField,
+            columns,
+            hasClearValue,
+            visibleText,
+            sizeClass,
+            onInput,
+            onFocus,
+            onBlur,
+            onKeydown,
+            clearValue,
+            closeDropdown,
+            openDropdown,
+            onSelect,
+        };
     },
-    { immediate: true },
-);
-
-/**
- * Re-resolve inputText sau khi store.data load xong.
- *
- * Vấn đề: watch(modelValue, { immediate }) chạy TRƯỚC khi data được fetch
- * → getDisplayText không tìm thấy item → fallback về String(primitiveValue).
- *
- * Fix: mỗi lần storeData thay đổi (data về), nếu modelValue đang là primitive
- * và inputText chưa đúng display text → re-resolve lại.
- * Không chạy khi user đang gõ (isFocused) để tránh ghi đè keyword search.
- */
-watch(storeData, () => {
-    if (isFocused.value) return;
-    const text = getDisplayText(props.modelValue);
-    if (text && text !== inputText.value) {
-        confirmedDisplayText.value = text;
-        inputText.value = text;
-    }
-    // Set selectedItem khi data load xong mà modelValue đã có sẵn
-    setSelectedItem(props.modelValue);
-});
-
-/**
- * onWindowScroll — Đóng dropdown khi scroll xảy ra bên ngoài cb-panel.
- * Dùng capture: true để bắt được scroll trên mọi container, nhưng
- * bỏ qua nếu event xuất phát từ bên trong panel (list/tbody cuộn nội bộ).
- */
-const onWindowScroll = (e: Event): void => {
-    if (!isOpen.value) return;
-    if (panelRef.value && panelRef.value.contains(e.target as Node)) return;
-    closeDropdown();
-    inputText.value = confirmedDisplayText.value;
-};
-
-// Lifecycle
-
-onMounted(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("scroll", onWindowScroll, { passive: true, capture: true });
-    window.addEventListener("resize", closeDropdown, { passive: true });
-    // autoLoad: pre-fetch data ngay khi mount, không cần chờ user mở dropdown
-    if (props.autoLoad) {
-        props.store.loadData("");
-    }
-});
-
-onBeforeUnmount(() => {
-    document.removeEventListener("mousedown", handleClickOutside);
-    window.removeEventListener("scroll", onWindowScroll, { capture: true });
-    window.removeEventListener("resize", closeDropdown);
-    if (debounceTimer) clearTimeout(debounceTimer);
-    props.store.$dispose();
 });
 </script>
 

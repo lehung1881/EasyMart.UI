@@ -1,15 +1,12 @@
 <template>
     <div class="cb-dropdown">
-        <!-- Loading state -->
         <div v-if="loading" class="cb-dropdown__loading">
             <span class="cb-dropdown__spinner" aria-hidden="true"></span>
             <span>Đang tải...</span>
         </div>
 
-        <!-- Empty state -->
         <div v-else-if="!data || data.length === 0" class="cb-dropdown__empty">Không có kết quả</div>
 
-        <!-- TABLE MODE — khi có columns prop -->
         <template v-else-if="columns && columns.length > 0">
             <table class="cb-dropdown__table" role="listbox">
                 <thead class="cb-dropdown__thead">
@@ -34,6 +31,7 @@
                         :ref="
                             (el) => {
                                 if (el) itemRefs[index] = el as HTMLElement;
+                                if (index === 0) sampleItemRef = el as HTMLElement;
                             }
                         "
                         role="option"
@@ -43,9 +41,8 @@
                             'cb-dropdown__row--active': activeIndex === index,
                             'cb-dropdown__row--selected': isSelected(item),
                         }"
-                        @mousedown.prevent="emit('select', item)"
+                        @click.prevent="$emit('select', item)"
                     >
-                        <!-- Slot: custom toàn bộ <tr> -->
                         <slot name="row" :item="item" :index="index" :columns="columns">
                             <td
                                 v-for="col in columns"
@@ -53,7 +50,6 @@
                                 class="cb-dropdown__td"
                                 :style="columnStyle(col)"
                             >
-                                <!-- Slot: custom từng cell theo field -->
                                 <slot :name="`cell-${col.dataField}`" :item="item" :value="item[col.dataField]">
                                     {{ displayData(item[col.dataField], col) }}
                                 </slot>
@@ -64,7 +60,6 @@
                             ></td>
                         </slot>
                     </tr>
-                    <!-- Sentinel row -->
                     <tr v-if="hasMore" ref="sentinelRef" class="cb-sentinel" aria-hidden="true">
                         <td :colspan="columns?.length ?? 1" />
                     </tr>
@@ -77,7 +72,6 @@
             </table>
         </template>
 
-        <!-- LIST MODE — khi không có columns -->
         <ul v-else class="cb-dropdown__list" role="listbox" :style="{ maxHeight: maxListHeight }">
             <li
                 v-for="(item, index) in data"
@@ -85,6 +79,7 @@
                 :ref="
                     (el) => {
                         if (el) itemRefs[index] = el as HTMLElement;
+                        if (index === 0) sampleItemRef = el as HTMLElement;
                     }
                 "
                 role="option"
@@ -94,17 +89,14 @@
                     'cb-dropdown__item--active': activeIndex === index,
                     'cb-dropdown__item--selected': isSelected(item),
                 }"
-                @mousedown.prevent="emit('select', item)"
+                @click.prevent="$emit('select', item)"
             >
-                <!-- Slot: custom render item -->
                 <slot name="item" :item="item" :index="index">
                     {{ item[displayField] }}
                 </slot>
             </li>
 
-            <!-- Sentinel — IntersectionObserver bắt khi cuộn chạm đáy -->
             <li v-if="hasMore" ref="sentinelRef" class="cb-sentinel" aria-hidden="true" />
-            <!-- Loading more indicator -->
             <li v-if="loadingMore" class="cb-dropdown__loading-more" aria-hidden="true">
                 <span class="cb-dropdown__spinner" />
             </li>
@@ -112,162 +104,191 @@
     </div>
 </template>
 
-<script setup lang="ts">
-/**
- * BaseComboboxDropdown.vue
- * UI layer — Pure render component, không chứa business logic.
- * Chỉ nhận props và render dropdown list hoặc table.
- */
-
-import { ref, computed, watch, onBeforeUnmount } from "vue";
+<script lang="ts">
+import { defineComponent, ref, computed, watch, onBeforeUnmount, onMounted, type PropType } from "vue";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import { formatData } from "@/commons/formatData";
-// ─── Props ────────────────────────────────────────────────────────────────────
 
-const props = withDefaults(
-    defineProps<{
+export default defineComponent({
+    name: "BaseComboboxDropdown",
+    props: {
         /** Dữ liệu hiển thị trong dropdown */
-        data: Array<any>;
+        data: {
+            type: Array as PropType<Array<any>>,
+            default: () => [],
+        },
         /** Field dùng để hiển thị text */
-        displayField: string;
+        displayField: {
+            type: String,
+            required: true,
+        },
         /** Field dùng làm value */
-        valueField: string;
+        valueField: {
+            type: String,
+            required: true,
+        },
         /** Nếu có → render dạng bảng; không có → render dạng list */
-        columns?: ColumnDefinition[];
+        columns: {
+            type: Array as PropType<ColumnDefinition[]>,
+            default: undefined,
+        },
         /** Index item đang được highlight (keyboard nav) */
-        activeIndex: number;
+        activeIndex: {
+            type: Number,
+            required: true,
+        },
         /** Giá trị đang được chọn (để highlight selected) */
-        selectedValue: any;
+        selectedValue: {
+            type: [String, Number, Object, Boolean] as PropType<any>,
+            default: null,
+        },
         /** Đang tải dữ liệu (lần đầu) */
-        loading: boolean;
+        loading: {
+            type: Boolean,
+            required: true,
+        },
         /** Đang tải thêm trang kế (infinite scroll) */
-        loadingMore?: boolean;
+        loadingMore: {
+            type: Boolean,
+            default: false,
+        },
         /** Còn dữ liệu để load thêm không */
-        hasMore?: boolean;
+        hasMore: {
+            type: Boolean,
+            default: false,
+        },
         /** Số item tối đa hiển thị trước khi scroll, default: 6 */
-        maxDisplayItem?: number;
-    }>(),
-    {
-        // Bắt buộc có default để tránh lỗi khi store chưa init xong
-        data: () => [],
-        columns: undefined,
-        loadingMore: false,
-        hasMore: false,
-        maxDisplayItem: 6,
+        maxDisplayItem: {
+            type: Number,
+            default: 6,
+        },
     },
-);
+    emits: ["select", "hover", "load-more"],
+    setup(props, { emit }) {
+        // ─── Refs ─────────────────────────────────────────────────────────────────────
 
-// ─── Emits ────────────────────────────────────────────────────────────────────
+        /** Mảng ref tới từng item element để scroll into view */
+        const itemRefs = ref<HTMLElement[]>([]);
+        /** Sentinel element ở cuối list — IntersectionObserver theo dõi để trigger load-more */
+        const sentinelRef = ref<HTMLElement | null>(null);
+        /** Observer instance */
+        let observer: IntersectionObserver | null = null;
 
-const emit = defineEmits<{
-    /** Khi click chọn item */
-    (e: "select", item: any): void;
-    /** Khi hover vào item — cập nhật activeIndex ở parent */
-    (e: "hover", index: number): void;
-    /** Khi scroll chạm đáy — yêu cầu load trang kế */
-    (e: "load-more"): void;
-}>();
+        // ─── Computed ─────────────────────────────────────────────────────────────────
 
-// ─── Refs ─────────────────────────────────────────────────────────────────────
+        // Trong setup()
+        const sampleItemRef = ref<HTMLElement | null>(null);
+        const itemHeight = ref(36);
 
-/** Mảng ref tới từng item element để scroll into view */
-const itemRefs = ref<HTMLElement[]>([]);
-/** Sentinel element ở cuối list — IntersectionObserver theo dõi để trigger load-more */
-const sentinelRef = ref<HTMLElement | null>(null);
-/** Observer instance */
-let observer: IntersectionObserver | null = null;
-
-// ─── Computed ─────────────────────────────────────────────────────────────────
-
-const ITEM_HEIGHT = 36; // px — khớp với $item-height trong SCSS
-const LIST_PADDING = 8; // 4px top + 4px bottom của ul
-
-/**
- * maxListHeight — Chiều cao tối đa của scroll container.
- * List mode : itemHeight * n + padding ul
- * Table mode: itemHeight * n + thead (~33px)
- */
-const maxListHeight = computed(() => `${ITEM_HEIGHT * props.maxDisplayItem + LIST_PADDING}px`);
-const maxTableBodyHeight = computed(() => `${ITEM_HEIGHT * props.maxDisplayItem}px`);
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const displayData = (value: any, col: ColumnDefinition): string => {
-    return formatData.formatDisplayData(value, col.formatType ?? 0);
-};
-
-/**
- * isSelected — Kiểm tra item có đang được chọn không.
- * So sánh theo valueField để tránh reference equality issue.
- */
-const isSelected = (item: any): boolean => {
-    if (props.selectedValue == null) return false;
-    if (typeof props.selectedValue === "object") {
-        return props.selectedValue[props.valueField] === item[props.valueField];
-    }
-    return props.selectedValue === item[props.valueField];
-};
-
-/**
- * columnStyle — Trả về object style cho <th> và <td>.
- * Tập trung tất cả style liên quan đến column vào một chỗ,
- * dễ mở rộng thêm property sau này mà không cần sửa template.
- */
-const columnStyle = (col: ColumnDefinition): Record<string, string> => {
-    const { width, align } = col;
-    const colWidth = width === undefined || width === null ? "auto" : typeof width === "number" ? `${width}px` : width;
-    return {
-        width: colWidth,
-        maxWidth: colWidth,
-        minWidth: colWidth,
-        textAlign: align ?? "left",
-    };
-};
-
-// ─── Watch ────────────────────────────────────────────────────────────────────
-
-/**
- * Watch activeIndex → tự động cuộn item active vào viewport.
- */
-watch(
-    () => props.activeIndex,
-    (index) => {
-        if (index < 0) return;
-        itemRefs.value[index]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    },
-);
-
-/**
- * Watch sentinelRef — setup IntersectionObserver khi sentinel xuất hiện trong DOM.
- * hasMore = false → sentinel bị v-if remove → observer tự disconnect.
- *
- * PHẢI dùng flush: 'post' — Vue docs yêu cầu khi watch template ref,
- * đảm bảo DOM đã patch xong trước khi callback chạy.
- * Nếu dùng flush: 'pre' (default): el.closest() trả null vì phần tử chưa mount
- * → root: null → observer theo dõi viewport thay vì scroll container → không fire.
- */
-watch(
-    sentinelRef,
-    (el) => {
-        observer?.disconnect();
-        observer = null;
-        if (!el) return;
-
-        // Root là scroll container cha gần nhất (list hoặc tbody)
-        const scrollParent = el.closest(".cb-dropdown__list, .cb-dropdown__tbody") as HTMLElement | null;
-
-        observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry?.isIntersecting) emit("load-more");
+        watch(
+            () => props.data,
+            () => {
+                if (!sampleItemRef.value) return;
+                const measured = sampleItemRef.value.offsetHeight;
+                if (measured > 0) itemHeight.value = measured;
             },
-            { root: scrollParent, threshold: 0 }, // threshold: 0 — 1px đủ để trigger
+            { flush: "post" },
         );
-        observer.observe(el);
-    },
-    { flush: "post" },
-);
 
-onBeforeUnmount(() => {
-    observer?.disconnect();
+        // Tính toán lại chiều cao tối đa
+        const maxListHeight = computed(() => `${itemHeight.value * props.maxDisplayItem + 8}px`); // 8px padding ul
+        const maxTableBodyHeight = computed(() => `${itemHeight.value * props.maxDisplayItem}px`);
+
+        // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+        const displayData = (value: any, col: ColumnDefinition): string => {
+            return formatData.formatDisplayData(value, col.formatType ?? 0);
+        };
+
+        /**
+         * isSelected — Kiểm tra item có đang được chọn không.
+         * So sánh theo valueField để tránh reference equality issue.
+         */
+        const isSelected = (item: any): boolean => {
+            if (props.selectedValue == null) return false;
+            if (typeof props.selectedValue === "object") {
+                return props.selectedValue[props.valueField] === item[props.valueField];
+            }
+            return props.selectedValue === item[props.valueField];
+        };
+
+        /**
+         * columnStyle — Trả về object style cho <th> và <td>.
+         * Tập trung tất cả style liên quan đến column vào một chỗ,
+         * dễ mở rộng thêm property sau này mà không cần sửa template.
+         */
+        const columnStyle = (col: ColumnDefinition): Record<string, string> => {
+            const { width, align } = col;
+            const colWidth =
+                width === undefined || width === null ? "auto" : typeof width === "number" ? `${width}px` : width;
+            return {
+                width: colWidth,
+                maxWidth: colWidth,
+                minWidth: colWidth,
+                textAlign: align ?? "left",
+            };
+        };
+
+        // ─── Watch ────────────────────────────────────────────────────────────────────
+
+        /**
+         * Watch activeIndex → tự động cuộn item active vào viewport.
+         */
+        watch(
+            () => props.activeIndex,
+            (index) => {
+                if (index < 0) return;
+                itemRefs.value[index]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            },
+        );
+
+        /**
+         * Watch sentinelRef — setup IntersectionObserver khi sentinel xuất hiện trong DOM.
+         * hasMore = false → sentinel bị v-if remove → observer tự disconnect.
+         *
+         * PHẢI dùng flush: 'post' — Vue docs yêu cầu khi watch template ref,
+         * đảm bảo DOM đã patch xong trước khi callback chạy.
+         * Nếu dùng flush: 'pre' (default): el.closest() trả null vì phần tử chưa mount
+         * → root: null → observer theo dõi viewport thay vì scroll container → không fire.
+         */
+        watch(
+            sentinelRef,
+            (el) => {
+                observer?.disconnect();
+                observer = null;
+                if (!el) return;
+
+                // Root là scroll container cha gần nhất (list hoặc tbody)
+                const scrollParent = el.closest(".cb-dropdown__list, .cb-dropdown__tbody") as HTMLElement | null;
+
+                observer = new IntersectionObserver(
+                    ([entry]) => {
+                        if (entry?.isIntersecting) emit("load-more");
+                    },
+                    { root: scrollParent, threshold: 0 }, // threshold: 0 — 1px đủ để trigger
+                );
+                observer.observe(el);
+            },
+            { flush: "post" },
+        );
+
+        onBeforeUnmount(() => {
+            observer?.disconnect();
+        });
+
+        // ─── Trả về các thuộc tính cho Template ───────────────────────────────────────
+
+        return {
+            itemRefs,
+            sentinelRef,
+            maxListHeight,
+            maxTableBodyHeight,
+            sampleItemRef,
+            displayData,
+            isSelected,
+            columnStyle,
+        };
+    },
 });
 </script>
 
