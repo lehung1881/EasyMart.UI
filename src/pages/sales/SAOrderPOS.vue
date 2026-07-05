@@ -4,14 +4,14 @@
         <div class="saorder-pos_header">
             <div class="tab-container">
                 <div
-                    v-for="order in orderList"
-                    :key="order.RefID"
+                    v-for="tabOrder in orderList"
+                    :key="tabOrder.tabID"
                     class="tab-item"
-                    :class="{ active: order.RefID === activeOrder?.RefID }"
-                    @click="setActiveOrder(order as SAOrder)"
+                    :class="{ active: tabOrder.tabID === activeTab.tabID }"
+                    @click="setActiveTab(tabOrder as OrderTab)"
                 >
-                    <div class="tab-title">{{ order.RefNoText }}</div>
-                    <div @click.stop="closeOrderTab(order.RefID)" class="icon-close16"></div>
+                    <div class="tab-title">{{ tabOrder.title }}</div>
+                    <div @click.stop="closeOrderTab(tabOrder.tabID)" class="icon-close16"></div>
                 </div>
 
                 <div class="tab-divider"></div>
@@ -249,24 +249,24 @@
                         <span>{{ $t("i18nSAOrder.POS.Discount") }}</span>
                         <div class="discount-input-wrap">
                             <BaseInputNumber
-                                v-model="discountValue"
+                                v-model="activeTab.discountValue"
                                 :min="0"
-                                :max="discountType === 'percent' ? 100 : undefined"
+                                :max="activeTab.discountType === 'percent' ? 100 : undefined"
                                 :format-type="FormatType.Quantity"
                                 class="discount-input"
                             />
                             <div class="discount-type-toggle">
                                 <button
                                     class="discount-type-btn"
-                                    :class="{ 'is-active': discountType === 'percent' }"
-                                    @click="discountType = 'percent'"
+                                    :class="{ 'is-active': activeTab.discountType === 'percent' }"
+                                    @click="chooseDiscount('percent')"
                                 >
                                     %
                                 </button>
                                 <button
                                     class="discount-type-btn"
-                                    :class="{ 'is-active': discountType === 'amount' }"
-                                    @click="discountType = 'amount'"
+                                    :class="{ 'is-active': activeTab.discountType === 'amount' }"
+                                    @click="chooseDiscount('amount')"
                                 >
                                     ₫
                                 </button>
@@ -346,7 +346,7 @@ import { FormatType } from "@/constants";
 import SAOrder from "@/models/sales/SAOrder";
 import SAOrderDetail from "@/models/sales/SAOrderDetail";
 import SearchInventoryItem from "@/pages/sales/SearchInventoryItem.vue";
-import { useOrderTabManager } from "@/composables/sales/SAOrderPos/useOrderTabManager";
+import { useOrderTabManager, type OrderTab } from "@/composables/sales/SAOrderPos/useOrderTabManager";
 import { useOrderDetailActions } from "@/composables/sales/SAOrderPos/useOrderDetailActions";
 import { useOrderSidebarResize } from "@/composables/sales/SAOrderPos/useOrderSidebarResize.ts";
 
@@ -357,7 +357,6 @@ const PAYMENT_METHOD_MAP = {
     transfer: 3,
 } as const;
 type PaymentMethodKey = keyof typeof PAYMENT_METHOD_MAP;
-type DiscountType = "percent" | "amount";
 
 export default defineComponent({
     name: "SAOrderPOS",
@@ -394,7 +393,7 @@ export default defineComponent({
         // #endregion
 
         // #region COMPOSABLES
-        const { orderList, activeOrder, isMaxTabsReached, createNewOrder, setActiveOrder, closeOrderTab } =
+        const { orderList, activeOrder, activeTab, isMaxTabsReached, createNewOrder, setActiveTab, closeOrderTab } =
             useOrderTabManager();
 
         const {
@@ -402,6 +401,7 @@ export default defineComponent({
             currentOrderDetails,
             orderSummary,
             customerStore,
+            cashierStore,
             selectOrderDetail,
             updateItemQuantity,
             increaseItemQuantity,
@@ -412,9 +412,9 @@ export default defineComponent({
             handleSelectInventoryItem,
             handleCustomerChange,
             formatCustomerDisplayText,
-            cashierStore,
             handleCashierChange,
-        } = useOrderDetailActions(activeOrder);
+            chooseDiscount,
+        } = useOrderDetailActions(activeOrder, activeTab);
 
         const { sidebarWidth, initiateSidebarResize } = useOrderSidebarResize();
         // #endregion
@@ -437,16 +437,6 @@ export default defineComponent({
                 activeOrder.value.PaymentMethod = PAYMENT_METHOD_MAP[key];
             },
         });
-
-        /** Loại giảm giá: % hoặc ₫ — local UI state, không lưu vào model */
-        const discountType = ref<DiscountType>("percent");
-
-        /**
-         * lvhung - 05.07.2026
-         * Giá trị nhập giảm giá — local UI state.
-         * Khi thay đổi sẽ tính lại discountAmount và ghi vào activeOrder.DiscountAmount.
-         */
-        const discountValue = ref<number>(0);
 
         /**
          * lvhung - 05.07.2026
@@ -483,13 +473,13 @@ export default defineComponent({
          * lvhung - 05.07.2026
          * Cập nhật discountAmount vào model mỗi khi discountValue hoặc discountType thay đổi.
          */
-        watch([discountValue, discountType], () => {
+        watch([() => activeTab.value.discountValue, () => activeTab.value.discountType], () => {
             if (!activeOrder.value) return;
             const total = orderSummary.value.totalAmount;
-            if (discountType.value === "percent") {
-                activeOrder.value.DiscountAmount = Math.round((total * discountValue.value) / 100);
+            if (activeTab.value.discountType === "percent") {
+                activeOrder.value.DiscountAmount = Math.round((total * activeTab.value.discountValue) / 100);
             } else {
-                activeOrder.value.DiscountAmount = discountValue.value;
+                activeOrder.value.DiscountAmount = activeTab.value.discountValue;
             }
         });
         // #endregion
@@ -534,8 +524,9 @@ export default defineComponent({
             activeOrder,
             isMaxTabsReached,
             createNewOrder,
-            setActiveOrder,
+            setActiveTab,
             closeOrderTab,
+            activeTab,
             // detail
             selectedDetailID,
             currentOrderDetails,
@@ -560,14 +551,13 @@ export default defineComponent({
             handleCashierChange,
             // payment
             selectedPaymentMethod,
-            discountType,
-            discountValue,
             discountAmount,
             amountDue,
             changeAmount,
             // helpers
             formatCurrency,
             handleCheckout,
+            chooseDiscount,
         };
     },
 });

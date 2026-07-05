@@ -4,6 +4,7 @@ import SAOrder from "@/models/sales/SAOrder";
 import SAOrderDetail from "@/models/sales/SAOrderDetail";
 import { loadDataRemoteCombobox, useComboboxStore } from "@/composables/controls/useComboboxStore";
 import CustomerApi from "@/api/modules/dictionary/customerAPI.ts";
+import type { OrderTab } from "./useOrderTabManager";
 
 interface InventoryItemSearchResult {
     InventoryItemID: string;
@@ -19,8 +20,9 @@ interface InventoryItemSearchResult {
  * Cung cấp toàn bộ thao tác CRUD và tính toán trên chi tiết đơn hàng POS.
  * Nhận activeOrder dưới dạng Ref để reactive với tab đang active.
  * @param activeOrder Ref tới đơn hàng đang được chọn trên POS.
+ * @param activeTab Ref tới tab đang được chọn.
  */
-export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>) => {
+export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTab: Ref<OrderTab>) => {
     // #region STATE
     const selectedDetailID = ref<string | null>(null);
     // #endregion
@@ -196,6 +198,18 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>) => {
 
         activeOrder.value.SAOrderDetails = detailList;
     };
+
+    /**
+     * lvhung - 05.07.2026
+     * Thay đổi loại chiết khấu (theo phần trăm hoặc theo số tiền) cho tab hiện tại.
+     * @param type Loại chiết khấu ('percent' hoặc 'amount')
+     */
+    const chooseDiscount = (type: "percent" | "amount"): void => {
+        activeTab.value.discountType = type;
+        if (type === "percent") {
+            activeTab.value.discountValue = Math.min(Math.max(activeTab.value.discountValue, 0), 100);
+        }
+    };
     // #endregion
 
     // #region CUSTOMER COMBOBOX
@@ -272,5 +286,6 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>) => {
         formatCustomerDisplayText,
         cashierStore,
         handleCashierChange,
+        chooseDiscount,
     };
 };
