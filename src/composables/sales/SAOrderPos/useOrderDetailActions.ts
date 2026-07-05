@@ -34,20 +34,6 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
      */
     const currentOrderDetails = computed(() => activeOrder.value?.SAOrderDetails ?? []);
 
-    /**
-     * lvhung - 05.07.2026
-     * Tổng hợp số lượng và thành tiền của toàn bộ dòng trong đơn hàng hiện tại.
-     */
-    const orderSummary = computed(() => {
-        return currentOrderDetails.value.reduce(
-            (summary, detail) => {
-                summary.totalQuantity += Number(detail.Quantity ?? 0);
-                summary.totalAmount += Number(detail.Amount ?? 0);
-                return summary;
-            },
-            { totalQuantity: 0, totalAmount: 0 },
-        );
-    });
     // #endregion
 
     // #region HELPERS
@@ -59,6 +45,15 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
     const syncOrderDetails = (updatedDetails: SAOrderDetail[]): void => {
         if (!activeOrder.value) return;
         activeOrder.value.SAOrderDetails = updatedDetails;
+    };
+
+    /**
+     * Đồng bộ lại toàn bộ tổng tiền trên master đơn hàng.
+     * Dùng model `SAOrder.calculateTotals()` để đảm bảo cùng một nguồn logic.
+     */
+    const syncMasterTotals = (): void => {
+        if (!activeOrder.value) return;
+        activeOrder.value.calculateTotals();
     };
     // #endregion
 
@@ -85,6 +80,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         detail.MainQuantity = nextQuantity;
         detail.Amount = Number(detail.UnitPrice ?? 0) * nextQuantity;
         syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
+        syncMasterTotals();
     };
 
     /**
@@ -123,6 +119,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         detail.MainUnitPrice = nextUnitPrice;
         detail.Amount = nextUnitPrice * Number(detail.Quantity ?? 0);
         syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
+        syncMasterTotals();
     };
 
     /**
@@ -142,6 +139,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
             detail.MainUnitPrice = nextUnitPrice;
         }
         syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
+        syncMasterTotals();
     };
 
     /**
@@ -156,6 +154,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
             (detail) => detail.RefDetailID !== refDetailID,
         );
         syncOrderDetails(updatedDetails as SAOrderDetail[]);
+        syncMasterTotals();
         if (selectedDetailID.value === refDetailID) {
             selectedDetailID.value = null;
         }
@@ -197,6 +196,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         }
 
         activeOrder.value.SAOrderDetails = detailList;
+        syncMasterTotals();
     };
 
     /**
@@ -204,11 +204,44 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
      * Thay đổi loại chiết khấu (theo phần trăm hoặc theo số tiền) cho tab hiện tại.
      * @param type Loại chiết khấu ('percent' hoặc 'amount')
      */
-    const chooseDiscount = (type: "percent" | "amount"): void => {
+    const chooseDiscount = (type: "percent" | "amount", subtotal: number): void => {
         activeTab.value.discountType = type;
         if (type === "percent") {
             activeTab.value.discountValue = Math.min(Math.max(activeTab.value.discountValue, 0), 100);
         }
+        if (!activeOrder.value) return;
+        if (activeTab.value.discountType === "percent") {
+            activeOrder.value.DiscountAmount = Math.round((subtotal * activeTab.value.discountValue) / 100);
+        } else {
+            activeOrder.value.DiscountAmount = activeTab.value.discountValue;
+        }
+        syncMasterTotals();
+    };
+
+    /**
+     * Cập nhật giá trị giảm giá từ input và tính lại tiền trên master.
+     * @param value Giá trị giảm giá mới.
+     */
+    const updateDiscountValue = (value: number | null): void => {
+        activeTab.value.discountValue = Math.max(0, Number(value ?? 0));
+        if (!activeOrder.value) return;
+        const subtotal = currentOrderDetails.value.reduce((sum, detail) => sum + Number(detail.Amount ?? 0), 0);
+        if (activeTab.value.discountType === "percent") {
+            activeOrder.value.DiscountAmount = Math.round((subtotal * activeTab.value.discountValue) / 100);
+        } else {
+            activeOrder.value.DiscountAmount = activeTab.value.discountValue;
+        }
+        syncMasterTotals();
+    };
+
+    /**
+     * Cập nhật số tiền khách trả và tính lại tiền thừa.
+     * @param value Số tiền khách đưa.
+     */
+    const updatePaidAmount = (value: number | null): void => {
+        if (!activeOrder.value) return;
+        activeOrder.value.PaidAmount = Math.max(0, Number(value ?? 0));
+        syncMasterTotals();
     };
     // #endregion
 
@@ -272,7 +305,6 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
     return {
         selectedDetailID,
         currentOrderDetails,
-        orderSummary,
         selectOrderDetail,
         updateItemQuantity,
         increaseItemQuantity,
@@ -287,5 +319,10 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         cashierStore,
         handleCashierChange,
         chooseDiscount,
+        updateDiscountValue,
+        updatePaidAmount,
+        syncMasterTotals,
     };
 };
+
+

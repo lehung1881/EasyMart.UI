@@ -83,6 +83,33 @@ export class SAOrder extends BaseModel {
     /** Danh sách chi tiết đơn hàng. */
     declare SAOrderDetails: SAOrderDetail[];
 
+    /**
+     * Tính lại các giá trị tổng hợp trên master đơn hàng từ danh sách chi tiết.
+     * - SubTotalAmount: tổng `Amount` của các dòng chi tiết
+     * - TotalAmount: SubTotalAmount - DiscountAmount + TaxAmount
+     * - ChangeAmount: số tiền trả lại = PaidAmount - TotalAmount
+     *
+     * @param discountAmount Số tiền giảm giá áp dụng lên master. Nếu truyền vào sẽ đồng bộ vào model.
+     * @param paidAmount Số tiền khách đã trả. Nếu truyền vào sẽ đồng bộ vào model.
+     * @returns Chính instance hiện tại để có thể chain nếu cần.
+     */
+    calculateTotals(): this {
+        const details = this.SAOrderDetails ?? [];
+        const subtotal = details.reduce((sum, detail) => sum + Number(detail.Amount ?? 0), 0);
+        const discount = Number(this.DiscountAmount ?? 0);
+        const tax = Number(this.TaxAmount ?? 0);
+        const paid = Number(this.PaidAmount ?? 0);
+        const total = Math.max(0, subtotal - discount + tax);
+
+        this.SubTotalAmount = subtotal;
+        this.DiscountAmount = Math.max(0, discount);
+        this.TotalAmount = total;
+        this.PaidAmount = Math.max(0, paid);
+        this.ChangeAmount = Math.max(0, this.PaidAmount - total);
+
+        return this;
+    }
+
     constructor(data?: Partial<SAOrder>, options: unknown = null) {
         super(data as Record<string, unknown> | undefined, options);
     }

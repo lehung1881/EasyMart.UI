@@ -47,16 +47,16 @@
                             <div class="main-selected-panel__title">
                                 {{ $t("i18nSAOrder.POS.SelectedProducts") }}
                             </div>
-                            <div class="main-selected-panel__subtitle">
-                                {{
-                                    $t("i18nSAOrder.POS.ProductCount", {
-                                        count: activeOrder?.SAOrderDetails?.length ?? 0,
-                                    })
-                                }}
-                            </div>
+                        <div class="main-selected-panel__subtitle">
+                            {{
+                                $t("i18nSAOrder.POS.ProductCount", {
+                                    count: activeOrder?.SAOrderDetails?.length ?? 0,
+                                })
+                            }}
                         </div>
-                        <div class="main-selected-panel__badge" v-if="orderSummary.totalAmount > 0">
-                            {{ formatCurrency(orderSummary.totalAmount) }}
+                    </div>
+                        <div class="main-selected-panel__badge" v-if="(activeOrder?.SubTotalAmount ?? 0) > 0">
+                            {{ formatCurrency(activeOrder?.SubTotalAmount ?? 0) }}
                         </div>
                     </div>
 
@@ -243,7 +243,7 @@
                     <div class="sidebar-section__label">{{ $t("i18nSAOrder.POS.OrderSummary") }}</div>
                     <div class="summary-row">
                         <span>{{ $t("i18nSAOrder.POS.SubTotal") }}</span>
-                        <strong>{{ formatCurrency(orderSummary.totalAmount) }}</strong>
+                        <strong>{{ formatCurrency(activeOrder?.SubTotalAmount ?? 0) }}</strong>
                     </div>
                     <div class="summary-row summary-row--discount">
                         <span>{{ $t("i18nSAOrder.POS.Discount") }}</span>
@@ -253,20 +253,21 @@
                                 :min="0"
                                 :max="activeTab.discountType === 'percent' ? 100 : undefined"
                                 :format-type="FormatType.Quantity"
+                                @input="(value: number | null) => updateDiscountValue(value)"
                                 class="discount-input"
                             />
                             <div class="discount-type-toggle">
                                 <button
                                     class="discount-type-btn"
                                     :class="{ 'is-active': activeTab.discountType === 'percent' }"
-                                    @click="chooseDiscount('percent')"
+                                    @click="chooseDiscount('percent', activeOrder?.SubTotalAmount ?? 0)"
                                 >
                                     %
                                 </button>
                                 <button
                                     class="discount-type-btn"
                                     :class="{ 'is-active': activeTab.discountType === 'amount' }"
-                                    @click="chooseDiscount('amount')"
+                                    @click="chooseDiscount('amount', activeOrder?.SubTotalAmount ?? 0)"
                                 >
                                     ₫
                                 </button>
@@ -276,7 +277,7 @@
                     <div class="summary-divider"></div>
                     <div class="summary-row summary-row--total">
                         <span>{{ $t("i18nSAOrder.POS.NeedToPay") }}</span>
-                        <strong class="summary-total-value">{{ formatCurrency(amountDue) }}</strong>
+                        <strong class="summary-total-value">{{ formatCurrency(activeOrder?.TotalAmount ?? 0) }}</strong>
                     </div>
                 </div>
 
@@ -302,16 +303,17 @@
                                 v-model="activeOrder.PaidAmount"
                                 :min="0"
                                 :format-type="FormatType.Currency"
+                                @input="(value: number | null) => updatePaidAmount(value)"
                                 class="cash-input"
                             />
                         </div>
                         <div
                             v-if="activeOrder.PaidAmount > 0"
                             class="change-row"
-                            :class="{ 'is-positive': changeAmount > 0 }"
+                            :class="{ 'is-positive': (activeOrder?.ChangeAmount ?? 0) > 0 }"
                         >
                             <span>{{ $t("i18nSAOrder.POS.Change") }}</span>
-                            <strong>{{ formatCurrency(changeAmount) }}</strong>
+                            <strong>{{ formatCurrency(activeOrder?.ChangeAmount ?? 0) }}</strong>
                         </div>
                     </template>
                 </div>
@@ -340,7 +342,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch, onMounted, getCurrentInstance } from "vue";
+import { defineComponent, ref, computed, onMounted, getCurrentInstance } from "vue";
 import { useI18n } from "vue-i18n";
 import { FormatType } from "@/constants";
 import SAOrder from "@/models/sales/SAOrder";
@@ -379,10 +381,11 @@ export default defineComponent({
             { key: "action", label: "", align: "right", width: "100px" },
         ];
 
-        const isGroupRows = ref(localStorage.getItem("saorder_pos_group_rows") !== "false");
-
-        watch(isGroupRows, (val) => {
-            localStorage.setItem("saorder_pos_group_rows", String(val));
+        const isGroupRows = computed<boolean>({
+            get: () => localStorage.getItem("saorder_pos_group_rows") !== "false",
+            set: (val: boolean) => {
+                localStorage.setItem("saorder_pos_group_rows", String(val));
+            },
         });
 
         const paymentMethods: { value: PaymentMethodKey; label: string; icon: string }[] = [
@@ -399,7 +402,6 @@ export default defineComponent({
         const {
             selectedDetailID,
             currentOrderDetails,
-            orderSummary,
             customerStore,
             cashierStore,
             selectOrderDetail,
@@ -414,6 +416,8 @@ export default defineComponent({
             formatCustomerDisplayText,
             handleCashierChange,
             chooseDiscount,
+            updateDiscountValue,
+            updatePaidAmount,
         } = useOrderDetailActions(activeOrder, activeTab);
 
         const { sidebarWidth, initiateSidebarResize } = useOrderSidebarResize();
@@ -438,50 +442,6 @@ export default defineComponent({
             },
         });
 
-        /**
-         * lvhung - 05.07.2026
-         * Số tiền giảm giá thực tế — computed từ discountValue + discountType,
-         * đồng thời sync vào activeOrder.DiscountAmount.
-         */
-        const discountAmount = computed<number>({
-            get: () => activeOrder.value?.DiscountAmount ?? 0,
-            set: (val: number) => {
-                if (!activeOrder.value) return;
-                activeOrder.value.DiscountAmount = val;
-            },
-        });
-
-        /**
-         * lvhung - 05.07.2026
-         * Số tiền cần thanh toán = SubTotalAmount - DiscountAmount.
-         * Đọc từ orderSummary.totalAmount (reactive theo SAOrderDetails) trừ discountAmount.
-         */
-        const amountDue = computed<number>(() => {
-            return Math.max(0, orderSummary.value.totalAmount - discountAmount.value);
-        });
-
-        /**
-         * lvhung - 05.07.2026
-         * Tiền thừa trả lại khách = PaidAmount - amountDue.
-         * Bind 2 chiều với activeOrder.ChangeAmount.
-         */
-        const changeAmount = computed<number>(() => {
-            return Math.max(0, (activeOrder.value?.PaidAmount ?? 0) - amountDue.value);
-        });
-
-        /**
-         * lvhung - 05.07.2026
-         * Cập nhật discountAmount vào model mỗi khi discountValue hoặc discountType thay đổi.
-         */
-        watch([() => activeTab.value.discountValue, () => activeTab.value.discountType], () => {
-            if (!activeOrder.value) return;
-            const total = orderSummary.value.totalAmount;
-            if (activeTab.value.discountType === "percent") {
-                activeOrder.value.DiscountAmount = Math.round((total * activeTab.value.discountValue) / 100);
-            } else {
-                activeOrder.value.DiscountAmount = activeTab.value.discountValue;
-            }
-        });
         // #endregion
 
         // #region HELPERS & UTILS
@@ -530,7 +490,6 @@ export default defineComponent({
             // detail
             selectedDetailID,
             currentOrderDetails,
-            orderSummary,
             selectOrderDetail,
             updateItemQuantity,
             increaseItemQuantity,
@@ -551,13 +510,12 @@ export default defineComponent({
             handleCashierChange,
             // payment
             selectedPaymentMethod,
-            discountAmount,
-            amountDue,
-            changeAmount,
             // helpers
             formatCurrency,
             handleCheckout,
             chooseDiscount,
+            updateDiscountValue,
+            updatePaidAmount,
         };
     },
 });
