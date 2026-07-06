@@ -5,18 +5,8 @@ import SAOrderDetail from "@/models/sales/SAOrderDetail";
 import { loadDataRemoteCombobox, useComboboxStore } from "@/composables/controls/useComboboxStore";
 import CustomerApi from "@/api/modules/dictionary/customerAPI.ts";
 import type { OrderTab } from "./useOrderTabManager";
-import CalcSAOrder from "@/utils/CalcSaOrder.ts";
+import SAOrderCalculator from "@/utils/CalcSaOrder.ts";
 import unitAPI from "@/api/modules/dictionary/unitAPI";
-
-interface InventoryItemSearchResult {
-    InventoryItemID: string;
-    InventoryItemCode: string;
-    InventoryItemName: string;
-    SellPrice: number;
-    MinimumStock: number;
-    ImageUrl: string | null;
-}
-
 /**
  * lvhung - 05.07.2026
  * Cung cấp toàn bộ thao tác CRUD và tính toán trên chi tiết đơn hàng POS.
@@ -55,7 +45,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
      */
     const calculateMasterTotal = (): void => {
         if (!activeOrder.value) return;
-        CalcSAOrder.calculateAmounts(activeOrder.value);
+        SAOrderCalculator.calculateAmounts(activeOrder.value);
     };
     // #endregion
 
@@ -76,7 +66,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
      */
     const increaseItemQuantity = (detail: SAOrderDetail): void => {
         detail.Quantity = Number(detail.Quantity ?? 0) + 1;
-        changeDetailOrder('quantity', detail);
+        changeDetailOrder("quantity", detail);
     };
 
     /**
@@ -90,24 +80,8 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
             removeOrderDetail(detail.RefDetailID);
         } else {
             detail.Quantity = currentQuantity - 1;
-            changeDetailOrder('quantity', detail);
+            changeDetailOrder("quantity", detail);
         }
-    };
-
-    /**
-     * lvhung - 05.07.2026
-     * Cập nhật đơn giá của một mặt hàng và tính lại thành tiền.
-     * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
-     * @param value Giá trị đơn giá mới.
-     */
-    const updateItemUnitPrice = (detail: SAOrderDetail, value: number | null): void => {
-        if (!activeOrder.value) return;
-        const nextUnitPrice = Math.max(0, Number(value ?? 0));
-        detail.UnitPrice = nextUnitPrice;
-        detail.MainUnitPrice = nextUnitPrice;
-        detail.Amount = nextUnitPrice * Number(detail.Quantity ?? 0);
-        syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-        calculateMasterTotal();
     };
 
     /**
@@ -140,24 +114,24 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
 
         switch (columnName) {
             case "unit":
-                CalcSAOrder.calcMainUnit(detail);
-                CalcSAOrder.calcDiscountAmount(detail);
-                CalcSAOrder.calcAmount(detail);
-                CalcSAOrder.calcVatAmount(detail);
+                SAOrderCalculator.calcMainUnit(detail);
+                SAOrderCalculator.calcDiscountAmount(detail);
+                SAOrderCalculator.calcAmount(detail);
+                SAOrderCalculator.calcVatAmount(detail);
                 break;
 
             case "quantity":
             case "unit-price":
-                CalcSAOrder.calcMainUnit(detail);
-                CalcSAOrder.calcDiscountAmount(detail);
-                CalcSAOrder.calcAmount(detail);
-                CalcSAOrder.calcVatAmount(detail);
+                SAOrderCalculator.calcMainUnit(detail);
+                SAOrderCalculator.calcDiscountAmount(detail);
+                SAOrderCalculator.calcAmount(detail);
+                SAOrderCalculator.calcVatAmount(detail);
                 break;
 
             case "discount-rate":
-                CalcSAOrder.calcDiscountAmount(detail);
-                CalcSAOrder.calcAmount(detail);
-                CalcSAOrder.calcVatAmount(detail);
+                SAOrderCalculator.calcDiscountAmount(detail);
+                SAOrderCalculator.calcAmount(detail);
+                SAOrderCalculator.calcVatAmount(detail);
                 break;
 
             case "amount": {
@@ -166,8 +140,8 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
                 detail.UnitPrice = qty !== 0 ? amount / qty : 0;
                 detail.DiscountAmount = 0;
                 detail.DiscountRate = 0;
-                CalcSAOrder.calcMainUnit(detail);
-                CalcSAOrder.calcVatAmount(detail);
+                SAOrderCalculator.calcMainUnit(detail);
+                SAOrderCalculator.calcVatAmount(detail);
                 break;
             }
         }
@@ -193,10 +167,10 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
 
         if (existingDetail) {
             existingDetail.Quantity = Number(existingDetail.Quantity ?? 0) + 1;
-            CalcSAOrder.calcMainUnit(existingDetail);
-            CalcSAOrder.calcDiscountAmount(existingDetail);
-            CalcSAOrder.calcAmount(existingDetail);
-            CalcSAOrder.calcVatAmount(existingDetail);
+            SAOrderCalculator.calcMainUnit(existingDetail);
+            SAOrderCalculator.calcDiscountAmount(existingDetail);
+            SAOrderCalculator.calcAmount(existingDetail);
+            SAOrderCalculator.calcVatAmount(existingDetail);
         } else {
             const newDetail = new SAOrderDetail({
                 InventoryItemID: inventoryItem.InventoryItemID,
@@ -213,7 +187,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
                 SortOrder: detailList.length + 1,
             });
             newDetail.setAutoPrimaryKey();
-            CalcSAOrder.calculateDetailAmounts(newDetail);
+            SAOrderCalculator.calculateDetailAmounts(newDetail);
             detailList.push(newDetail);
             activeOrder.value.SAOrderDetails = detailList;
         }
@@ -329,20 +303,24 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
      */
     const unitStore = useComboboxStore("unit_combobox", {
         viewOrTableName: "di_unit",
-        comboboxLoadData: (pay) => loadDataRemoteCombobox(unitAPI, pay),
         displayField: "UnitName",
         valueField: "UnitID",
+        queryMode: "local",
+        customLocalData: (rawData: any, options: any) => {
+            if (options && options.dataRow) {
+                const currentRow = options.dataRow;
+                return [{ UnitID: currentRow.UnitID, UnitName: currentRow.UnitName }];
+            }
+            return rawData;
+        },
     });
     return {
         unitStore,
         selectedDetailID,
         currentOrderDetails,
         selectOrderDetail,
-        updateItemQuantity,
         increaseItemQuantity,
         decreaseItemQuantity,
-        updateItemUnitPrice,
-        updateItemAmount,
         removeOrderDetail,
         handleSelectInventoryItem,
         customerStore,
@@ -354,8 +332,6 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         updateDiscountValue,
         updatePaidAmount,
         calculateMasterTotal,
-        changeDetailOrder
+        changeDetailOrder,
     };
 };
-
-

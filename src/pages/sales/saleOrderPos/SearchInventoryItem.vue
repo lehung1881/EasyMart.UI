@@ -63,22 +63,14 @@ import inventoryItemApi from "@/api/modules/dictionary/inventoryItemAPI";
 import { FilterNodeType, LogicalOperator, type PagingRequest, type PagingResponse } from "@/models/common/paging";
 import type { ServiceResponse } from "@/models/common/serviceResponse";
 import defaultImageUrl from "@/assets/images/image_default.png";
-
-interface InventoryItemSearchResult {
-    InventoryItemID: string;
-    InventoryItemCode: string;
-    InventoryItemName: string;
-    SellPrice: number;
-    MinimumStock: number;
-    ImageUrl: string | null;
-}
+import type InventoryItemModel from "@/models/dictionary/inventoryItem";
 
 export default defineComponent({
     name: "SearchInventoryItem",
     emits: ["select-item"],
     setup(_, { emit }) {
         const searchQuery = ref("");
-        const searchResults = ref<InventoryItemSearchResult[]>([]);
+        const searchResults = ref<InventoryItemModel[]>([]);
         const isLoading = ref(false);
         const isLoadingMore = ref(false);
         const isOpenDropdown = ref(false);
@@ -120,7 +112,7 @@ export default defineComponent({
                         },
                     ],
                 },
-                Columns: "InventoryItemID,InventoryItemCode,InventoryItemName,SellPrice,MinimumStock",
+                Columns: "*",
                 ViewOrTableName: "di_inventory_item",
                 SelectedValue: null,
             };
@@ -131,10 +123,10 @@ export default defineComponent({
          * @param keyword Từ khóa cần tìm.
          * @returns Danh sách hàng hóa trả về trực tiếp từ API.
          */
-        const searchInventoryItems = async (keyword: string): Promise<InventoryItemSearchResult[]> => {
+        const searchInventoryItems = async (keyword: string): Promise<any> => {
             const payload = buildSearchPayload(keyword);
             const response = (await inventoryItemApi.getPagingCombobox(payload)) as ServiceResponse<
-                PagingResponse<Record<string, unknown>>
+                PagingResponse<any>
             >;
 
             const pageData = response.Data?.PageData ?? [];
@@ -143,14 +135,7 @@ export default defineComponent({
             // Cập nhật payload.pageSize thành payload.PageSize
             hasMore.value = currentPage.value * payload.PageSize < total || pageData.length >= payload.PageSize;
 
-            return pageData.map((item) => ({
-                InventoryItemID: String(item.InventoryItemID ?? ""),
-                InventoryItemCode: String(item.InventoryItemCode ?? ""),
-                InventoryItemName: String(item.InventoryItemName ?? ""),
-                SellPrice: Number(item.SellPrice ?? 0),
-                MinimumStock: Number(item.MinimumStock ?? 0),
-                ImageUrl: typeof item.ImageUrl === "string" && item.ImageUrl.trim() ? item.ImageUrl : null,
-            }));
+            return pageData;
         };
 
         /**
@@ -158,7 +143,7 @@ export default defineComponent({
          * @param item Sản phẩm cần lấy ảnh.
          * @returns URL ảnh của sản phẩm hoặc ảnh mặc định.
          */
-        const getItemImage = (item: InventoryItemSearchResult): string => {
+        const getItemImage = (item: any): string => {
             return item.ImageUrl || defaultImageUrl;
         };
 
@@ -298,7 +283,7 @@ export default defineComponent({
          * @param item Sản phẩm được chọn.
          * @returns Không trả về giá trị.
          */
-        const selectItem = (item: InventoryItemSearchResult) => {
+        const selectItem = (item: any) => {
             emit("select-item", item);
             clearSearch();
         };

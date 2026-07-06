@@ -40,4 +40,6 @@ export interface ComboboxStoreOptions {
     dropdownWidth?: number | null;
     /** Model của dòng dữ liệu */
     modelClass?: ModelConstructor;
+    /** Hàm tùy chỉnh dữ liệu local */
+    customLocalData?: (rawData: any, options: any) => Array<any>;
 }

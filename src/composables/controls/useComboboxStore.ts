@@ -70,6 +70,8 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
         /** Hàm gọi API (remote mode) */
         const loadFn = ref<ComboboxLoadData | null>(null);
 
+        const customLocalDataFn = ref<any | null>(null);
+
         /** Mode truy vấn */
         const mode = ref<QueryMode>("remote");
 
@@ -181,11 +183,16 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
          * @param keyword Từ khóa tìm kiếm.
          * @returns Promise hoàn tất load data.
          */
-        const loadData = async (keyword: string): Promise<void> => {
+        const loadData = async (keyword: string, options: any = null): Promise<void> => {
             const displayFieldValue = displayField.value;
 
             // LOCAL MODE
             if (!isRemoteMode()) {
+                // Xử lý custom local data nếu có
+                if (options && customLocalDataFn.value) {
+                    rawData.value = customLocalDataFn.value(rawData.value, options);
+                }
+
                 if (!keyword || !displayFieldValue) {
                     data.value = [...rawData.value];
                 } else {
@@ -254,6 +261,7 @@ export const useComboboxStore = (storeID: string, options: ComboboxStoreOptions)
          */
         const initConfigStore = (config: ComboboxStoreOptions): void => {
             loadFn.value = config.comboboxLoadData ?? null;
+            customLocalDataFn.value = config.customLocalData ?? null;
             mode.value = config.queryMode ?? (config.data ? "local" : "remote");
             pageSize.value = config.pageSize ?? 20;
             viewName.value = config.viewOrTableName ?? "";

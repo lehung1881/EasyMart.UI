@@ -35,9 +35,7 @@
             <!-- Left Side: Main Content Panel -->
             <div class="pos-content__main">
                 <div class="flex items-center gap-4">
-                    <SearchInventoryItem
-                        @select-item="(inventoryItem) => handleSelectInventoryItem(inventoryItem, isGroupRows)"
-                    />
+                    <SearchInventoryItem @select-item="(item: any) => handleSelectInventoryItem(item, isGroupRows)" />
                     <BaseSwitch v-model="isGroupRows" :label="$t('i18nSAOrder.POS.GroupRows')" />
                 </div>
 
@@ -47,14 +45,14 @@
                             <div class="main-selected-panel__title">
                                 {{ $t("i18nSAOrder.POS.SelectedProducts") }}
                             </div>
-                        <div class="main-selected-panel__subtitle">
-                            {{
-                                $t("i18nSAOrder.POS.ProductCount", {
-                                    count: activeOrder?.SAOrderDetails?.length ?? 0,
-                                })
-                            }}
+                            <div class="main-selected-panel__subtitle">
+                                {{
+                                    $t("i18nSAOrder.POS.ProductCount", {
+                                        count: activeOrder?.SAOrderDetails?.length ?? 0,
+                                    })
+                                }}
+                            </div>
                         </div>
-                    </div>
                         <div class="main-selected-panel__badge" v-if="(activeOrder?.SubTotalAmount ?? 0) > 0">
                             {{ formatCurrency(activeOrder?.SubTotalAmount ?? 0) }}
                         </div>
@@ -77,120 +75,19 @@
                             </thead>
 
                             <tbody>
-                                <tr
-                                    v-for="(orderDetail: SAOrderDetail) in currentOrderDetails"
+                                <SAOrderDetailRow
+                                    v-for="orderDetail in currentOrderDetails"
                                     :key="orderDetail.RefDetailID"
-                                    :class="{ 'is-active': selectedDetailID === orderDetail.RefDetailID }"
-                                    @click="selectOrderDetail(orderDetail.RefDetailID)"
-                                    class="main-selected-table__row"
-                                >
-                                    <td
-                                        v-for="column in tableColumns"
-                                        :key="column.key"
-                                        :class="[`col-${column.key}`, `is-${column.align}`]"
-                                        :style="{ width: column.width }"
-                                        class="main-selected-table__col"
-                                    >
-                                        <!-- Serial Column -->
-                                        <template v-if="column.key === 'serial'">
-                                            <div class="flex items-center justify-center font-bold">
-                                                {{ orderDetail.SortOrder }}
-                                            </div>
-                                        </template>
-
-                                        <!-- Product Info Column -->
-                                        <template v-if="column.key === 'product'">
-                                            <div class="cell-product">
-                                                <div class="cell-product__name">
-                                                    {{ orderDetail.InventoryItemName }}
-                                                </div>
-                                                <div class="cell-product__code">
-                                                    {{ orderDetail.InventoryItemCode }}
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        <!-- Unit Column -->
-                                        <template v-else-if="column.key === 'unit'">
-                                            <BaseCombobox
-                                                v-model="orderDetail.UnitID"
-                                                :store="unitStore"
-                                                :autoLoad="false"
-                                                clearIcon
-                                                :initText="model.UnitName"
-                                                @selected="(item: any) => changeDetailOrder(column.key, orderDetail, item)"
-                                                @change="(item: any, value: any) => changeDetailOrder(column.key, orderDetail, item)"
-                                            />
-                                        </template>
-
-                                        <!-- Quantity Column -->
-                                        <template v-else-if="column.key === 'quantity'">
-                                            <div class="flex justify-end">
-                                                <BaseInputNumber
-                                                    v-model="orderDetail.Quantity"
-                                                    :min="0"
-                                                    :max-decimals="0"
-                                                    :format-type="FormatType.Quantity"
-                                                    @change="
-                                                        (value: number | null) =>
-                                                            changeDetailOrder(column.key, orderDetail)
-                                                    "
-                                                    class="quantity-input"
-                                                >
-                                                    <template #left-icon>
-                                                        <div
-                                                            class="quantity-icon icon-decrease"
-                                                            @click="decreaseItemQuantity(orderDetail as SAOrderDetail)"
-                                                        ></div>
-                                                    </template>
-                                                    <template #right-icon>
-                                                        <div
-                                                            class="quantity-icon icon-plus"
-                                                            @click="increaseItemQuantity(orderDetail as SAOrderDetail)"
-                                                        ></div>
-                                                    </template>
-                                                </BaseInputNumber>
-                                            </div>
-                                        </template>
-
-                                        <!-- Unit Price Column -->
-                                        <template v-else-if="column.key === 'unit-price'">
-                                            <BaseInputNumber
-                                                v-model="orderDetail.UnitPrice"
-                                                :min="0"
-                                                :format-type="FormatType.Currency"
-                                                @change="
-                                                    (value: number | null) =>
-                                                        changeDetailOrder(column.key, orderDetail)
-                                                "
-                                            />
-                                        </template>
-
-                                        <!-- Amount Column -->
-                                        <template v-else-if="column.key === 'amount'">
-                                            <BaseInputNumber
-                                                v-model="orderDetail.Amount"
-                                                :min="0"
-                                                :format-type="FormatType.Currency"
-                                                @change="
-                                                    (value: number | null) =>
-                                                        changeDetailOrder(column.key, orderDetail)
-                                                "
-                                                class="input-amount"
-                                            />
-                                        </template>
-
-                                        <!-- Actions Column -->
-                                        <template v-else-if="column.key === 'action'">
-                                            <div class="flex justify-end">
-                                                <div
-                                                    class="icon-trash-24"
-                                                    @click.stop="removeOrderDetail(orderDetail.RefDetailID)"
-                                                ></div>
-                                            </div>
-                                        </template>
-                                    </td>
-                                </tr>
+                                    :order-detail="orderDetail as SAOrderDetail"
+                                    :table-columns="tableColumns"
+                                    :is-selected="selectedDetailID === orderDetail.RefDetailID"
+                                    :unit-store="unitStore"
+                                    @select="selectOrderDetail"
+                                    @remove="removeOrderDetail"
+                                    @increase-quantity="increaseItemQuantity"
+                                    @decrease-quantity="decreaseItemQuantity"
+                                    @change-column="changeDetailOrder"
+                                />
                             </tbody>
                         </table>
                     </div>
@@ -353,13 +250,12 @@
 import { defineComponent, ref, computed, onMounted, getCurrentInstance } from "vue";
 import { useI18n } from "vue-i18n";
 import { FormatType } from "@/constants";
-import SAOrder from "@/models/sales/SAOrder";
 import SAOrderDetail from "@/models/sales/SAOrderDetail";
-import SearchInventoryItem from "@/pages/sales/SearchInventoryItem.vue";
+import SearchInventoryItem from "@/pages/sales/saleOrderPos/SearchInventoryItem.vue";
 import { useOrderTabManager, type OrderTab } from "@/composables/sales/SAOrderPos/useOrderTabManager";
 import { useOrderDetailActions } from "@/composables/sales/SAOrderPos/useOrderDetailActions";
 import { useOrderSidebarResize } from "@/composables/sales/SAOrderPos/useOrderSidebarResize.ts";
-
+import SAOrderDetailRow, { type TableColumn } from "@/pages/sales/saleOrderPos/SAOrderDetailRow.vue";
 /** Map PaymentMethod number từ model sang string key để dùng trong UI */
 const PAYMENT_METHOD_MAP = {
     cash: 1,
@@ -372,6 +268,7 @@ export default defineComponent({
     name: "SAOrderPOS",
     components: {
         SearchInventoryItem,
+        SAOrderDetailRow,
     },
     setup() {
         const { proxy } = getCurrentInstance() as any;
@@ -379,7 +276,7 @@ export default defineComponent({
         // #region CONFIG & LOCAL STATES
         const { t } = useI18n();
 
-        const tableColumns = [
+        const tableColumns: TableColumn[] = [
             { key: "serial", label: "", align: "center", width: "50px" },
             { key: "product", label: t("i18nSAOrder.POS.ColProduct"), align: "left" },
             { key: "unit", label: t("i18nSAOrder.POS.ColUnit"), align: "left", width: "140px" },
@@ -412,12 +309,10 @@ export default defineComponent({
             currentOrderDetails,
             customerStore,
             cashierStore,
+            unitStore,
             selectOrderDetail,
-            updateItemQuantity,
             increaseItemQuantity,
             decreaseItemQuantity,
-            updateItemUnitPrice,
-            updateItemAmount,
             removeOrderDetail,
             handleSelectInventoryItem,
             handleCustomerChange,
@@ -426,6 +321,7 @@ export default defineComponent({
             chooseDiscount,
             updateDiscountValue,
             updatePaidAmount,
+            changeDetailOrder,
         } = useOrderDetailActions(activeOrder, activeTab);
 
         const { sidebarWidth, initiateSidebarResize } = useOrderSidebarResize();
@@ -499,11 +395,8 @@ export default defineComponent({
             selectedDetailID,
             currentOrderDetails,
             selectOrderDetail,
-            updateItemQuantity,
             increaseItemQuantity,
             decreaseItemQuantity,
-            updateItemUnitPrice,
-            updateItemAmount,
             removeOrderDetail,
             handleSelectInventoryItem,
             // sidebar
@@ -524,6 +417,8 @@ export default defineComponent({
             chooseDiscount,
             updateDiscountValue,
             updatePaidAmount,
+            changeDetailOrder,
+            unitStore,
         };
     },
 });

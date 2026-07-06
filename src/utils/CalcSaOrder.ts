@@ -25,11 +25,10 @@ class SAOrderCalculator {
      * MainUnitPrice = UnitPrice / conversionRate
      *
      * @param detail Instance SAOrderDetail cần cập nhật.
-     * @param conversionRate Tỉ lệ quy đổi từ đơn vị bán sang đơn vị chính.
      * @param options Tuỳ chọn tính toán.
      */
-    calcMainUnit(detail: SAOrderDetail, conversionRate: number, options: any = {}): void {
-        const rate = Number(conversionRate || 1);
+    calcMainUnit(detail: SAOrderDetail, options: any = {}): void {
+        const rate = Number(detail.ExchangeRate || 1);
         const qty = Number(detail.Quantity ?? 0);
         const price = Number(detail.UnitPrice ?? 0);
 
@@ -49,7 +48,7 @@ class SAOrderCalculator {
         const price = Number(detail.UnitPrice ?? 0);
         const discountRate = Number(detail.DiscountRate ?? 0);
 
-        detail.DiscountAmount = round(price * qty * discountRate / 100, options.decimalPlaces);
+        detail.DiscountAmount = round((price * qty * discountRate) / 100, options.decimalPlaces);
     }
 
     /**
@@ -80,7 +79,7 @@ class SAOrderCalculator {
         const amount = Number(detail.Amount ?? 0);
         const vatRate = Number(detail.VatRate ?? 0);
 
-        detail.VatAmount = round(amount * vatRate / 100, options.decimalPlaces);
+        detail.VatAmount = round((amount * vatRate) / 100, options.decimalPlaces);
     }
 
     /**
@@ -162,4 +161,4 @@ class SAOrderCalculator {
     // #endregion
 }
 
-export const CalcSAOrder = new SAOrderCalculator();
+export default new SAOrderCalculator();

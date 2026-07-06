@@ -191,6 +191,14 @@ export default defineComponent({
             type: Function as PropType<(selectedItem: any) => string>,
             default: undefined,
         },
+        /**
+         * lvhung - 06.07.2026
+         * Dữ liệu dòng hiện tại, dùng để truyền vào combobox trong bảng.
+         */
+        dataRow: {
+            type: Object as PropType<any>,
+            default: undefined,
+        },
     },
     emits: ["update:modelValue", "change", "selected", "before-selected", "search"],
     setup(props, { emit }) {
@@ -337,7 +345,7 @@ export default defineComponent({
         const openDropdown = async () => {
             if (props.disabled) return;
             // Luôn load trước — không guard bằng isOpen
-            props.store.loadData("");
+            loadDataCombobox("");
             if (isOpen.value) return; // guard UI
             isOpen.value = true;
             await nextTick();
@@ -374,6 +382,17 @@ export default defineComponent({
         };
 
         /**
+         * Load data cho combobox, dùng chung cho openDropdown() và onInput().
+         * @param keyword
+         */
+        const loadDataCombobox = async (keyword: string): Promise<void> => {
+            const options = {
+                dataRow: props.dataRow,
+            };
+            await props.store.loadData(keyword, options);
+        };
+
+        /**
          * clearValue — Xoá giá trị đang chọn và reset về full list.
          */
         const clearValue = () => {
@@ -385,7 +404,7 @@ export default defineComponent({
             activeIndex.value = -1;
             inputRef.value?.focus();
             // Reset về full list
-            props.store.loadData("");
+            loadDataCombobox("");
         };
 
         // Input Handlers
@@ -405,7 +424,7 @@ export default defineComponent({
 
             debounceTimer = setTimeout(() => {
                 if (keyword.length >= props.minChars) {
-                    props.store.loadData(keyword);
+                    loadDataCombobox(keyword);
                 }
                 emit("search", keyword);
             }, props.debounceTime);
@@ -525,7 +544,7 @@ export default defineComponent({
             window.addEventListener("scroll", onWindowScroll, { passive: true, capture: true });
             window.addEventListener("resize", closeDropdown, { passive: true });
             if (props.autoLoad) {
-                props.store.loadData("");
+                loadDataCombobox("");
             }
         });
 

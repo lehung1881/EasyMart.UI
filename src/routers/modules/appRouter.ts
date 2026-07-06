@@ -21,7 +21,7 @@ const appRoutes: RouteRecordRaw[] = [
             {
                 path: "sale/saorder-pos",
                 name: "SAOrderPOS",
-                component: () => import("@/pages/sales/SAOrderPOS.vue"),
+                component: () => import("@/pages/sales/saleOrderPos/SAOrderPOS.vue"),
             },
 
             ...dictionaryRoutes,
