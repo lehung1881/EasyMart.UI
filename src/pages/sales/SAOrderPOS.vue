@@ -78,7 +78,7 @@
 
                             <tbody>
                                 <tr
-                                    v-for="orderDetail in currentOrderDetails"
+                                    v-for="(orderDetail: SAOrderDetail) in currentOrderDetails"
                                     :key="orderDetail.RefDetailID"
                                     :class="{ 'is-active': selectedDetailID === orderDetail.RefDetailID }"
                                     @click="selectOrderDetail(orderDetail.RefDetailID)"
@@ -112,20 +112,28 @@
 
                                         <!-- Unit Column -->
                                         <template v-else-if="column.key === 'unit'">
-                                            {{ orderDetail.UnitName || orderDetail.MainUnitName || "-" }}
+                                            <BaseCombobox
+                                                v-model="orderDetail.UnitID"
+                                                :store="unitStore"
+                                                :autoLoad="false"
+                                                clearIcon
+                                                :initText="model.UnitName"
+                                                @selected="(item: any) => changeDetailOrder(column.key, orderDetail, item)"
+                                                @change="(item: any, value: any) => changeDetailOrder(column.key, orderDetail, item)"
+                                            />
                                         </template>
 
                                         <!-- Quantity Column -->
                                         <template v-else-if="column.key === 'quantity'">
                                             <div class="flex justify-end">
                                                 <BaseInputNumber
-                                                    :model-value="orderDetail.Quantity"
+                                                    v-model="orderDetail.Quantity"
                                                     :min="0"
                                                     :max-decimals="0"
                                                     :format-type="FormatType.Quantity"
-                                                    @input="
+                                                    @change="
                                                         (value: number | null) =>
-                                                            updateItemQuantity(orderDetail as SAOrderDetail, value)
+                                                            changeDetailOrder(column.key, orderDetail)
                                                     "
                                                     class="quantity-input"
                                                 >
@@ -148,12 +156,12 @@
                                         <!-- Unit Price Column -->
                                         <template v-else-if="column.key === 'unit-price'">
                                             <BaseInputNumber
-                                                :model-value="orderDetail.UnitPrice"
+                                                v-model="orderDetail.UnitPrice"
                                                 :min="0"
                                                 :format-type="FormatType.Currency"
-                                                @input="
+                                                @change="
                                                     (value: number | null) =>
-                                                        updateItemUnitPrice(orderDetail as SAOrderDetail, value)
+                                                        changeDetailOrder(column.key, orderDetail)
                                                 "
                                             />
                                         </template>
@@ -161,12 +169,12 @@
                                         <!-- Amount Column -->
                                         <template v-else-if="column.key === 'amount'">
                                             <BaseInputNumber
-                                                :model-value="orderDetail.Amount"
+                                                v-model="orderDetail.Amount"
                                                 :min="0"
                                                 :format-type="FormatType.Currency"
-                                                @input="
+                                                @change="
                                                     (value: number | null) =>
-                                                        updateItemAmount(orderDetail as SAOrderDetail, value)
+                                                        changeDetailOrder(column.key, orderDetail)
                                                 "
                                                 class="input-amount"
                                             />
@@ -253,7 +261,7 @@
                                 :min="0"
                                 :max="activeTab.discountType === 'percent' ? 100 : undefined"
                                 :format-type="FormatType.Quantity"
-                                @input="(value: number | null) => updateDiscountValue(value)"
+                                @change="(value: number | null) => updateDiscountValue(value)"
                                 class="discount-input"
                             />
                             <div class="discount-type-toggle">
@@ -303,7 +311,7 @@
                                 v-model="activeOrder.PaidAmount"
                                 :min="0"
                                 :format-type="FormatType.Currency"
-                                @input="(value: number | null) => updatePaidAmount(value)"
+                                @change="(value: number | null) => updatePaidAmount(value)"
                                 class="cash-input"
                             />
                         </div>

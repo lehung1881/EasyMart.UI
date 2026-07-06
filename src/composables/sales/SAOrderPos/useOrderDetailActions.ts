@@ -5,6 +5,8 @@ import SAOrderDetail from "@/models/sales/SAOrderDetail";
 import { loadDataRemoteCombobox, useComboboxStore } from "@/composables/controls/useComboboxStore";
 import CustomerApi from "@/api/modules/dictionary/customerAPI.ts";
 import type { OrderTab } from "./useOrderTabManager";
+import CalcSAOrder from "@/utils/CalcSaOrder.ts";
+import unitAPI from "@/api/modules/dictionary/unitAPI";
 
 interface InventoryItemSearchResult {
     InventoryItemID: string;
@@ -51,9 +53,9 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
      * Đồng bộ lại toàn bộ tổng tiền trên master đơn hàng.
      * Dùng model `SAOrder.calculateTotals()` để đảm bảo cùng một nguồn logic.
      */
-    const syncMasterTotals = (): void => {
+    const calculateMasterTotal = (): void => {
         if (!activeOrder.value) return;
-        activeOrder.value.calculateTotals();
+        CalcSAOrder.calculateAmounts(activeOrder.value);
     };
     // #endregion
 
@@ -69,27 +71,12 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
 
     /**
      * lvhung - 05.07.2026
-     * Cập nhật số lượng của một mặt hàng trong đơn và tính lại thành tiền.
-     * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
-     * @param value Số lượng mới.
-     */
-    const updateItemQuantity = (detail: SAOrderDetail, value: number | null): void => {
-        if (!activeOrder.value) return;
-        const nextQuantity = Math.max(0, Number(value ?? 0));
-        detail.Quantity = nextQuantity;
-        detail.MainQuantity = nextQuantity;
-        detail.Amount = Number(detail.UnitPrice ?? 0) * nextQuantity;
-        syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-        syncMasterTotals();
-    };
-
-    /**
-     * lvhung - 05.07.2026
      * Tăng số lượng mặt hàng lên 1 đơn vị.
      * @param detail Đối tượng chi tiết hàng hóa cần tăng số lượng.
      */
     const increaseItemQuantity = (detail: SAOrderDetail): void => {
-        updateItemQuantity(detail, Number(detail.Quantity ?? 0) + 1);
+        detail.Quantity = Number(detail.Quantity ?? 0) + 1;
+        changeDetailOrder('quantity', detail);
     };
 
     /**
@@ -102,7 +89,8 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         if (currentQuantity <= 1) {
             removeOrderDetail(detail.RefDetailID);
         } else {
-            updateItemQuantity(detail, currentQuantity - 1);
+            detail.Quantity = currentQuantity - 1;
+            changeDetailOrder('quantity', detail);
         }
     };
 
@@ -119,27 +107,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         detail.MainUnitPrice = nextUnitPrice;
         detail.Amount = nextUnitPrice * Number(detail.Quantity ?? 0);
         syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-        syncMasterTotals();
-    };
-
-    /**
-     * lvhung - 05.07.2026
-     * Cập nhật thành tiền của một mặt hàng và tính ngược lại đơn giá tương ứng.
-     * @param detail Đối tượng chi tiết hàng hóa cần cập nhật.
-     * @param value Giá trị thành tiền mới.
-     */
-    const updateItemAmount = (detail: SAOrderDetail, value: number | null): void => {
-        if (!activeOrder.value) return;
-        const nextAmount = Math.max(0, Number(value ?? 0));
-        detail.Amount = nextAmount;
-        const currentQuantity = Number(detail.Quantity ?? 0);
-        if (currentQuantity > 0) {
-            const nextUnitPrice = nextAmount / currentQuantity;
-            detail.UnitPrice = nextUnitPrice;
-            detail.MainUnitPrice = nextUnitPrice;
-        }
-        syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
-        syncMasterTotals();
+        calculateMasterTotal();
     };
 
     /**
@@ -154,10 +122,58 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
             (detail) => detail.RefDetailID !== refDetailID,
         );
         syncOrderDetails(updatedDetails as SAOrderDetail[]);
-        syncMasterTotals();
+        calculateMasterTotal();
         if (selectedDetailID.value === refDetailID) {
             selectedDetailID.value = null;
         }
+    };
+
+    /**
+     * lvhung - 06.07.2026
+     * Xử lý tính toán lại dòng chi tiết khi người dùng thay đổi giá trị trên lưới.
+     * Sau khi tính xong detail sẽ sync lại master totals.
+     * @param columnName Tên cột vừa thay đổi.
+     * @param detail Dòng chi tiết cần tính toán lại.
+     */
+    const changeDetailOrder = (columnName: string, detail: SAOrderDetail, metaData: any = null): void => {
+        if (!activeOrder.value) return;
+
+        switch (columnName) {
+            case "unit":
+                CalcSAOrder.calcMainUnit(detail);
+                CalcSAOrder.calcDiscountAmount(detail);
+                CalcSAOrder.calcAmount(detail);
+                CalcSAOrder.calcVatAmount(detail);
+                break;
+
+            case "quantity":
+            case "unit-price":
+                CalcSAOrder.calcMainUnit(detail);
+                CalcSAOrder.calcDiscountAmount(detail);
+                CalcSAOrder.calcAmount(detail);
+                CalcSAOrder.calcVatAmount(detail);
+                break;
+
+            case "discount-rate":
+                CalcSAOrder.calcDiscountAmount(detail);
+                CalcSAOrder.calcAmount(detail);
+                CalcSAOrder.calcVatAmount(detail);
+                break;
+
+            case "amount": {
+                const qty = Number(detail.Quantity ?? 0);
+                const amount = Number(detail.Amount ?? 0);
+                detail.UnitPrice = qty !== 0 ? amount / qty : 0;
+                detail.DiscountAmount = 0;
+                detail.DiscountRate = 0;
+                CalcSAOrder.calcMainUnit(detail);
+                CalcSAOrder.calcVatAmount(detail);
+                break;
+            }
+        }
+
+        //syncOrderDetails([...(activeOrder.value.SAOrderDetails ?? [])] as SAOrderDetail[]);
+        calculateMasterTotal();
     };
 
     /**
@@ -167,7 +183,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
      * @param inventoryItem Hàng hóa được chọn từ kết quả tìm kiếm.
      * @param isGroupRows Chế độ gộp dòng nếu cùng mặt hàng.
      */
-    const handleSelectInventoryItem = (inventoryItem: InventoryItemSearchResult, isGroupRows: boolean): void => {
+    const handleSelectInventoryItem = (inventoryItem: any, isGroupRows: boolean): void => {
         if (!activeOrder.value) return;
 
         const detailList = [...(activeOrder.value.SAOrderDetails ?? [])];
@@ -177,26 +193,32 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
 
         if (existingDetail) {
             existingDetail.Quantity = Number(existingDetail.Quantity ?? 0) + 1;
-            existingDetail.MainQuantity = Number(existingDetail.MainQuantity ?? 0) + 1;
-            existingDetail.Amount = Number(existingDetail.UnitPrice ?? 0) * Number(existingDetail.Quantity ?? 0);
+            CalcSAOrder.calcMainUnit(existingDetail);
+            CalcSAOrder.calcDiscountAmount(existingDetail);
+            CalcSAOrder.calcAmount(existingDetail);
+            CalcSAOrder.calcVatAmount(existingDetail);
         } else {
             const newDetail = new SAOrderDetail({
                 InventoryItemID: inventoryItem.InventoryItemID,
                 InventoryItemCode: inventoryItem.InventoryItemCode,
                 InventoryItemName: inventoryItem.InventoryItemName,
-                Quantity: 1,
-                MainQuantity: 1,
+                UnitID: inventoryItem.UnitID,
+                UnitName: inventoryItem.UnitName,
+                MainUnitID: inventoryItem.UnitID,
+                MainUnitName: inventoryItem.UnitName,
                 UnitPrice: inventoryItem.SellPrice,
-                MainUnitPrice: inventoryItem.SellPrice,
-                Amount: inventoryItem.SellPrice,
+                ExchangeRate: 1,
+                ExchangeRateOperator: "*",
+                Quantity: 1,
                 SortOrder: detailList.length + 1,
             });
             newDetail.setAutoPrimaryKey();
+            CalcSAOrder.calculateDetailAmounts(newDetail);
             detailList.push(newDetail);
+            activeOrder.value.SAOrderDetails = detailList;
         }
 
-        activeOrder.value.SAOrderDetails = detailList;
-        syncMasterTotals();
+        calculateMasterTotal();
     };
 
     /**
@@ -215,7 +237,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         } else {
             activeOrder.value.DiscountAmount = activeTab.value.discountValue;
         }
-        syncMasterTotals();
+        calculateMasterTotal();
     };
 
     /**
@@ -231,7 +253,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         } else {
             activeOrder.value.DiscountAmount = activeTab.value.discountValue;
         }
-        syncMasterTotals();
+        calculateMasterTotal();
     };
 
     /**
@@ -241,7 +263,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
     const updatePaidAmount = (value: number | null): void => {
         if (!activeOrder.value) return;
         activeOrder.value.PaidAmount = Math.max(0, Number(value ?? 0));
-        syncMasterTotals();
+        calculateMasterTotal();
     };
     // #endregion
 
@@ -302,7 +324,17 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
     };
     // #endregion
 
+    /**
+     * Store cho combobox đơn vị tính
+     */
+    const unitStore = useComboboxStore("unit_combobox", {
+        viewOrTableName: "di_unit",
+        comboboxLoadData: (pay) => loadDataRemoteCombobox(unitAPI, pay),
+        displayField: "UnitName",
+        valueField: "UnitID",
+    });
     return {
+        unitStore,
         selectedDetailID,
         currentOrderDetails,
         selectOrderDetail,
@@ -321,7 +353,8 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         chooseDiscount,
         updateDiscountValue,
         updatePaidAmount,
-        syncMasterTotals,
+        calculateMasterTotal,
+        changeDetailOrder
     };
 };
 

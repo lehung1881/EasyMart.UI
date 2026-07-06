@@ -321,7 +321,7 @@ function emitNumericValue(raw: string): void {
     if (props.max != null && finalValue > props.max) finalValue = props.max;
 
     emit("update:modelValue", finalValue);
-    emit("input", finalValue);
+    emit("change", finalValue);
 }
 
 function onInput(event: Event): void {

@@ -34,6 +34,12 @@ export class SAOrderDetail extends BaseModel {
     /** Tên đơn vị tính chính snapshot. */
     declare MainUnitName: string | null;
 
+    /** Tỉ lệ quy đổi đơn vị tính. */
+    declare ExchangeRate: number;
+    
+    /** Phép tính quy đổi đơn vị tính ("*" hoặc "/"). Mặc định: "*". */
+    declare ExchangeRateOperator: "*" | "/";
+
     /** Số lượng bán. */
     declare Quantity: number;
 
