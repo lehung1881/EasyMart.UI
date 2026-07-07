@@ -29,7 +29,7 @@ const globalPopup: Plugin = {
         );
         app.component(
             "SAOrderDetail",
-            defineAsyncComponent(() => import("@/pages/sales/SAOrderDetail.vue")),
+            defineAsyncComponent(() => import("@/pages/sales/saleOrder/SAOrderDetail.vue")),
         );
         app.component(
             "FilterPopup",

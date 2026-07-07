@@ -185,6 +185,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
                 ExchangeRateOperator: "*",
                 Quantity: 1,
                 SortOrder: detailList.length + 1,
+                UnitList: [{ UnitID: inventoryItem.UnitID, UnitName: inventoryItem.UnitName }],
             });
             newDetail.setAutoPrimaryKey();
             SAOrderCalculator.calculateDetailAmounts(newDetail);
@@ -299,23 +300,15 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
     // #endregion
 
     /**
-     * Store cho combobox đơn vị tính
+     * Store cho combobox hàm load dữ liệu từ API, dùng cho combobox khách hàng.
+     * @param payload Dữ liệu truyền vào để load dữ liệu từ API.
+     * @returns Mảng dữ liệu khách hàng từ API.
      */
-    const unitStore = useComboboxStore("unit_combobox", {
-        viewOrTableName: "di_unit",
-        displayField: "UnitName",
-        valueField: "UnitID",
-        queryMode: "local",
-        customLocalData: (rawData: any, options: any) => {
-            if (options && options.dataRow) {
-                const currentRow = options.dataRow;
-                return [{ UnitID: currentRow.UnitID, UnitName: currentRow.UnitName }];
-            }
-            return rawData;
-        },
-    });
+    const comboboxCustomerLoadData = async (payload: any): Promise<any[]> => {
+        payload.ViewOrTableName = "di_customer";
+        return loadDataRemoteCombobox(CustomerApi, payload);
+    };
     return {
-        unitStore,
         selectedDetailID,
         currentOrderDetails,
         selectOrderDetail,
@@ -326,6 +319,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
         customerStore,
         handleCustomerChange,
         formatCustomerDisplayText,
+        comboboxCustomerLoadData,
         cashierStore,
         handleCashierChange,
         chooseDiscount,

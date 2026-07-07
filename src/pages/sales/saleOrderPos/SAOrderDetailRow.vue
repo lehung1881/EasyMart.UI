@@ -32,15 +32,16 @@
 
             <!-- Unit Column -->
             <template v-else-if="column.key === 'unit'">
-                <BaseCombobox
+                <BaseComboboxV2
                     v-model="orderDetail.UnitID"
-                    :store="unitStore"
-                    :autoLoad="false"
                     clearIcon
-                    :initText="orderDetail.UnitName"
+                    display-field="UnitName"
+                    value-field="UnitID"
                     @selected="(selectedItem: any) => emit('changeColumn', column.key, orderDetail, selectedItem)"
                     @change="(selectedItem: any) => emit('changeColumn', column.key, orderDetail, selectedItem)"
                     :data-row="orderDetail"
+                    :data="orderDetail.UnitList != null ? orderDetail.UnitList : []"
+                    query-mode="local"
                 />
             </template>
 
@@ -100,6 +101,7 @@
 import { defineComponent, type PropType } from "vue";
 import { FormatType } from "@/constants";
 import type SAOrderDetail from "@/models/sales/SAOrderDetail";
+import BaseComboboxV2 from "@/components/controls/BaseComboboxV2.vue";
 
 export interface TableColumn {
     key: string;
@@ -110,7 +112,9 @@ export interface TableColumn {
 
 export default defineComponent({
     name: "SAOrderDetailRow",
-
+    components: {
+        BaseComboboxV2,
+    },
     props: {
         /**
          * lvhung - 06.07.2026
@@ -137,15 +141,6 @@ export default defineComponent({
         isSelected: {
             type: Boolean,
             default: false,
-        },
-
-        /**
-         * lvhung - 06.07.2026
-         * Store dùng cho combobox đơn vị tính.
-         */
-        unitStore: {
-            type: Object,
-            required: true,
         },
     },
 
@@ -189,10 +184,24 @@ export default defineComponent({
             }
         }
 
+        /**
+         * Custome load dữ liệu cho combobox đơn vị tính, chỉ lấy ra đơn vị của sản phẩm hiện tại.
+         * @param rawData
+         * @param options
+         */
+        const customLocalData = (rawData: any, options: any) => {
+            if (options && options.dataRow) {
+                const currentRow = options.dataRow;
+                return [{ UnitID: currentRow.UnitID, UnitName: currentRow.UnitName }];
+            }
+            return rawData;
+        };
+
         return {
             emit,
             FormatType,
             stepQuantity,
+            customLocalData,
         };
     },
 });

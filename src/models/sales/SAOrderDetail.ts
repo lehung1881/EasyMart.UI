@@ -36,7 +36,7 @@ export class SAOrderDetail extends BaseModel {
 
     /** Tỉ lệ quy đổi đơn vị tính. */
     declare ExchangeRate: number;
-    
+
     /** Phép tính quy đổi đơn vị tính ("*" hoặc "/"). Mặc định: "*". */
     declare ExchangeRateOperator: "*" | "/";
 
@@ -85,6 +85,9 @@ export class SAOrderDetail extends BaseModel {
     /** Người sửa gần nhất. */
     declare ModifiedBy: string | null;
 
+    /** Danh sách đơn vị tính. */
+    declare UnitList: Array<any> | null;
+
     constructor(data?: Partial<SAOrderDetail>, options: unknown = null) {
         super(data as Record<string, unknown> | undefined, options);
     }
@@ -116,6 +119,7 @@ SAOrderDetail.prototype._fields = [
     { name: "CreatedBy", dataType: "string", defaultValue: null },
     { name: "ModifiedDate", dataType: "string", defaultValue: null },
     { name: "ModifiedBy", dataType: "string", defaultValue: null },
+    { name: "UnitList", dataType: "array", defaultValue: [], ignoreCheckChange: true, ignoreValidate: true },
 ] as BaseFieldConfig[];
 
 export default SAOrderDetail;

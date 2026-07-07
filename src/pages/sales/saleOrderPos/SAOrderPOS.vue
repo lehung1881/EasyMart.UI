@@ -81,7 +81,6 @@
                                     :order-detail="orderDetail as SAOrderDetail"
                                     :table-columns="tableColumns"
                                     :is-selected="selectedDetailID === orderDetail.RefDetailID"
-                                    :unit-store="unitStore"
                                     @select="selectOrderDetail"
                                     @remove="removeOrderDetail"
                                     @increase-quantity="increaseItemQuantity"
@@ -121,14 +120,16 @@
 
                 <div class="sidebar-section">
                     <div class="sidebar-section__label">{{ $t("i18nSAOrder.POS.Customer") }}</div>
-                    <BaseCombobox
+                    <BaseComboboxV2
                         v-model="activeOrder.CustomerID"
-                        :store="customerStore"
                         :autoLoad="false"
                         clearIcon
                         @change="handleCustomerChange"
                         :placeholder="$t('i18nSAOrder.POS.CustomerPlaceholder')"
                         :custom-display-text="formatCustomerDisplayText"
+                        :load-data="comboboxCustomerLoadData"
+                        display-field="CustomerName"
+                        value-field="CustomerID"
                     >
                         <template #item="{ item }">
                             <div class="cb-custom-item">
@@ -141,7 +142,7 @@
                                 </div>
                             </div>
                         </template>
-                    </BaseCombobox>
+                    </BaseComboboxV2>
                 </div>
 
                 <div class="sidebar-section">
@@ -256,6 +257,9 @@ import { useOrderTabManager, type OrderTab } from "@/composables/sales/SAOrderPo
 import { useOrderDetailActions } from "@/composables/sales/SAOrderPos/useOrderDetailActions";
 import { useOrderSidebarResize } from "@/composables/sales/SAOrderPos/useOrderSidebarResize.ts";
 import SAOrderDetailRow, { type TableColumn } from "@/pages/sales/saleOrderPos/SAOrderDetailRow.vue";
+import BaseComboboxV2 from "@/components/controls/BaseComboboxV2.vue";
+import CustomerApi from "@/api/modules/dictionary/customerAPI.ts";
+import { loadDataRemoteCombobox, useComboboxStore } from "@/composables/controls/useComboboxStore";
 /** Map PaymentMethod number từ model sang string key để dùng trong UI */
 const PAYMENT_METHOD_MAP = {
     cash: 1,
@@ -269,6 +273,7 @@ export default defineComponent({
     components: {
         SearchInventoryItem,
         SAOrderDetailRow,
+        BaseComboboxV2,
     },
     setup() {
         const { proxy } = getCurrentInstance() as any;
@@ -309,7 +314,6 @@ export default defineComponent({
             currentOrderDetails,
             customerStore,
             cashierStore,
-            unitStore,
             selectOrderDetail,
             increaseItemQuantity,
             decreaseItemQuantity,
@@ -322,6 +326,7 @@ export default defineComponent({
             updateDiscountValue,
             updatePaidAmount,
             changeDetailOrder,
+            comboboxCustomerLoadData,
         } = useOrderDetailActions(activeOrder, activeTab);
 
         const { sidebarWidth, initiateSidebarResize } = useOrderSidebarResize();
@@ -378,6 +383,7 @@ export default defineComponent({
         // #endregion
 
         return {
+            comboboxCustomerLoadData,
             // config
             tableColumns,
             isGroupRows,
@@ -418,7 +424,6 @@ export default defineComponent({
             updateDiscountValue,
             updatePaidAmount,
             changeDetailOrder,
-            unitStore,
         };
     },
 });

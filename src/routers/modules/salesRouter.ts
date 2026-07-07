@@ -4,7 +4,7 @@ const salesRoutes: RouteRecordRaw[] = [
     {
         path: "sales/orders",
         name: "sales",
-        component: () => import("@/pages/sales/SAOrderList.vue"),
+        component: () => import("@/pages/sales/saleOrder/SAOrderList.vue"),
     },
 ];
 
