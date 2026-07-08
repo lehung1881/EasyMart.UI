@@ -12,13 +12,13 @@ import { loadDataRemoteTable } from "@/composables/controls/useTableStore";
 import type { PagingRequest } from "@/models/common/paging";
 import { debounce } from "lodash";
 import { formConfigMap, type FormConfig } from "@/constants/staticConfig/FormConfig";
-import { FormState, ModelState } from "@/constants/enumration/modelState";
 import { attachListDebug, detachListDebug } from "@/composables/base/useDebug";
 import { usePopup } from "@/composables/popup/usePopup";
 import type { BaseModel } from "@/models/common/baseModel";
 import { columnDefault } from "@/constants/columnConfig";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 import { useToastMessage } from "@/composables/message/useToastMessage";
+import { Constant } from '@/constants/constants.ts';
 
 /**
  * Dữ liệu đầu vào cho callback validate trước khi xóa.
@@ -152,10 +152,10 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
         if (!record) return;
 
         switch (record.ModelState) {
-            case ModelState.Insert:
+            case Constant.ModelState.Insert:
                 tableStore.insertRecord(record);
                 break;
-            case ModelState.Update:
+            case Constant.ModelState.Update:
                 tableStore.updateRecord(record);
                 break;
             default:
@@ -284,7 +284,7 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
 
         const recordsForDelete = records.map((record) => ({
             ...record,
-            ModelState: ModelState.Delete,
+            ModelState: Constant.ModelState.Delete,
         }));
 
         return {
@@ -537,7 +537,7 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
             return;
         }
         show(detailFormID, {
-            FormState: FormState.Add,
+            FormState: Constant.FormState.Add,
             RecordData: null,
             updateListCallback,
         });
@@ -572,7 +572,7 @@ export const useBaseList = <TModel extends BaseModel>(options: BaseListOptions<T
 
         // Hiển thị form chi tiết với data đã lấy được
         show(detailFormID, {
-            FormState: FormState.Edit,
+            FormState: Constant.FormState.Edit,
             RecordData: recordData,
             updateListCallback,
         });

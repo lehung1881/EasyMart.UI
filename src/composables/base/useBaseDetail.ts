@@ -1,11 +1,11 @@
 ﻿import { computed, onBeforeUnmount, reactive, ref, getCurrentInstance } from "vue";
 import BaseAPI from "@/api/baseAPI";
 import BaseModel from "@/models/common/baseModel";
-import { ModelState, FormState } from "@/constants/enumration/modelState";
 import { attachDetailDebug, detachDetailDebug } from "@/composables/base/useDebug";
 import { showError } from "@/commons/messageBox";
 import { formConfigMap, type FormConfig } from "@/constants/staticConfig/FormConfig";
 import { useToastMessage } from "@/composables/message/useToastMessage";
+import { Constant } from '@/constants/constants.ts';
 
 /**
  * Payload callback trước khi lưu dữ liệu detail.
@@ -14,7 +14,7 @@ export interface BeforeSaveContext<TModel extends BaseModel> {
     /** Dữ liệu model hiện tại trước khi gửi API. */
     model: TModel;
     /** Trạng thái form hiện tại. */
-    formState: FormState;
+    formState: number;
 }
 
 /**
@@ -26,7 +26,7 @@ export interface SaveSuccessContext<TModel extends BaseModel> {
     /** Kết quả trả về từ API saveData. */
     response: unknown;
     /** Trạng thái form tại thời điểm lưu thành công. */
-    formState: FormState;
+    formState: number;
 }
 
 /**
@@ -48,7 +48,7 @@ export interface BaseDetailOptions<TModel extends BaseModel> {
     /** Callback khi lưu thất bại. */
     onSaveError?: (error: Error) => void | Promise<void>;
     /** Callback trước khi mở popup để bind dữ liệu vào form detail. */
-    bindingData?: (formState: FormState, recordData?: any) => void;
+    bindingData?: (formState: number, recordData?: any) => void;
 }
 
 /**
@@ -85,7 +85,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
     /**
      * Trạng thái form hiện tại, mặc định là Add khi mở form detail mới, sẽ được cập nhật lại khi mở form detail với record cần edit.
      */
-    const formState = ref<FormState>(FormState.Add);
+    const formState = ref<number>(Constant.FormState.Add);
 
     /**
      * Trạng thái đang lưu dữ liệu, dùng để disable nút lưu và tránh gọi API nhiều lần khi người dùng click liên tục.
@@ -95,7 +95,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
     /**
      * Computed property xác định xem form đang ở chế độ Edit hay Add, dùng để điều chỉnh giao diện hoặc logic nếu cần thiết.
      */
-    const isEditMode = computed<boolean>(() => formState.value === FormState.Edit);
+    const isEditMode = computed<boolean>(() => formState.value === Constant.FormState.Edit);
 
     /**
      * Computed property kiểm tra xem dữ liệu form đã có sự thay đổi so với trạng thái ban đầu hay chưa.
@@ -132,7 +132,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
     const beforeOpen = async ({ params }: any) => {
         try {
             const { FormState, RecordData, updateListCallback } = params || {};
-            formState.value = FormState ?? FormState.Add;
+            formState.value = FormState ?? Constant.FormState.Add;
             Object.assign(model, buildModel(RecordData));
             proxy.updateListCallback = typeof updateListCallback === "function" ? updateListCallback : null;
             options.bindingData?.(formState.value, RecordData);
@@ -146,7 +146,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
      * @returns Giá trị Insert hoặc Update.
      */
     const getModelStateForSave = (): number => {
-        return formState.value === FormState.Edit ? ModelState.Update : ModelState.Insert;
+        return formState.value === Constant.FormState.Edit ? Constant.ModelState.Update : Constant.ModelState.Insert;
     };
 
     /**
@@ -157,7 +157,7 @@ export function useBaseDetail<TModel extends BaseModel>(options: BaseDetailOptio
         const transformedPayload = options.transformBeforeSave?.();
         const modelState = transformedPayload?.ModelState ?? getModelStateForSave();
 
-        if (modelState === ModelState.Insert) {
+        if (modelState === Constant.ModelState.Insert) {
             model.setAutoPrimaryKey();
         }
 
