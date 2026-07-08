@@ -271,7 +271,7 @@ export const useOrderDetailActions = (activeOrder: Ref<SAOrder | null>, activeTa
      */
     const formatCustomerDisplayText = (selectedItem: any): string => {
         if (!selectedItem) return "";
-        const displayParts = [selectedItem.CustomerCode, selectedItem.CustomerName];
+        const displayParts = [selectedItem.CustomerName];
         if (selectedItem.PhoneNumber) displayParts.push(`(${selectedItem.PhoneNumber})`);
         return displayParts.join(" - ");
     };

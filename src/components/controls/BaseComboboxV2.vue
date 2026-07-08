@@ -64,7 +64,7 @@
         </div>
         <Teleport to="body">
             <Transition name="cb-dropdown">
-                <div v-if="isOpen" ref="panelRef" class="cb-panel" :style="dropdownStyle">
+                <div v-if="isOpen" ref="panelRef" class="cb-panel" :style="dropdownStyle" @mousedown.prevent>
                     <BaseComboboxDropdown
                         :data="storeData"
                         :display-field="displayField"
@@ -95,7 +95,7 @@ import type { PropType } from "vue";
 import BaseComboboxDropdown from "./BaseComboboxDropdown.vue";
 import { DataType, FilterOperator } from "@/constants";
 import { FilterNodeType, LogicalOperator, type FilterCondition, type PagingRequest } from "@/models/common/paging";
-import type BaseAPI from "@/api/baseAPI";
+import { debounce } from "lodash";
 import type { ColumnDefinition } from "@/models/common/columnDefinition";
 
 // Types
@@ -263,7 +263,6 @@ export default defineComponent({
         const inputText = ref("");
         const confirmedDisplayText = ref("");
         const activeIndex = ref(-1);
-        let debounceTimer: ReturnType<typeof setTimeout> | null = null;
         // #endregion
 
         // #region Refs – Data State
@@ -375,16 +374,6 @@ export default defineComponent({
                           dataType: DataType.String,
                       },
         });
-
-        /**
-         * lvhung - 07.07.2026
-         * Emit event load-data lên parent và chờ callback done trả về danh sách items
-         */
-        const requestRemoteData = (payload: PagingRequest): Promise<Array<any>> => {
-            return new Promise((done) => {
-                emit("load-data", payload, done);
-            });
-        };
 
         /**
          * lvhung - 07.07.2026
@@ -629,6 +618,17 @@ export default defineComponent({
          * lvhung - 07.07.2026
          * Xử lý sự kiện input của người dùng, debounce 300ms trước khi trigger loadData
          */
+        const onInputDebounce = debounce((keyword: string) => {
+            if (keyword.length >= props.minChars) {
+                loadData(keyword, { dataRow: props.dataRow });
+            }
+            emit("search", keyword);
+        }, 300);
+
+        /**
+         * lvhung - 07.07.2026
+         * Xử lý sự kiện input của người dùng, debounce 300ms trước khi trigger loadData
+         */
         const onInput = (e: Event): void => {
             if (!props.searchable) return;
             const keyword = (e.target as HTMLInputElement).value;
@@ -636,13 +636,14 @@ export default defineComponent({
 
             if (!isOpen.value) isOpen.value = true;
 
-            if (debounceTimer) clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                if (keyword.length >= props.minChars) {
-                    loadData(keyword, { dataRow: props.dataRow });
-                }
-                emit("search", keyword);
-            }, 1000);
+            if (!keyword) {
+                confirmedDisplayText.value = "";
+                setSelectedItem(null);
+                emit("update:modelValue", null);
+                emit("change", null, null);
+            }
+
+            onInputDebounce(keyword);
         };
 
         /**
@@ -723,6 +724,7 @@ export default defineComponent({
         const onWindowScroll = (e: Event): void => {
             if (!isOpen.value) return;
             if (panelRef.value && panelRef.value.contains(e.target as Node)) return;
+            if (rootRef.value?.contains(e.target as Node)) return;
             cancelEdit();
         };
         // #endregion
@@ -768,7 +770,7 @@ export default defineComponent({
             document.removeEventListener("click", handleClickOutside);
             window.removeEventListener("scroll", onWindowScroll, { capture: true });
             window.removeEventListener("resize", closeDropdown);
-            if (debounceTimer) clearTimeout(debounceTimer);
+            onInputDebounce.cancel();
         });
         // #endregion
 

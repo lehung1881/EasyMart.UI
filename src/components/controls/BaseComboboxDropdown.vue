@@ -89,7 +89,7 @@
                     'cb-dropdown__item--active': activeIndex === index,
                     'cb-dropdown__item--selected': isSelected(item),
                 }"
-                @click.prevent="$emit('select', item)"
+                @click.stop="$emit('select', item)"
             >
                 <slot name="item" :item="item" :index="index">
                     {{ item[displayField] }}
